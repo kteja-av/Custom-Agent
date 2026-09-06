@@ -218,6 +218,25 @@ def test_unstorable_values_are_found_however_deeply_nested():
     assert unstorable_reason({"a" + NUL: 1}) is not None, "a KEY can be unstorable too"
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        {"xs": ["fine", "bad" + NUL]},
+        {"xs": ("fine", "bad" + NUL)},
+        {"xs": [["fine"], ["bad" + NUL]]},
+        {"xs": [{"k": "bad" + NUL}]},
+    ],
+    ids=["list", "tuple", "nested-list", "dict-in-list"],
+)
+def test_a_nul_inside_a_sequence_is_found(value):
+    """A NUL is the case that separates the two layers: json.dumps escapes it
+    happily, so only the named walk can catch it -- and only if the walk
+    actually descends into sequences. Nothing pinned that; the earlier nesting
+    test used an infinity, which the backstop catches on its own.
+    """
+    assert unstorable_reason(value) == "text contains a NUL character"
+
+
 def test_unstorable_reason_is_total():
     """It runs on boundary paths, so it must not raise -- including on a
     self-referential structure, which a naive recursive walk never returns from."""
@@ -231,12 +250,10 @@ def test_unstorable_reason_is_total():
         def __hash__(self):
             return 0
 
-    # The depth guard must DIAGNOSE this, not merely survive it. Without the
-    # guard the walk recurses until it hits the interpreter limit and the outer
-    # catch absorbs the RecursionError -- still total, but the reason degrades
-    # to "could not be checked", and a run that blew the stack is not the same
-    # event as one that nested too deeply.
-    assert unstorable_reason(cyclic) == "nested more deeply than the store can accept"
+    # A cycle is caught by the serialiser's own circular-reference detection,
+    # not by a depth cap. The cap used to answer this, and answered it for
+    # honest deep structures too -- see the false-positive tests below.
+    assert unstorable_reason(cyclic) == "cannot be serialised for storage: ValueError"
     # An object with no JSON representation is genuinely unstorable -- psycopg
     # raises TypeError on it too -- so being flagged is correct, not a false
     # positive. What matters here is that deciding that never raises.
@@ -328,3 +345,42 @@ def test_values_postgres_accepts_are_not_rejected(value):
     """The other direction. A helper that over-rejects fails runs that should
     work, which is a defect too -- each of these was confirmed to store fine."""
     assert unstorable_reason(value) is None
+
+
+def _nest(depth):
+    value = {"leaf": 1}
+    for _ in range(depth):
+        value = {"n": value}
+    return value
+
+
+@pytest.mark.parametrize("depth", [10, 61, 100, 500, 900], ids=lambda d: f"depth-{d}")
+def test_deep_nesting_postgres_accepts_is_not_rejected(depth):
+    """Found by probing rather than by review: the walk used to declare
+    anything past depth 60 unstorable, and Postgres stores 900-deep JSON
+    without complaint. A model returning deeply nested arguments had its tool
+    call refused over a limit that does not exist -- over-rejection fails runs
+    that should work, which is a defect in the same class as under-rejection.
+
+    Verified against the live database: json.dumps and JSONB both accept every
+    depth here, and both give up at ~1000 on the interpreter's recursion limit.
+    """
+    assert unstorable_reason(_nest(depth)) is None
+
+
+def test_nesting_past_the_serialisers_limit_is_still_refused():
+    """The line is drawn by the serialiser, which is where Postgres draws it
+    too -- not by a number this module picked."""
+    assert unstorable_reason(_nest(2000)) is not None
+
+
+def test_a_nul_is_found_however_deeply_it_is_buried():
+    """Deferring on depth would have made the walk stop looking. It does not:
+    the serialiser happily escapes a NUL, so only the named check finds this,
+    and it has to still be looking at depth 300."""
+    buried = _nest(300)
+    cursor = buried
+    for _ in range(300):
+        cursor = cursor["n"]
+    cursor["leaf"] = "deep" + chr(0) + "value"
+    assert unstorable_reason(buried) == "text contains a NUL character"

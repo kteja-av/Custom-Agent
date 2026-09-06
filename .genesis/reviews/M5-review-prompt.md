@@ -39,11 +39,14 @@ Round 4 confirmed rounds 1 and 3 dead, and rejected on a fourth defect inside th
 
 **One round-4 finding was checked and is wrong.** The report said `INVARIANT-3c123c38` (`token_count` must not swallow `BaseException`) had no test. It did: mutating it turns the full suite red. The test was named `test_base_exception_from_a_hostile_int_still_propagates`, so no `-k usage` or `-k token_count` selection could find it -- which is a real problem of its own, and it has been renamed so all three selections now go red. Verify this yourself rather than taking either account on trust.
 
+**Found after round 4, by the author, unprompted.** Probing the helper for FALSE positives (rather than misses) turned up a live defect no review round had looked for: it capped nesting at depth 60 and called anything deeper unstorable, while Postgres stores 900-deep JSON happily. A model returning deeply nested arguments had its tool call refused over a limit that does not exist. The walk is now iterative with a visited-id set and never guesses about depth -- the serialiser decides, and agrees with Postgres exactly (both stop at ~1000). Cycles are caught by the serialiser's circular-reference detection instead of a cap.
+
 **Known equivalent mutant.** Flipping the backstop's `allow_nan=False` to `True` leaves the suite green, because the named layer catches non-finite floats first. It is kept deliberately as overlapping defence, and documented in the code. Do not report it as a fresh blind spot without saying why the overlap should go.
 
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
 - `unstorable_reason` decides what every primitive will accept, and has now been wrong twice. Find a value Postgres refuses that it passes, or one it rejects that would have stored fine. Probe the DATABASE for the answer rather than reasoning about it -- both previous holes were found that way, and the helper's verdicts are only worth what a live comparison says.
-- The backstop calls `json.dumps` on every tool-call argument dict. Is that a cost worth paying on a hot path, and can a large or deeply nested argument make it pathological?
+- The backstop calls `json.dumps` on every tool-call argument dict. Measured at 0.1-8ms for 10k keys, a 1MB string and a 50k-element list, with no false positives -- confirm or refute, and find a shape that is pathological.
+- **Hunt false positives, not just misses.** Four rounds hunted values the helper wrongly accepts; the depth-cap defect was one it wrongly rejected, and only a live-database comparison exposed it. Ask Postgres what it accepts and diff the two verdicts in both directions.
 - **Raising in `Message.__post_init__` is the riskiest thing here.** Find a path where that raise is not contained by a total boundary, or where it fires on an error path and takes down a handler.
 - `ToolCall.__post_init__` silently empties `arguments`. Is the reason always preserved, and can a caller be confused by arguments that vanish?
 - The message INSERT is now a `LEFT JOIN ... GROUP BY`. Re-measure concurrency: the author saw safety unchanged but availability *improved* (0-1 of 12 losers, previously 4 of 12). Confirm or refute.
@@ -108,7 +111,7 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
 2. Re-run the gate:
    ```bash
    .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 47
-   .venv\Scripts\python.exe -m pytest -q                             # expect 343
+   .venv\Scripts\python.exe -m pytest -q                             # expect 354
    ```
    A different number is itself a finding.
 3. **Mutation-test.** Round 1: 21 mutations, six survivors. Round 2's reviewer ran 56 and found 12 blind spots. Round 3: 12 targeted, 12 killed. Round 4: 12 targeted at the storability work, 12 killed -- one initially survived (removing the cycle-depth guard) because the outer catch absorbed the RecursionError, so the test now pins the *diagnosis* rather than mere survival. Every round's reviewer has found blind spots the author's own matrix did not; assume more exist. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
@@ -131,6 +134,8 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
    message tenancy from the caller     missing run no longer detected
    serialisation backstop removed      backstop keeps ensure_ascii
    backstop drops the encode step      backstop is not total
+   walk stops descending into lists    cycle guard removed (hangs the suite)
+   depth cap reintroduced              named NUL check removed
    messages tenant nullable            run_events tenant nullable
    messages sequence not unique        manifest primary key relaxed
    tenancy index removed               run never marked finished

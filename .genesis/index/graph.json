@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "agent-sdk",
-  "revision": "d854a5d5b8c3dd068ee98c837684c78a1c0ae84e",
-  "sourceHash": "c3245239f459c818ef058ff64f4ce1a7b1a89d626cd3d6c7403e2a329c82707e",
+  "revision": "002a2717dfc8d9ecb20ef88b24d110cc5d978a83",
+  "sourceHash": "d750a8b3e9db07eea982a11c04c4456ed5c5cae09cecda450d74ade84c0bec30",
   "provenance": {
     "tool": "genesis-graphizer",
     "method": "static-analysis",
@@ -228,7 +228,7 @@
         "extractor": "filesystem",
         "source": "agentsdk/primitives.py"
       },
-      "contentHash": "c31fce122118da2789add7aff31d571188829d8b2d0827236278bee459e95825"
+      "contentHash": "98e57c0d75f16dd4973130276c4c30deefd2f7a3f0620d09c3a11dfe1aba3aeb"
     },
     {
       "id": "file:agentsdk/providers/__init__.py",
@@ -371,7 +371,7 @@
         "extractor": "filesystem",
         "source": "tests/test_primitives.py"
       },
-      "contentHash": "49172441ec799189bff60265762769356d5e444a494ef1a3fd1bf2238d917e61"
+      "contentHash": "44eb12bdd869b20aee0234c65674837b80b2d5beaf2b3a43935896dfff5c06df"
     },
     {
       "id": "file:tests/test_tool_executor.py",
@@ -3348,7 +3348,7 @@
       "name": "_named_unstorable_reason",
       "qualifiedName": "_named_unstorable_reason",
       "kind": "function",
-      "line": 261,
+      "line": 260,
       "label": "_named_unstorable_reason",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3492,7 +3492,7 @@
       "name": "unstorable_reason",
       "qualifiedName": "unstorable_reason",
       "kind": "function",
-      "line": 217,
+      "line": 216,
       "label": "unstorable_reason",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -9044,7 +9044,7 @@
       "name": "Hostile",
       "qualifiedName": "test_unstorable_reason_is_total.Hostile",
       "kind": "class",
-      "line": 227,
+      "line": 246,
       "label": "test_unstorable_reason_is_total.Hostile",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9055,12 +9055,28 @@
       "contentHash": "3a458b73e5de1513af9d7fdccf52c73bb592888f2af8220400af24e35ca935d9"
     },
     {
+      "id": "symbol:tests/test_primitives.py#function:_nest",
+      "type": "symbol",
+      "name": "_nest",
+      "qualifiedName": "_nest",
+      "kind": "function",
+      "line": 350,
+      "label": "_nest",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "93309b415230e1370365b953cf3b5ac4ece85fe53e36a28617334113e9b0ff5b"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_a_lone_surrogate_is_unstorable",
       "type": "symbol",
       "name": "test_a_lone_surrogate_is_unstorable",
       "qualifiedName": "test_a_lone_surrogate_is_unstorable",
       "kind": "function",
-      "line": 296,
+      "line": 313,
       "label": "test_a_lone_surrogate_is_unstorable",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9076,7 +9092,7 @@
       "name": "test_a_message_refuses_content_no_store_can_hold",
       "qualifiedName": "test_a_message_refuses_content_no_store_can_hold",
       "kind": "function",
-      "line": 270,
+      "line": 287,
       "label": "test_a_message_refuses_content_no_store_can_hold",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9092,7 +9108,7 @@
       "name": "test_a_model_delivered_surrogate_flags_the_tool_call",
       "qualifiedName": "test_a_model_delivered_surrogate_flags_the_tool_call",
       "kind": "function",
-      "line": 303,
+      "line": 320,
       "label": "test_a_model_delivered_surrogate_flags_the_tool_call",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9103,12 +9119,44 @@
       "contentHash": "600343d13f43254d58dabcbcbb5589233452ba1c578ca64b3df380fc54ce4467"
     },
     {
+      "id": "symbol:tests/test_primitives.py#function:test_a_nul_inside_a_sequence_is_found",
+      "type": "symbol",
+      "name": "test_a_nul_inside_a_sequence_is_found",
+      "qualifiedName": "test_a_nul_inside_a_sequence_is_found",
+      "kind": "function",
+      "line": 231,
+      "label": "test_a_nul_inside_a_sequence_is_found",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "05a9845913d3b14389e8d7acf9457b770ccc51dca1195f990a90e7d2d50e589d"
+    },
+    {
+      "id": "symbol:tests/test_primitives.py#function:test_a_nul_is_found_however_deeply_it_is_buried",
+      "type": "symbol",
+      "name": "test_a_nul_is_found_however_deeply_it_is_buried",
+      "qualifiedName": "test_a_nul_is_found_however_deeply_it_is_buried",
+      "kind": "function",
+      "line": 377,
+      "label": "test_a_nul_is_found_however_deeply_it_is_buried",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "3cdabd4796422fb3108400bcb1388308a84c78503a3f3d026c27b53531c2ac1c"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_a_tool_call_keeps_an_existing_arguments_error",
       "type": "symbol",
       "name": "test_a_tool_call_keeps_an_existing_arguments_error",
       "qualifiedName": "test_a_tool_call_keeps_an_existing_arguments_error",
       "kind": "function",
-      "line": 259,
+      "line": 276,
       "label": "test_a_tool_call_keeps_an_existing_arguments_error",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9124,7 +9172,7 @@
       "name": "test_a_tool_call_with_unstorable_arguments_flags_itself",
       "qualifiedName": "test_a_tool_call_with_unstorable_arguments_flags_itself",
       "kind": "function",
-      "line": 248,
+      "line": 265,
       "label": "test_a_tool_call_with_unstorable_arguments_flags_itself",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9140,7 +9188,7 @@
       "name": "test_an_integer_beyond_the_serialisers_limit_is_unstorable",
       "qualifiedName": "test_an_integer_beyond_the_serialisers_limit_is_unstorable",
       "kind": "function",
-      "line": 314,
+      "line": 331,
       "label": "test_an_integer_beyond_the_serialisers_limit_is_unstorable",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9149,6 +9197,22 @@
         "source": "tests/test_primitives.py"
       },
       "contentHash": "8cabaefd088d8af7de6a84c721ea59b7f73b3ea3bfa4ec6287242c291bbfde7b"
+    },
+    {
+      "id": "symbol:tests/test_primitives.py#function:test_deep_nesting_postgres_accepts_is_not_rejected",
+      "type": "symbol",
+      "name": "test_deep_nesting_postgres_accepts_is_not_rejected",
+      "qualifiedName": "test_deep_nesting_postgres_accepts_is_not_rejected",
+      "kind": "function",
+      "line": 358,
+      "label": "test_deep_nesting_postgres_accepts_is_not_rejected",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "75985d606e4f1efdc53a1e86b2b118d6777e970b22efb316abeb80f39a4c6638"
     },
     {
       "id": "symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family",
@@ -9279,6 +9343,22 @@
       "contentHash": "04685ad5c4843fbf5ca4abb22f1bedb56d28b822d617a7084f5434ac3069489a"
     },
     {
+      "id": "symbol:tests/test_primitives.py#function:test_nesting_past_the_serialisers_limit_is_still_refused",
+      "type": "symbol",
+      "name": "test_nesting_past_the_serialisers_limit_is_still_refused",
+      "qualifiedName": "test_nesting_past_the_serialisers_limit_is_still_refused",
+      "kind": "function",
+      "line": 371,
+      "label": "test_nesting_past_the_serialisers_limit_is_still_refused",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "403b9dcdea55ec41fa8d2f29f92a7e79a69d47b159e371a73a715b7f9533d302"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_only_completed_and_failed_are_reachable_in_phase0",
       "type": "symbol",
       "name": "test_only_completed_and_failed_are_reachable_in_phase0",
@@ -9300,7 +9380,7 @@
       "name": "test_ordinary_message_content_is_untouched",
       "qualifiedName": "test_ordinary_message_content_is_untouched",
       "kind": "function",
-      "line": 278,
+      "line": 295,
       "label": "test_ordinary_message_content_is_untouched",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9316,7 +9396,7 @@
       "name": "test_ordinary_tool_call_arguments_are_untouched",
       "qualifiedName": "test_ordinary_tool_call_arguments_are_untouched",
       "kind": "function",
-      "line": 264,
+      "line": 281,
       "label": "test_ordinary_tool_call_arguments_are_untouched",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9412,7 +9492,7 @@
       "name": "test_surrogate_content_is_refused",
       "qualifiedName": "test_surrogate_content_is_refused",
       "kind": "function",
-      "line": 309,
+      "line": 326,
       "label": "test_surrogate_content_is_refused",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9460,7 +9540,7 @@
       "name": "test_unstorable_reason_is_total",
       "qualifiedName": "test_unstorable_reason_is_total",
       "kind": "function",
-      "line": 221,
+      "line": 240,
       "label": "test_unstorable_reason_is_total",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9476,7 +9556,7 @@
       "name": "__eq__",
       "qualifiedName": "test_unstorable_reason_is_total.Hostile.__eq__",
       "kind": "function",
-      "line": 228,
+      "line": 247,
       "label": "test_unstorable_reason_is_total.Hostile.__eq__",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9492,7 +9572,7 @@
       "name": "__hash__",
       "qualifiedName": "test_unstorable_reason_is_total.Hostile.__hash__",
       "kind": "function",
-      "line": 231,
+      "line": 250,
       "label": "test_unstorable_reason_is_total.Hostile.__hash__",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9540,7 +9620,7 @@
       "name": "test_values_postgres_accepts_are_not_rejected",
       "qualifiedName": "test_values_postgres_accepts_are_not_rejected",
       "kind": "function",
-      "line": 327,
+      "line": 344,
       "label": "test_values_postgres_accepts_are_not_rejected",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -12409,7 +12489,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:_named_unstorable_reason",
-      "line": 261,
+      "line": 260,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12535,7 +12615,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:unstorable_reason",
-      "line": 217,
+      "line": 216,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17393,7 +17473,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#class:test_unstorable_reason_is_total.Hostile",
-      "line": 227,
+      "line": 246,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17403,11 +17483,25 @@
       "contentHash": "9967376f8f9af1cc5d6842ff81a5cbb096970cb5539d2b8119aa54757342dd9a"
     },
     {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:_nest:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:_nest",
+      "line": 350,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "84db7caa1365203b91c3f0235a5639d8cf8ffa06672934faca63c757abf35561"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_lone_surrogate_is_unstorable:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_lone_surrogate_is_unstorable",
-      "line": 296,
+      "line": 313,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17421,7 +17515,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_message_refuses_content_no_store_can_hold",
-      "line": 270,
+      "line": 287,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17435,7 +17529,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_model_delivered_surrogate_flags_the_tool_call",
-      "line": 303,
+      "line": 320,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17445,11 +17539,39 @@
       "contentHash": "982969bf4246a1c1b36f4f5ee410c0769f34e993fe259c44c289a24445a262d3"
     },
     {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_nul_inside_a_sequence_is_found:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_a_nul_inside_a_sequence_is_found",
+      "line": 231,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "d973163bf37c2af1896b76ede9c98a0c747d71a16b079b5ffdc97f9c42a7fa8d"
+    },
+    {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_nul_is_found_however_deeply_it_is_buried:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_a_nul_is_found_however_deeply_it_is_buried",
+      "line": 377,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "db667c8edc3ed9298b2c224f6e291fd2eaf588e45abcba1fec7ee54312967450"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_tool_call_keeps_an_existing_arguments_error:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_tool_call_keeps_an_existing_arguments_error",
-      "line": 259,
+      "line": 276,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17463,7 +17585,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_tool_call_with_unstorable_arguments_flags_itself",
-      "line": 248,
+      "line": 265,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17477,7 +17599,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_an_integer_beyond_the_serialisers_limit_is_unstorable",
-      "line": 314,
+      "line": 331,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17485,6 +17607,20 @@
         "source": "tests/test_primitives.py"
       },
       "contentHash": "5120244dedf6afbc888b58b87d385ad74350d94ef0e90f8158617321da282f50"
+    },
+    {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_deep_nesting_postgres_accepts_is_not_rejected:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_deep_nesting_postgres_accepts_is_not_rejected",
+      "line": 358,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "22c60eb2625962a98d4c815fe56822006f8989b7ba8f235966acb6ab62ff4dbe"
     },
     {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family:",
@@ -17599,6 +17735,20 @@
       "contentHash": "0623eb397d7174119d956b236be03ed85a1f35be716d4b72607629f289ae510e"
     },
     {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_nesting_past_the_serialisers_limit_is_still_refused:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_nesting_past_the_serialisers_limit_is_still_refused",
+      "line": 371,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "c7448b5a4c24b0b639b38abe2f86c5ce9626d24fb78edac98aa8534e46d5dca8"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_only_completed_and_failed_are_reachable_in_phase0:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
@@ -17617,7 +17767,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_ordinary_message_content_is_untouched",
-      "line": 278,
+      "line": 295,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17631,7 +17781,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_ordinary_tool_call_arguments_are_untouched",
-      "line": 264,
+      "line": 281,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17715,7 +17865,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_surrogate_content_is_refused",
-      "line": 309,
+      "line": 326,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17757,7 +17907,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_reason_is_total",
-      "line": 221,
+      "line": 240,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17771,7 +17921,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_reason_is_total.Hostile.__eq__",
-      "line": 228,
+      "line": 247,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17785,7 +17935,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_reason_is_total.Hostile.__hash__",
-      "line": 231,
+      "line": 250,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17827,7 +17977,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_values_postgres_accepts_are_not_rejected",
-      "line": 327,
+      "line": 344,
       "resolved": true,
       "confidence": 1,
       "provenance": {

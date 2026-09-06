@@ -211,7 +211,6 @@ class Message:
 # --- storability (M5 round 3) -----------------------------------------------
 
 _NUL = "\x00"
-_MAX_DEPTH = 60
 
 
 def unstorable_reason(value: Any) -> str | None:
@@ -258,36 +257,54 @@ def unstorable_reason(value: Any) -> str | None:
     return None
 
 
-def _named_unstorable_reason(value: Any, _depth: int = 0) -> str | None:
-    """The diagnosable half: the failures worth naming precisely."""
+def _named_unstorable_reason(value: Any) -> str | None:
+    """The diagnosable half: the failures worth naming precisely.
+
+    Iterative, with a set of visited container ids, rather than recursive with
+    a depth cap. The cap was a defect of its own: it declared anything nested
+    past 60 unstorable, and Postgres stores 900-deep JSON without complaint, so
+    a model returning deeply nested arguments had its tool call refused over a
+    limit that does not exist. Over-rejection fails runs that should work.
+
+    Raising the number would only have moved the wrong answer. Depth is not
+    this function's call to make -- the serialiser and the database agree on
+    where it ends (both give up around 1000, at the interpreter's recursion
+    limit), so the backstop decides it. Walking iteratively also means a NUL
+    nested 300 deep is still found by name, which deferring on depth would have
+    quietly stopped doing.
+    """
     try:
-        if _depth > _MAX_DEPTH:
-            return "nested more deeply than the store can accept"
-        if isinstance(value, str):
-            return "text contains a NUL character" if _NUL in value else None
-        if isinstance(value, bool) or value is None or isinstance(value, int):
-            return None
-        if isinstance(value, float):
-            if value != value:
-                return "NaN cannot be stored: JSON has no representation for it"
-            if value in (float("inf"), float("-inf")):
-                return f"{value} cannot be stored: JSON has no representation for it"
-            return None
-        if isinstance(value, dict):
-            for key, item in value.items():
-                reason = _named_unstorable_reason(key, _depth + 1)
-                if reason is None:
-                    reason = _named_unstorable_reason(item, _depth + 1)
-                if reason is not None:
-                    return reason
-            return None
-        if isinstance(value, (list, tuple, set, frozenset)):
-            for item in value:
-                reason = _named_unstorable_reason(item, _depth + 1)
-                if reason is not None:
-                    return reason
-            return None
-        # Not reachable from decoded JSON. The backstop above decides it.
+        stack = [value]
+        seen: set[int] = set()
+        while stack:
+            item = stack.pop()
+            if isinstance(item, str):
+                if _NUL in item:
+                    return "text contains a NUL character"
+                continue
+            if isinstance(item, bool) or item is None or isinstance(item, int):
+                continue
+            if isinstance(item, float):
+                if item != item:
+                    return "NaN cannot be stored: JSON has no representation for it"
+                if item in (float("inf"), float("-inf")):
+                    return f"{item} cannot be stored: JSON has no representation for it"
+                continue
+            if isinstance(item, dict):
+                if id(item) in seen:  # a cycle, or the same object twice
+                    continue
+                seen.add(id(item))
+                for key, sub in item.items():
+                    stack.append(key)
+                    stack.append(sub)
+                continue
+            if isinstance(item, (list, tuple, set, frozenset)):
+                if id(item) in seen:
+                    continue
+                seen.add(id(item))
+                stack.extend(item)
+                continue
+            # Not reachable from decoded JSON. The backstop decides it.
         return None
     except Exception:  # noqa: BLE001 - total by intent, see unstorable_reason
         return "could not be checked for storability"
