@@ -23,13 +23,16 @@ from .session import SessionStore
 
 
 class RunRecorder(Protocol):
-    """What Runner needs from a durable backend, and nothing more."""
+    """What Runner needs from a durable backend, and nothing more.
 
-    def start_run(self, scope: RunScope, **fields: Any) -> None: ...
+    `write_manifest` is deliberately absent: the manifest is an argument to
+    `start_run`, written in the same transaction as the run row, so a backend
+    cannot offer the Runner a way to start a run without one (AC-6).
+    """
+
+    def start_run(self, scope: RunScope, *, manifest: dict[str, Any], **fields: Any) -> None: ...
 
     def finish_run(self, run_id: str, status: str) -> None: ...
-
-    def write_manifest(self, scope: RunScope, manifest: dict[str, Any]) -> None: ...
 
 
 @dataclass(frozen=True)

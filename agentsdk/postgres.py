@@ -278,25 +278,40 @@ class PostgresRunStore:
         max_turns: int,
         model_id: str | None,
         principal_context: dict[str, Any] | None,
+        manifest: dict[str, Any],
     ) -> None:
+        """The run row and its manifest are one transaction, not two.
+
+        AC-6 requires exactly one manifest per run. Written over two
+        connections that held only while nothing failed in between: an ordinary
+        transient error after the first write left a `runs` row nothing could
+        explain -- no manifest, and no RunStarted event either, because the
+        emit is sequenced after both writes.
+
+        The manifest is a parameter rather than a follow-up call, so "a run
+        exists without its manifest" stops being a state this API can express.
+        Either both rows commit or neither does.
+        """
         with psycopg.connect(self._dsn) as conn:
-            conn.execute(
-                """
-                INSERT INTO runs (
-                    run_id, tenant_id, project_id, agent_spec_id, status,
-                    principal_context, max_turns, model_id
-                ) VALUES (%s,%s,%s,%s,'running',%s,%s,%s)
-                """,
-                (
-                    scope.run_id,
-                    scope.tenant_id,
-                    scope.project_id,
-                    agent_spec_id,
-                    Jsonb(principal_context) if principal_context else None,
-                    max_turns,
-                    model_id,
-                ),
-            )
+            with conn.transaction():
+                conn.execute(
+                    """
+                    INSERT INTO runs (
+                        run_id, tenant_id, project_id, agent_spec_id, status,
+                        principal_context, max_turns, model_id
+                    ) VALUES (%s,%s,%s,%s,'running',%s,%s,%s)
+                    """,
+                    (
+                        scope.run_id,
+                        scope.tenant_id,
+                        scope.project_id,
+                        agent_spec_id,
+                        Jsonb(principal_context) if principal_context else None,
+                        max_turns,
+                        model_id,
+                    ),
+                )
+                self._insert_manifest(conn, scope, manifest)
 
     def finish_run(self, run_id: str, status: str) -> None:
         with psycopg.connect(self._dsn) as conn:
@@ -306,30 +321,43 @@ class PostgresRunStore:
             )
 
     def write_manifest(self, scope: RunScope, manifest: dict[str, Any]) -> None:
-        """Exactly one row per run -- guaranteed by the primary key, not by care."""
+        """Write a manifest for a run that already exists.
+
+        Not on the Runner's path -- `start_run` writes the manifest atomically
+        with the run row. This one cannot reintroduce that defect: it only ever
+        adds a manifest, so it cannot leave a run without one. A second call
+        for the same run is refused by the primary key, not by care.
+        """
         with psycopg.connect(self._dsn) as conn:
-            conn.execute(
-                """
+            self._insert_manifest(conn, scope, manifest)
+
+    @staticmethod
+    def _insert_manifest(
+        conn: psycopg.Connection, scope: RunScope, manifest: dict[str, Any]
+    ) -> None:
+        """Takes the caller's connection so it can join an open transaction."""
+        conn.execute(
+            """
                 INSERT INTO execution_manifests (
                     run_id, tenant_id, project_id, sdk_version, agent_spec_hash,
                     instructions_hash, model_id, model_version,
                     model_adapter_version, tool_spec_hashes, policy_version
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                """,
-                (
-                    scope.run_id,
-                    scope.tenant_id,
-                    scope.project_id,
-                    manifest["sdk_version"],
-                    manifest["agent_spec_hash"],
-                    manifest["instructions_hash"],
-                    manifest.get("model_id"),
-                    manifest.get("model_version"),
-                    manifest.get("model_adapter_version"),
-                    Jsonb(manifest.get("tool_spec_hashes") or []),
-                    manifest.get("policy_version"),
-                ),
-            )
+            """,
+            (
+                scope.run_id,
+                scope.tenant_id,
+                scope.project_id,
+                manifest["sdk_version"],
+                manifest["agent_spec_hash"],
+                manifest["instructions_hash"],
+                manifest.get("model_id"),
+                manifest.get("model_version"),
+                manifest.get("model_adapter_version"),
+                Jsonb(manifest.get("tool_spec_hashes") or []),
+                manifest.get("policy_version"),
+            ),
+        )
 
     def get_run(self, run_id: str) -> dict[str, Any] | None:
         with psycopg.connect(self._dsn) as conn:

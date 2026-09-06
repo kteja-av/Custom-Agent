@@ -2,6 +2,22 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
+## Round 2 -- what round 1 rejected, and what changed
+
+A previous reviewer rejected this milestone and was right to. Their finding, and the response:
+
+**The defect.** `start_run` wrote the `runs` row and `write_manifest` wrote the manifest on two independent connections, with `RunStarted` emitted after both. An injected transient `psycopg.OperationalError` between them committed a `runs` row with **zero** manifests -- AC-6 requires exactly one -- and no `RunStarted` event to explain it.
+
+**The fix is structural, not careful ordering.** The manifest is now a required *argument* to `start_run`, and both rows are written in one transaction. `RunRecorder` no longer declares `write_manifest`, so no backend can offer the Runner a way to start a run without a manifest. Either both rows commit or neither does. `write_manifest` survives as a standalone method, but it can only ever *add* a manifest, so it cannot reproduce the defect.
+
+**Six surviving mutations, all gate gaps, now closed** -- plus two more the author found by extending the reviewer's own reasoning: the round-1 reviewer flagged `history()`'s unpinned `ORDER BY`, and the same hole existed in `PostgresTrace.reconstruct` for both messages and events, which is AC-7's own claim. Tests now write rows *out of order* before asserting a read is ordered.
+
+**Attack these first.** They are where the last defect was, and where a fix is most likely to have introduced a new one:
+- Is the transaction genuinely atomic, or does `psycopg`'s `with conn.transaction()` inside `with psycopg.connect()` leave a window? Try killing the process mid-write.
+- Does anything else in the Runner's start path still write across two connections?
+- The new `_insert_manifest` is a `@staticmethod` taking a caller's connection. Can it be called with a connection whose transaction is already broken?
+- 267 tests now, up from 259. Did any new test weaken an old one -- the `started` fixture now writes a manifest, which changed what two AC-6 tests are asserting against.
+
 ## Repository
 
 `<repo>`
@@ -53,11 +69,11 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
 1. Read the files, `SPEC.md`, and the decisions/invariants/knowledge in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 30
-   .venv\Scripts\python.exe -m pytest -q                             # expect 259
+   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 38
+   .venv\Scripts\python.exe -m pytest -q                             # expect 267
    ```
    A different number is itself a finding.
-3. **Mutation-test.** The author ran 21 mutations; six survived and were fixed. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
+3. **Mutation-test.** Round 1 ran 21 mutations with six survivors; round 2 ran 13 targeted at those gaps and the new atomicity code, killing 13/13. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
    ```
    sequence_no constant not computed   append without scope allowed
    bound store accepts any run         history ignores ordering
@@ -66,6 +82,8 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
    event sequence constant             events not persisted
    manifest never written              manifest hash ignores instructions
    manifest hash ignores tool profile  model version left null
+   manifest write not atomic with run  trace ordering removed
+   is_error dropped on write           principal_context not persisted
    messages tenant nullable            run_events tenant nullable
    messages sequence not unique        manifest primary key relaxed
    tenancy index removed               run never marked finished
@@ -73,6 +91,7 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
    ```
    Restore every mutated file and verify SHA-256, restoring in a `finally`.
 4. Attack the work on its own terms. Worth suspicion:
+   - **AC-6 atomicity, the round-1 defect.** Reproduce it against the current code: inject a failure into the manifest write and confirm no `runs` row survives. Then look for the same shape elsewhere.
    - **Concurrency.** The author measured this before submitting: 12 barrier-synchronised writers on one run committed 8 unique contiguous rows with 0 duplicates, and 4 writers raised `UniqueViolation`. So safety holds and availability does not, which is recorded as a known limitation for Phase 2 and pinned by a test. Verify that measurement independently, and judge whether deferring the availability half is the right call or whether FR-9 demands more.
    - **Connection per operation.** Every store method opens its own `psycopg.connect`. Correct but wasteful; does it create a correctness problem (no shared transaction across the run's writes — a run row can exist with no manifest if the process dies between them)?
    - **Is the vacuous-pass guard sound?** `test_the_database_is_actually_configured` is deliberately un-skippable so a database-less run fails rather than skipping to green. Does the fixture exempt exactly that one test and no other?

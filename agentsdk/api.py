@@ -226,6 +226,10 @@ class Runner:
         sessions = self._sessions
         if self._persistence is not None:
             sessions = self._persistence.session_store_for(scope)
+            # FR-11: exactly one manifest row, written at start -- in the same
+            # transaction as the run row, so no failure between the two can
+            # leave a run that nothing can explain. The primary key guarantees
+            # "at most one"; passing it here guarantees "at least one".
             self._persistence.runs.start_run(
                 scope,
                 agent_spec_id=spec.id,
@@ -234,12 +238,7 @@ class Runner:
                 principal_context=(
                     config.principal_context.to_json() if config.principal_context else None
                 ),
-            )
-            # FR-11: exactly one row, written at start. The primary key on
-            # run_id is what guarantees "exactly one", not this call site.
-            self._persistence.runs.write_manifest(
-                scope,
-                build_manifest(
+                manifest=build_manifest(
                     sdk_version=__version__,
                     agent_spec_id=spec.id,
                     instructions=spec.instructions,

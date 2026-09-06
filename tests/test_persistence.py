@@ -11,6 +11,7 @@ tearing down tables another developer may be looking at.
 
 import os
 import uuid
+from datetime import datetime, timezone
 
 import psycopg
 import pytest
@@ -51,6 +52,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DSN = normalise_database_url(os.environ.get("DATABASE_URL"))
+
+# Rows written before this session belong to earlier runs of the suite; the
+# whole-table AC-6 property is asserted only over what this session created.
+SUITE_STARTED_AT = datetime.now(timezone.utc)
 
 
 def test_the_database_is_actually_configured():
@@ -97,10 +102,30 @@ def scope():
     return RunScope(run_id=str(uuid.uuid4()), tenant_id="t-test", project_id="p-test")
 
 
+def a_manifest(**overrides):
+    fields = dict(
+        sdk_version="0.1.0",
+        agent_spec_id="spec-1",
+        instructions="be terse",
+        tool_profile=("echo",),
+        tool_spec_hashes=["abc"],
+        model_id="openai.gpt-4o-mini",
+        model_version="2024-07-18",
+        model_adapter_version="openai-compatible/1",
+        policy_version="AllowlistPermissionChecker",
+    )
+    return build_manifest(**{**fields, **overrides})
+
+
 @pytest.fixture
 def started(scope):
     PostgresRunStore(DSN).start_run(
-        scope, agent_spec_id="spec-1", max_turns=5, model_id="m", principal_context=None
+        scope,
+        agent_spec_id="spec-1",
+        max_turns=5,
+        model_id="m",
+        principal_context=None,
+        manifest=a_manifest(),
     )
     return scope
 
@@ -271,6 +296,104 @@ def test_provenance_survives_the_round_trip(started):
     assert restored.provenance.source_uri_or_hash == "https://example.test/page"
 
 
+def test_a_failed_tool_result_is_still_a_failure_after_a_round_trip(started):
+    """is_error defaults to False on read. A dropped flag turns a stored failure
+    into a stored success -- silently, and only visible after the fact."""
+    store = PostgresSessionStore(DSN).bind(started)
+    store.append(
+        started.run_id,
+        Message(
+            role=Role.TOOL,
+            tool_results=(
+                ToolResult(
+                    tool_call_id="c1",
+                    content="boom",
+                    provenance=ContentProvenance.internal_tool(),
+                    is_error=True,
+                ),
+            ),
+        ),
+    )
+    assert store.history(started.run_id)[0].tool_results[0].is_error is True
+
+
+def test_history_orders_by_sequence_no_not_by_insertion(started):
+    """ORDER BY was unpinned: an append-only table returns in insertion order
+    anyway, so removing it changed nothing any test could see. Write the rows
+    out of order to make the clause the only thing that can save the read."""
+    with psycopg.connect(DSN) as conn:
+        for sequence_no, content in ((3, "third"), (1, "first"), (2, "second")):
+            conn.execute(
+                "INSERT INTO messages (message_id, run_id, tenant_id, project_id,"
+                " sequence_no, role, content) VALUES (%s,%s,%s,%s,%s,'user',%s)",
+                (
+                    uuid.uuid4(),
+                    started.run_id,
+                    started.tenant_id,
+                    started.project_id,
+                    sequence_no,
+                    content,
+                ),
+            )
+    history = PostgresSessionStore(DSN).history(started.run_id)
+    assert [m.content for m in history] == ["first", "second", "third"]
+
+
+def test_the_trace_reconstructs_in_order_however_the_rows_were_written(started):
+    """AC-7 says the trace reconstructs IN ORDER, so the ordering has to be
+    what the reader guarantees rather than what the table happens to return.
+    Both ORDER BY clauses here survived the round-1 matrix for the same reason
+    history()'s did: nothing ever wrote a row out of order."""
+    with psycopg.connect(DSN) as conn:
+        for sequence_no, content in ((2, "second"), (3, "third"), (1, "first")):
+            conn.execute(
+                "INSERT INTO messages (message_id, run_id, tenant_id, project_id,"
+                " sequence_no, role, content) VALUES (%s,%s,%s,%s,%s,'user',%s)",
+                (uuid.uuid4(), started.run_id, started.tenant_id,
+                 started.project_id, sequence_no, content),
+            )
+        for sequence_no, event_type in ((3, "RunCompleted"), (1, "RunStarted"), (2, "ToolCalled")):
+            conn.execute(
+                "INSERT INTO run_events (event_id, schema_version, sequence_no, event_type,"
+                " tenant_id, project_id, run_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                (uuid.uuid4(), 1, sequence_no, event_type, started.tenant_id,
+                 started.project_id, started.run_id),
+            )
+
+    trace = PostgresTrace(DSN).reconstruct(started.run_id)
+    assert [m["sequence_no"] for m in trace["messages"]] == [1, 2, 3]
+    assert [m["content"] for m in trace["messages"]] == ["first", "second", "third"]
+    assert [e["sequence_no"] for e in trace["events"]] == [1, 2, 3]
+    assert [e["event_type"] for e in trace["events"]] == [
+        "RunStarted", "ToolCalled", "RunCompleted"
+    ]
+
+
+def test_event_payloads_survive_values_json_cannot_hold(started):
+    """_json_safe's str() fallback runs on arbitrary objects. It must neither
+    raise nor drop the entry -- an event that cannot be written is an event the
+    audit trail silently lacks."""
+
+    class Awkward:
+        def __str__(self):
+            return "awkward-value"
+
+    sink = PostgresEventStore(DSN, started.tenant_id, started.project_id, started.run_id)
+    sink.emit(
+        EventType.RUN_STARTED,
+        {
+            "object": Awkward(),
+            "nested": {"list": [Awkward(), Role.USER], "when": datetime.now(timezone.utc)},
+        },
+    )
+    payload = query(
+        "SELECT payload FROM run_events WHERE run_id=%s", (started.run_id,)
+    )[0][0]
+    assert payload["object"] == "awkward-value"
+    assert payload["nested"]["list"] == ["awkward-value", "user"]
+    assert isinstance(payload["nested"]["when"], str)
+
+
 def test_tool_calls_survive_the_round_trip(started):
     store = PostgresSessionStore(DSN).bind(started)
     store.append(
@@ -287,7 +410,12 @@ def test_tool_calls_survive_the_round_trip(started):
 def test_runs_are_isolated(started, scope):
     other = RunScope(run_id=str(uuid.uuid4()), tenant_id="t-test", project_id="p-test")
     PostgresRunStore(DSN).start_run(
-        other, agent_spec_id="s", max_turns=1, model_id=None, principal_context=None
+        other,
+        agent_spec_id="s",
+        max_turns=1,
+        model_id=None,
+        principal_context=None,
+        manifest=a_manifest(),
     )
     PostgresSessionStore(DSN).bind(started).append(
         started.run_id, Message(role=Role.USER, content="mine")
@@ -337,19 +465,7 @@ def test_event_sequence_numbers_are_unique_per_run(started):
 
 
 def test_exactly_one_manifest_per_run_with_every_field_populated(started):
-    manifest = build_manifest(
-        sdk_version="0.1.0",
-        agent_spec_id="spec-1",
-        instructions="be terse",
-        tool_profile=("echo",),
-        tool_spec_hashes=["abc"],
-        model_id="openai.gpt-4o-mini",
-        model_version="2024-07-18",
-        model_adapter_version="openai-compatible/1",
-        policy_version="AllowlistPermissionChecker",
-    )
-    PostgresRunStore(DSN).write_manifest(started, manifest)
-
+    """The fixture wrote this via start_run, so it is the real path under test."""
     rows = query(
         "SELECT sdk_version, agent_spec_hash, instructions_hash, model_id, model_version,"
         " model_adapter_version, tool_spec_hashes, policy_version, tenant_id, project_id"
@@ -358,21 +474,53 @@ def test_exactly_one_manifest_per_run_with_every_field_populated(started):
     )
     assert len(rows) == 1
     assert all(field is not None for field in rows[0])
+    # Not merely non-null: the hashes the caller passed actually reached the row.
+    assert rows[0][6] == ["abc"], "tool_spec_hashes stored something other than what was built"
+    assert rows[0][3] == "openai.gpt-4o-mini"
+    assert rows[0][7] == "AllowlistPermissionChecker"
 
 
 def test_a_second_manifest_for_the_same_run_is_rejected(started):
-    manifest = build_manifest(
-        sdk_version="0.1.0",
-        agent_spec_id="s",
-        instructions="i",
-        tool_profile=(),
-        tool_spec_hashes=[],
-        model_id=None,
-    )
-    store = PostgresRunStore(DSN)
-    store.write_manifest(started, manifest)
     with pytest.raises(psycopg.errors.UniqueViolation):
-        store.write_manifest(started, manifest)
+        PostgresRunStore(DSN).write_manifest(started, a_manifest())
+
+
+def test_a_run_row_is_never_written_without_its_manifest(scope):
+    """AC-6 atomicity, at the store.
+
+    The run row and the manifest were once written over two connections. A
+    failure in the window between them left a `runs` row nothing could explain:
+    no manifest, and no RunStarted event either, because that emit is sequenced
+    after both writes. Here the manifest insert fails at the database; the run
+    row must go with it.
+    """
+    unwritable = dict(a_manifest(), sdk_version=None)  # violates NOT NULL
+    with pytest.raises(psycopg.errors.NotNullViolation):
+        PostgresRunStore(DSN).start_run(
+            scope,
+            agent_spec_id="s",
+            max_turns=1,
+            model_id=None,
+            principal_context=None,
+            manifest=unwritable,
+        )
+    assert query("SELECT 1 FROM runs WHERE run_id=%s", (scope.run_id,)) == []
+    assert query("SELECT 1 FROM execution_manifests WHERE run_id=%s", (scope.run_id,)) == []
+
+
+def test_the_manifest_records_the_principal_context_run_settings(scope):
+    """principal_context is lean metadata (ADR-27) but must survive the write."""
+    PostgresRunStore(DSN).start_run(
+        scope,
+        agent_spec_id="s",
+        max_turns=7,
+        model_id="m",
+        principal_context={"principal_id": "u-42", "roles": ["reader"]},
+        manifest=a_manifest(),
+    )
+    stored = PostgresRunStore(DSN).get_run(scope.run_id)
+    assert stored["principal_context"] == {"principal_id": "u-42", "roles": ["reader"]}
+    assert stored["max_turns"] == 7
 
 
 def test_manifest_hashes_are_stable_and_sensitive():
@@ -392,6 +540,17 @@ def test_manifest_hashes_are_stable_and_sensitive():
     assert (
         build_manifest(**base)["agent_spec_hash"]
         != build_manifest(**{**base, "tool_profile": ("echo", "other")})["agent_spec_hash"]
+    )
+    # The spec hash must move when the instructions do: two runs with different
+    # instructions are different configurations, and the manifest exists to say
+    # so. Asserting only the tool_profile half left that half unpinned.
+    assert (
+        build_manifest(**base)["agent_spec_hash"]
+        != build_manifest(**{**base, "instructions": "be verbose"})["agent_spec_hash"]
+    )
+    assert (
+        build_manifest(**base)["agent_spec_hash"]
+        != build_manifest(**{**base, "agent_spec_id": "other"})["agent_spec_hash"]
     )
 
 
@@ -578,6 +737,55 @@ async def test_a_whole_run_persists_and_reconstructs():
         )
         assert rows, f"{table} has no row for this run"
         assert all(t == "t-e2e" and p == "p-e2e" for t, p in rows)
+
+
+async def test_a_transient_failure_at_start_leaves_nothing_unexplainable(monkeypatch):
+    """M5 round-1 review defect, reproduced through the public API.
+
+    An ordinary transient error between the run write and the manifest write
+    used to commit a `runs` row with no manifest (AC-6 wants exactly one) and
+    no RunStarted event, since that emit comes after both. The two writes now
+    share a transaction, so the run either exists explained or not at all.
+    """
+
+    def boom(conn, scope, manifest):
+        raise psycopg.OperationalError("transient blip between two writes")
+
+    monkeypatch.setattr(PostgresRunStore, "_insert_manifest", staticmethod(boom))
+
+    runner = Runner(
+        {"gw": ScriptedModel(text("hi"))},
+        tools=[echo_tool()],
+        persistence=Persistence.postgres(DSN),
+    )
+    result = await runner.run(
+        AgentSpec(id="s", instructions="i", preferred_model="gw:m", tool_profile=("echo",)),
+        "go",
+        RunConfig(tenant_id="t-atomic", project_id="p-atomic"),
+    )
+
+    # The M4 boundary still holds: a psycopg error comes back as a failed run.
+    assert result.status is RunStatus.FAILED
+    # And it leaves no half-written run behind.
+    assert query("SELECT 1 FROM runs WHERE run_id=%s", (result.run_id,)) == []
+    assert query("SELECT 1 FROM execution_manifests WHERE run_id=%s", (result.run_id,)) == []
+
+
+async def test_every_run_this_suite_started_has_exactly_one_manifest(started):
+    """AC-6 as a standing property across runs, not a single one.
+
+    A run row with no manifest is exactly the state the round-1 defect
+    produced, so assert none exists rather than checking one run at a time.
+    Scoped to this session's runs: rows written before the fix are still in the
+    development database, and quietly deleting another developer's data to make
+    a test pass would be the wrong way to earn a green.
+    """
+    orphans = query(
+        "SELECT r.run_id FROM runs r LEFT JOIN execution_manifests m USING (run_id)"
+        " WHERE m.run_id IS NULL AND r.started_at >= %s LIMIT 5",
+        (SUITE_STARTED_AT,),
+    )
+    assert orphans == [], f"runs started with no execution manifest: {orphans}"
 
 
 async def test_a_failed_run_is_recorded_as_failed():
