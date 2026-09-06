@@ -40,7 +40,7 @@ from .primitives import (
     TrustZone,
 )
 
-__version__ = "0.1.0.dev0"
+from .version import __version__
 
 __all__ = [
     # The public API surface (NFR-5). Everything below it is exported for

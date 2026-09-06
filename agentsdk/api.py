@@ -20,10 +20,34 @@ from .executor import ToolExecutor
 from .hooks import RuntimeHook
 from .identity import PrincipalContext
 from .loop import AgentLoop
+from .manifest import build_manifest
 from .model import ModelClient, Usage
 from .permissions import AllowlistPermissionChecker, PermissionChecker
+from .persistence import Persistence
+from .postgres import RunScope
+from .registry import ModelRegistry, default_registry
 from .session import InMemorySessionStore, SessionStore
 from .tools import Tool, ToolRegistry
+from .version import __version__
+
+
+def _usage_from_events(events: tuple[RunEvent, ...]) -> Usage:
+    """Rebuild total usage from the ModelCalled events.
+
+    Used when the total boundary catches a non-SDK exception and never sees the
+    loop's accumulator. The tokens were spent either way; reporting zero would
+    quietly under-report cost on exactly the runs someone is investigating.
+    """
+    total = Usage()
+    for event in events:
+        raw = event.payload.get("usage") if isinstance(event.payload, dict) else None
+        if isinstance(raw, dict):
+            total = total + Usage(
+                prompt_tokens=int(raw.get("prompt_tokens", 0) or 0),
+                completion_tokens=int(raw.get("completion_tokens", 0) or 0),
+                total_tokens=int(raw.get("total_tokens", 0) or 0),
+            )
+    return total
 
 
 class RunStatus(str, Enum):
@@ -108,9 +132,15 @@ class Runner:
         tool_registry: ToolRegistry | None = None,
         hook: RuntimeHook | None = None,
         assembler: ContextAssembler | None = None,
+        persistence: Persistence | None = None,
+        model_registry: ModelRegistry | None = None,
     ) -> None:
         if not model_clients:
             raise ValueError("Runner requires at least one model client")
+        # Optional: with no persistence the Runner behaves exactly as before,
+        # entirely in memory. Phase 0 must stay runnable without a database.
+        self._persistence = persistence
+        self._models = model_registry if model_registry is not None else default_registry()
         self._clients = dict(model_clients)
         self._sessions = session_store if session_store is not None else InMemorySessionStore()
         # `or` would be wrong here: ToolRegistry defines __len__, so an EMPTY
@@ -140,21 +170,39 @@ class Runner:
         BaseException passes through: cancellation is control flow, not failure.
         """
         run_id = str(uuid.uuid4())
-        events: EventSink = InMemoryEventSink(config.tenant_id, config.project_id, run_id)
+        scope = RunScope(run_id=run_id, tenant_id=config.tenant_id, project_id=config.project_id)
+        events: EventSink = (
+            self._persistence.event_sink_for(scope)
+            if self._persistence is not None
+            else InMemoryEventSink(config.tenant_id, config.project_id, run_id)
+        )
         # Deliberately OUTSIDE the guard below -- see the docstring.
         client_key, model_id = self._resolve_model(spec, config)
         try:
-            return await self._run(spec, task, config, run_id, events, client_key, model_id)
+            return await self._run(spec, task, config, scope, events, client_key, model_id)
         except Exception as exc:  # noqa: BLE001
             reason = describe_exception(exc)
             self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason})
+            self._safe_finish(run_id, RunStatus.FAILED)
             return RunResult(
                 status=RunStatus.FAILED,
                 output=None,
                 events=events.events(),
+                # Reconstructed from the ModelCalled events rather than reported
+                # as zero: the tokens were spent, and a caller reconciling cost
+                # should not have to know that a failed run under-reports.
+                usage=_usage_from_events(events.events()),
                 run_id=run_id,
                 error=reason,
             )
+
+    def _safe_finish(self, run_id: str, status: RunStatus) -> None:
+        if self._persistence is None:
+            return
+        try:
+            self._persistence.runs.finish_run(run_id, status.value)
+        except Exception:  # noqa: BLE001 - persistence must not mask the real failure
+            pass
 
     @staticmethod
     def _safe_emit(events: EventSink, event_type: EventType, payload: dict) -> None:
@@ -169,11 +217,39 @@ class Runner:
         spec: AgentSpec,
         task: str,
         config: RunConfig,
-        run_id: str,
+        scope: RunScope,
         events: EventSink,
         client_key: str,
         model_id: str | None,
     ) -> RunResult:
+        run_id = scope.run_id
+        sessions = self._sessions
+        if self._persistence is not None:
+            sessions = self._persistence.session_store_for(scope)
+            self._persistence.runs.start_run(
+                scope,
+                agent_spec_id=spec.id,
+                max_turns=config.max_turns,
+                model_id=model_id,
+                principal_context=(
+                    config.principal_context.to_json() if config.principal_context else None
+                ),
+            )
+            # FR-11: exactly one row, written at start. The primary key on
+            # run_id is what guarantees "exactly one", not this call site.
+            self._persistence.runs.write_manifest(
+                scope,
+                build_manifest(
+                    sdk_version=__version__,
+                    agent_spec_id=spec.id,
+                    instructions=spec.instructions,
+                    tool_profile=spec.tool_profile,
+                    tool_spec_hashes=[s.schema_hash() for s in self._registry.specs()],
+                    model_id=model_id or "unspecified",
+                    **self._model_versions(model_id, client_key),
+                    policy_version=type(spec.checker()).__name__,
+                ),
+            )
 
         events.emit(
             EventType.RUN_STARTED,
@@ -197,7 +273,7 @@ class Runner:
         )
         loop = AgentLoop(
             model_client=self._clients[client_key],
-            session_store=self._sessions,
+            session_store=sessions,
             tool_executor=executor,
             tool_registry=self._registry,
             event_sink=events,
@@ -225,6 +301,8 @@ class Runner:
             EventType.RUN_COMPLETED if status is RunStatus.COMPLETED else EventType.RUN_FAILED,
             {"status": status.value, "turns": outcome.turns, "reason": error},
         )
+        if self._persistence is not None:
+            self._persistence.runs.finish_run(run_id, status.value)
         return RunResult(
             status=status,
             output=outcome.output,
@@ -233,6 +311,22 @@ class Runner:
             run_id=run_id,
             error=error,
         )
+
+    def _model_versions(self, model_id: str | None, client_key: str) -> dict[str, str]:
+        """Version fields for the manifest (FR-11, AC-6).
+
+        A model absent from the registry is reported as "unregistered" rather
+        than left null: the manifest's job is to say exactly what produced a
+        run, and "we did not know" is a more useful answer than an empty
+        column that could equally mean the writer forgot.
+        """
+        entry = self._models.resolve(model_id) if model_id else None
+        return {
+            "model_version": entry.model_version if entry else "unregistered",
+            "model_adapter_version": (
+                entry.adapter_version if entry else type(self._clients[client_key]).__name__
+            ),
+        }
 
     def _resolve_model(self, spec: AgentSpec, config: RunConfig) -> tuple[str, str | None]:
         """`"<client_key>:<model_id>"`, or a bare model id when unambiguous."""

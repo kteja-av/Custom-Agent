@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-06T13:11:17.888Z"
+    "updated_at": "2026-09-06T13:46:44.749Z"
   },
   "policy": {
     "ponytail": "full",
@@ -343,6 +343,14 @@
       "source": "M4 review round 2, 2026-09-06",
       "tags": [],
       "recorded_at": "2026-09-06T13:11:16.562Z"
+    },
+    {
+      "id": "KNOWLEDGE-af3c98a2",
+      "title": "Concurrent appends are safe but not available; Phase 2 needs a retry or lock",
+      "text": "Measured, not assumed. PostgresSessionStore.append uses INSERT ... SELECT COALESCE(MAX(sequence_no),0)+1 inside one transaction. Under READ COMMITTED two concurrent transactions can read the same MAX. Probed with 12 barrier-synchronised writers on one run: 8 rows committed with unique contiguous sequence numbers 1..8, 0 duplicates, and 4 writers raised UniqueViolation. So SAFETY holds absolutely (no duplicate or reordered history can commit, guaranteed by UNIQUE (run_id, sequence_no)) while AVAILABILITY does not (a losing writer errors rather than serialising). Phase 0 has exactly one writer per run so this is unreachable today. Phase 2's concurrent subagents will need a retry-on-UniqueViolation loop or a per-run advisory lock; the safety property is pinned by a test so a future fix cannot regress it.",
+      "source": "concurrency probe, 12 threads, 2026-09-06",
+      "tags": [],
+      "recorded_at": "2026-09-06T13:46:20.939Z"
     }
   ],
   "tasks": [
@@ -573,8 +581,13 @@
           "id": "unit",
           "command": ".venv\\Scripts\\python.exe -m pytest tests/test_persistence.py -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M5-postgres-unit.json",
+            "source_hash": "d4056eb62c760c7e942d74dbfcf394e6e0da194ccaf1830a6e744b61caafca57",
+            "hash": "35c55d777d2b45714f0f9b8738789de33b03985befa5ab890069337398004d17",
+            "observed_at": "2026-09-06T13:46:20.586Z"
+          }
         },
         {
           "id": "independent-review",
@@ -593,7 +606,7 @@
         "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-06T13:11:05.380Z"
+      "updated_at": "2026-09-06T13:46:20.774Z"
     },
     {
       "id": "M6-golden-eval",
@@ -634,9 +647,11 @@
       "blocker": null,
       "notes": [],
       "failures": [],
-      "limitations": [],
+      "limitations": [
+        "Carried from M5: concurrent appends to one run are safe but not available -- a losing writer raises UniqueViolation rather than serialising. Unreachable in Phase 0 (single writer per run); Phase 2 needs a retry loop or per-run advisory lock."
+      ],
       "created_at": "2026-09-05T18:10:01.160Z",
-      "updated_at": "2026-09-05T18:10:01.161Z"
+      "updated_at": "2026-09-06T13:46:21.078Z"
     }
   ],
   "learning_proposals": [],
@@ -753,11 +768,11 @@
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-06T13:11:17.826Z",
+    "at": "2026-09-06T13:46:44.643Z",
     "revision": {
-      "commit": "977ce2e62f579820ff54c8f2c0715a7b05a1086c",
+      "commit": "211f766e9f5955775d3d412018471e71142c82aa",
       "dirty": true,
-      "source_hash": "f42e54ec6df53740e168636e6af6ea377bdf1ae304943d418a8ef5038a54231f"
+      "source_hash": "d4056eb62c760c7e942d74dbfcf394e6e0da194ccaf1830a6e744b61caafca57"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."

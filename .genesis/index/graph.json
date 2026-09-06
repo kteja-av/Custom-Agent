@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "agent-sdk",
-  "revision": "977ce2e62f579820ff54c8f2c0715a7b05a1086c",
-  "sourceHash": "34d4bb7eb3ee673e4a8daa9176135dd728114a67eaf3b9f46608f497fa35bba2",
+  "revision": "211f766e9f5955775d3d412018471e71142c82aa",
+  "sourceHash": "09c504a3e660ee8c570b0092a58f63af43388361a942537158701fa180f8db3f",
   "provenance": {
     "tool": "genesis-graphizer",
     "method": "static-analysis",
@@ -20,7 +20,7 @@
         "extractor": "filesystem",
         "source": "agentsdk/__init__.py"
       },
-      "contentHash": "f563b1c0a55c5da80ce54f571a10924781ab644536b3989e9866f6326eb20dde"
+      "contentHash": "c2481ab7344c750ee2e7683ca90ff7b0603eb74fdea3a4a36edf38a953e85cad"
     },
     {
       "id": "file:agentsdk/api.py",
@@ -33,7 +33,7 @@
         "extractor": "filesystem",
         "source": "agentsdk/api.py"
       },
-      "contentHash": "a4db5fef67bc9ab5694e8f10831e28ce0381a36116753128c6e61541247de23d"
+      "contentHash": "fdb3ffd1cd689154fd08e2ebded8007cba3f0b093fe085ae93fa1a6150f2687a"
     },
     {
       "id": "file:agentsdk/config.py",
@@ -140,6 +140,19 @@
       "contentHash": "5fc3416d756bd32e47021d4cda124ec4503bb9c5d6344e921ee259471ac3c1a1"
     },
     {
+      "id": "file:agentsdk/manifest.py",
+      "type": "file",
+      "label": "agentsdk/manifest.py",
+      "path": "agentsdk/manifest.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "36ed707f8da0dd9ba3b8b6fb3359b98fc2dbd77035a84e18126195b1b7fab1f2"
+    },
+    {
       "id": "file:agentsdk/model.py",
       "type": "file",
       "label": "agentsdk/model.py",
@@ -177,6 +190,32 @@
         "source": "agentsdk/permissions.py"
       },
       "contentHash": "f9c36ad252d1c5126b1988e76ea63c3d3760460aa34c82c2a144e12e9b7fc831"
+    },
+    {
+      "id": "file:agentsdk/persistence.py",
+      "type": "file",
+      "label": "agentsdk/persistence.py",
+      "path": "agentsdk/persistence.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "57e4ac60dc54380638c29bce889f567237e6be32cd7fdb5c9b2798cd9141f49b"
+    },
+    {
+      "id": "file:agentsdk/postgres.py",
+      "type": "file",
+      "label": "agentsdk/postgres.py",
+      "path": "agentsdk/postgres.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "c560a354c2b7f5a3aa8ed1f25a4fafd0d8f473e88629e1b67c1d7b352c7cfc31"
     },
     {
       "id": "file:agentsdk/primitives.py",
@@ -257,6 +296,19 @@
       "contentHash": "65dbc21f1c9c34fb45c27a691ad9f662ec933fcde5c5a16c3e2bb27f5e22fca1"
     },
     {
+      "id": "file:agentsdk/version.py",
+      "type": "file",
+      "label": "agentsdk/version.py",
+      "path": "agentsdk/version.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/version.py"
+      },
+      "contentHash": "f8a26bb5bf9bb8f3e67c316bc7e494f1db7279574e61f795ef9175ea3006ee56"
+    },
+    {
       "id": "file:conftest.py",
       "type": "file",
       "label": "conftest.py",
@@ -296,6 +348,19 @@
       "contentHash": "ec12bea99a8b5fe554bf530196ce020c9bcace7c1cddee00b1c07660dc66ca46"
     },
     {
+      "id": "file:tests/test_persistence.py",
+      "type": "file",
+      "label": "tests/test_persistence.py",
+      "path": "tests/test_persistence.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "427aac12ce7aae36bf1e875c02e38b152a15b34efd1b9144f15a1662b6453506"
+    },
+    {
       "id": "file:tests/test_primitives.py",
       "type": "file",
       "label": "tests/test_primitives.py",
@@ -329,7 +394,7 @@
       "confidence": 1,
       "provenance": {
         "extractor": "import",
-        "source": "agentsdk/config.py"
+        "source": "tests/test_persistence.py"
       },
       "contentHash": "83087500ed7773b06baa42b380cfcff35b26a4ac5f2f050bc1e800923da27116"
     },
@@ -356,6 +421,30 @@
         "source": "agentsdk/executor.py"
       },
       "contentHash": "84835b7d28a701319856dbc799b2087ee70db49ad519290c163632f60adca87b"
+    },
+    {
+      "id": "package:pypi:psycopg",
+      "type": "package",
+      "label": "psycopg",
+      "ecosystem": "pypi",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "import",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "405511f9ef7ea9ea34df49077eb11296b70ee5e5f1819b269891513207052f85"
+    },
+    {
+      "id": "package:pypi:psycopg.types.json",
+      "type": "package",
+      "label": "psycopg.types.json",
+      "ecosystem": "pypi",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "import",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "64f7366cb0923c11b0e4ae3f802c347c45d6e173812e305533d86eff921e9854"
     },
     {
       "id": "package:pypi:pytest",
@@ -437,7 +526,7 @@
       "confidence": 1,
       "provenance": {
         "extractor": "standard-library",
-        "source": "agentsdk/outcomes.py"
+        "source": "agentsdk/postgres.py"
       },
       "contentHash": "4686554b9c3e1fb149a0e7e021505618c951f789cfec438f14e8947c05848d41"
     },
@@ -509,7 +598,7 @@
       "confidence": 1,
       "provenance": {
         "extractor": "standard-library",
-        "source": "agentsdk/config.py"
+        "source": "tests/test_persistence.py"
       },
       "contentHash": "3806d26c0342f905b28f23c7de3c2705833ec1628f03e04e4b658f3914ba2b4c"
     },
@@ -550,6 +639,18 @@
       "contentHash": "7e94b3e53ed926a0862ab420950da1727eead16cbd6a34908b9d475846791a02"
     },
     {
+      "id": "runtime:python:threading",
+      "type": "runtime",
+      "label": "threading",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "standard-library",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "215ed8c5ba8f40533d2453e1761827f0c56f197e01be05dd16fd0c0a10c2449f"
+    },
+    {
       "id": "runtime:python:typing",
       "type": "runtime",
       "label": "typing",
@@ -581,7 +682,7 @@
       "confidence": 1,
       "provenance": {
         "extractor": "standard-library",
-        "source": "agentsdk/outcomes.py"
+        "source": "tests/test_persistence.py"
       },
       "contentHash": "6669c9e7a67c8b11dbd583e6bafa963dd54a301236cadf75f7c404980ee01683"
     },
@@ -591,7 +692,7 @@
       "name": "AgentSpec",
       "qualifiedName": "AgentSpec",
       "kind": "class",
-      "line": 36,
+      "line": 60,
       "label": "AgentSpec",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -607,7 +708,7 @@
       "name": "RunConfig",
       "qualifiedName": "RunConfig",
       "kind": "class",
-      "line": 71,
+      "line": 95,
       "label": "RunConfig",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -623,7 +724,7 @@
       "name": "Runner",
       "qualifiedName": "Runner",
       "kind": "class",
-      "line": 101,
+      "line": 125,
       "label": "Runner",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -639,7 +740,7 @@
       "name": "RunResult",
       "qualifiedName": "RunResult",
       "kind": "class",
-      "line": 86,
+      "line": 110,
       "label": "RunResult",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -655,7 +756,7 @@
       "name": "RunStatus",
       "qualifiedName": "RunStatus",
       "kind": "class",
-      "line": 29,
+      "line": 53,
       "label": "RunStatus",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -666,12 +767,28 @@
       "contentHash": "d44a4ff5822bd72ecc0e8f81c16e4927ae6a902ab1102ebd51a26c9922b321d3"
     },
     {
+      "id": "symbol:agentsdk/api.py#function:_usage_from_events",
+      "type": "symbol",
+      "name": "_usage_from_events",
+      "qualifiedName": "_usage_from_events",
+      "kind": "function",
+      "line": 34,
+      "label": "_usage_from_events",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "c2f4901740054db695c4e34ee24b70d80c95194862493a9c6bf86659e79f4701"
+    },
+    {
       "id": "symbol:agentsdk/api.py#function:AgentSpec.__post_init__",
       "type": "symbol",
       "name": "__post_init__",
       "qualifiedName": "AgentSpec.__post_init__",
       "kind": "function",
-      "line": 55,
+      "line": 79,
       "label": "AgentSpec.__post_init__",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -687,7 +804,7 @@
       "name": "checker",
       "qualifiedName": "AgentSpec.checker",
       "kind": "function",
-      "line": 58,
+      "line": 82,
       "label": "AgentSpec.checker",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -703,7 +820,7 @@
       "name": "__post_init__",
       "qualifiedName": "RunConfig.__post_init__",
       "kind": "function",
-      "line": 78,
+      "line": 102,
       "label": "RunConfig.__post_init__",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -719,7 +836,7 @@
       "name": "__init__",
       "qualifiedName": "Runner.__init__",
       "kind": "function",
-      "line": 102,
+      "line": 126,
       "label": "Runner.__init__",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -730,12 +847,28 @@
       "contentHash": "079f2cd7808dbb00c7c5a4236b0777096db616492f4d40dc941dc4ef8a86b0d3"
     },
     {
+      "id": "symbol:agentsdk/api.py#function:Runner._model_versions",
+      "type": "symbol",
+      "name": "_model_versions",
+      "qualifiedName": "Runner._model_versions",
+      "kind": "function",
+      "line": 315,
+      "label": "Runner._model_versions",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "8abd21691720eff5ac9a0637982b7d471a827989121ad6a09cc1a3ccb30036c3"
+    },
+    {
       "id": "symbol:agentsdk/api.py#function:Runner._resolve_model",
       "type": "symbol",
       "name": "_resolve_model",
       "qualifiedName": "Runner._resolve_model",
       "kind": "function",
-      "line": 237,
+      "line": 331,
       "label": "Runner._resolve_model",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -751,7 +884,7 @@
       "name": "_run",
       "qualifiedName": "Runner._run",
       "kind": "function",
-      "line": 167,
+      "line": 215,
       "label": "Runner._run",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -767,7 +900,7 @@
       "name": "_safe_emit",
       "qualifiedName": "Runner._safe_emit",
       "kind": "function",
-      "line": 160,
+      "line": 208,
       "label": "Runner._safe_emit",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -778,12 +911,28 @@
       "contentHash": "45ea196c6ef8aa03748b751f11cd89f38f47d5770c20ddb41ec9a193a0e5e46f"
     },
     {
+      "id": "symbol:agentsdk/api.py#function:Runner._safe_finish",
+      "type": "symbol",
+      "name": "_safe_finish",
+      "qualifiedName": "Runner._safe_finish",
+      "kind": "function",
+      "line": 199,
+      "label": "Runner._safe_finish",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "3eac54a4f1a66f8b16a5f74fd04946fa11c618210301967f89fea26371fec9f4"
+    },
+    {
       "id": "symbol:agentsdk/api.py#function:Runner.run",
       "type": "symbol",
       "name": "run",
       "qualifiedName": "Runner.run",
       "kind": "function",
-      "line": 125,
+      "line": 155,
       "label": "Runner.run",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -799,7 +948,7 @@
       "name": "succeeded",
       "qualifiedName": "RunResult.succeeded",
       "kind": "function",
-      "line": 97,
+      "line": 121,
       "label": "RunResult.succeeded",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -1994,6 +2143,38 @@
       "contentHash": "1a64d368f8681ac319d9202fa25c1198ec8e6165e63ff16f484205287b829b2c"
     },
     {
+      "id": "symbol:agentsdk/manifest.py#function:_sha256",
+      "type": "symbol",
+      "name": "_sha256",
+      "qualifiedName": "_sha256",
+      "kind": "function",
+      "line": 19,
+      "label": "_sha256",
+      "path": "agentsdk/manifest.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "09ff5cecfebbd54edf483a4060077dda3d6c4f73ae97120319ec0ff237a78483"
+    },
+    {
+      "id": "symbol:agentsdk/manifest.py#function:build_manifest",
+      "type": "symbol",
+      "name": "build_manifest",
+      "qualifiedName": "build_manifest",
+      "kind": "function",
+      "line": 23,
+      "label": "build_manifest",
+      "path": "agentsdk/manifest.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "14439bdd30da7e3c07cb5cad70c9844ec247b19175ab58e4d185ccad6fbdca41"
+    },
+    {
       "id": "symbol:agentsdk/model.py#class:ModelClient",
       "type": "symbol",
       "name": "ModelClient",
@@ -2456,6 +2637,534 @@
         "source": "agentsdk/permissions.py"
       },
       "contentHash": "3cb924f0e16b2141f5ae2e78cd26417a072a8d93a8f99864b40a100ff0803105"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#class:Persistence",
+      "type": "symbol",
+      "name": "Persistence",
+      "qualifiedName": "Persistence",
+      "kind": "class",
+      "line": 36,
+      "label": "Persistence",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "ec3a0cd4417c98f1c5b65211c9ed8bace072ec6e86146e11dd9c6272278eff9a"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#class:RunRecorder",
+      "type": "symbol",
+      "name": "RunRecorder",
+      "qualifiedName": "RunRecorder",
+      "kind": "class",
+      "line": 25,
+      "label": "RunRecorder",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "612654f0b6831fb4215bb5e8ab2f313249f1338191d3fbf45f8b95994b6aaef1"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#function:Persistence.event_sink_for",
+      "type": "symbol",
+      "name": "event_sink_for",
+      "qualifiedName": "Persistence.event_sink_for",
+      "kind": "function",
+      "line": 51,
+      "label": "Persistence.event_sink_for",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "2859baf32d6d9f89c0a82c915f1233cca472c5044d28e08b827df23be5fd97d6"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#function:Persistence.postgres",
+      "type": "symbol",
+      "name": "postgres",
+      "qualifiedName": "Persistence.postgres",
+      "kind": "function",
+      "line": 42,
+      "label": "Persistence.postgres",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "86e8e2de7d615f854110b8f51cda3c757a9a52aa3ea04bacf6ce6e62d69dfac3"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#function:Persistence.session_store_for",
+      "type": "symbol",
+      "name": "session_store_for",
+      "qualifiedName": "Persistence.session_store_for",
+      "kind": "function",
+      "line": 47,
+      "label": "Persistence.session_store_for",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "7d7738b73184737cf6295eb6f70fb2cc2ba2e7e141a80a9062b8388928022cc6"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#function:RunRecorder.finish_run",
+      "type": "symbol",
+      "name": "finish_run",
+      "qualifiedName": "RunRecorder.finish_run",
+      "kind": "function",
+      "line": 30,
+      "label": "RunRecorder.finish_run",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "7dfca5b030a9e86f4f0b4268924392d274f0ed87711fa9d1c92ac00618da109c"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#function:RunRecorder.start_run",
+      "type": "symbol",
+      "name": "start_run",
+      "qualifiedName": "RunRecorder.start_run",
+      "kind": "function",
+      "line": 28,
+      "label": "RunRecorder.start_run",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "c4dd0c40108b789aa0e1638bfe92b79f1f2785b2807e7d0226b03d2aa69d7bf3"
+    },
+    {
+      "id": "symbol:agentsdk/persistence.py#function:RunRecorder.write_manifest",
+      "type": "symbol",
+      "name": "write_manifest",
+      "qualifiedName": "RunRecorder.write_manifest",
+      "kind": "function",
+      "line": 32,
+      "label": "RunRecorder.write_manifest",
+      "path": "agentsdk/persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "ba135ff21dc652cbcc9a75d1beacac0472e7c35b8d9c6a7e6537e2219137d2b0"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#class:PostgresEventStore",
+      "type": "symbol",
+      "name": "PostgresEventStore",
+      "qualifiedName": "PostgresEventStore",
+      "kind": "class",
+      "line": 195,
+      "label": "PostgresEventStore",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "652c3bf8383eecc6cfe5c9e57b2750252fa4e4321c41ccd5abb5e1035fbc4760"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#class:PostgresRunStore",
+      "type": "symbol",
+      "name": "PostgresRunStore",
+      "qualifiedName": "PostgresRunStore",
+      "kind": "class",
+      "line": 267,
+      "label": "PostgresRunStore",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "827cc30203512e93bf859f35bc8ec096c9cb2a5943b6e86d0676f2d2c2ac9986"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#class:PostgresSessionStore",
+      "type": "symbol",
+      "name": "PostgresSessionStore",
+      "qualifiedName": "PostgresSessionStore",
+      "kind": "class",
+      "line": 133,
+      "label": "PostgresSessionStore",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "78b8cc6f7234baccd369005bb69ddb50d580552c40da3840f870332aa05d3ddf"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#class:PostgresTrace",
+      "type": "symbol",
+      "name": "PostgresTrace",
+      "qualifiedName": "PostgresTrace",
+      "kind": "class",
+      "line": 353,
+      "label": "PostgresTrace",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "5569689b501964446eaee110b4cbeaa8ece7456ac150af878486bd27e4ef9075"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#class:RunScope",
+      "type": "symbol",
+      "name": "RunScope",
+      "qualifiedName": "RunScope",
+      "kind": "class",
+      "line": 125,
+      "label": "RunScope",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "0bbdce388b3aed16e9170c1a6e337cef70d1ab5b881be8dc58512a3044196ab6"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:_json_safe",
+      "type": "symbol",
+      "name": "_json_safe",
+      "qualifiedName": "_json_safe",
+      "kind": "function",
+      "line": 252,
+      "label": "_json_safe",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "ff8ae58e1d02226ca18cb866f7a4d300d67a525178826def1ed35d204848752d"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:_message_from_row",
+      "type": "symbol",
+      "name": "_message_from_row",
+      "qualifiedName": "_message_from_row",
+      "kind": "function",
+      "line": 95,
+      "label": "_message_from_row",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "b21aa2f5d8e22d9445b44a68bc3bfd2affffb0bb1e0c4e2105a89ab7c7e7c036"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:_message_to_columns",
+      "type": "symbol",
+      "name": "_message_to_columns",
+      "qualifiedName": "_message_to_columns",
+      "kind": "function",
+      "line": 72,
+      "label": "_message_to_columns",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "4a193f096b67b350026c93878de3301d2a57bec40270e5d66cdcfe3643887035"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:_provenance_from_json",
+      "type": "symbol",
+      "name": "_provenance_from_json",
+      "qualifiedName": "_provenance_from_json",
+      "kind": "function",
+      "line": 62,
+      "label": "_provenance_from_json",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "a3d125088cbfe7729b5299fc63f61c32af761aaae57ab984bbfb8175f2ee4a61"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:_provenance_to_json",
+      "type": "symbol",
+      "name": "_provenance_to_json",
+      "qualifiedName": "_provenance_to_json",
+      "kind": "function",
+      "line": 52,
+      "label": "_provenance_to_json",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "255171cafaa5f0b0a6495228549e5485ec011b31e756d38f9738093e6d07498c"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:apply_schema",
+      "type": "symbol",
+      "name": "apply_schema",
+      "qualifiedName": "apply_schema",
+      "kind": "function",
+      "line": 40,
+      "label": "apply_schema",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "7e062ac0449c852944b1fab163f7962afee3088c919e9ebdf6a55861334d44f6"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresEventStore.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "PostgresEventStore.__init__",
+      "kind": "function",
+      "line": 198,
+      "label": "PostgresEventStore.__init__",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "be66ff6ffab68bd391b791b0178e42900241b5d593cb3855908d3b0fc4c8d9f3"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresEventStore.emit",
+      "type": "symbol",
+      "name": "emit",
+      "qualifiedName": "PostgresEventStore.emit",
+      "kind": "function",
+      "line": 205,
+      "label": "PostgresEventStore.emit",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "d59a43e4df36a0c26af939127f09647e2a28830489ec7b40d63cc0abb28ceb6b"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresEventStore.events",
+      "type": "symbol",
+      "name": "events",
+      "qualifiedName": "PostgresEventStore.events",
+      "kind": "function",
+      "line": 248,
+      "label": "PostgresEventStore.events",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "74d3c14c7136e78f8e8cdc771d2ef83a538b531d6aa30afd2f736ce8399d34ec"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresRunStore.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "PostgresRunStore.__init__",
+      "kind": "function",
+      "line": 270,
+      "label": "PostgresRunStore.__init__",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "20006287599c4b4d643c79b89edd8633e596170034876a05b29bee80b23f5122"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresRunStore.finish_run",
+      "type": "symbol",
+      "name": "finish_run",
+      "qualifiedName": "PostgresRunStore.finish_run",
+      "kind": "function",
+      "line": 301,
+      "label": "PostgresRunStore.finish_run",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "0edf693e015606c3e2d0e4b15d5798d0a0b24ecc8082d69214f409776232c86a"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresRunStore.get_run",
+      "type": "symbol",
+      "name": "get_run",
+      "qualifiedName": "PostgresRunStore.get_run",
+      "kind": "function",
+      "line": 334,
+      "label": "PostgresRunStore.get_run",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "62a8bd73182b92eeb70c9a38181b1af5567ee6bd357aec4c43ba9ffe3a0de574"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresRunStore.start_run",
+      "type": "symbol",
+      "name": "start_run",
+      "qualifiedName": "PostgresRunStore.start_run",
+      "kind": "function",
+      "line": 273,
+      "label": "PostgresRunStore.start_run",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "6c47410ff87cefa256476ab9df40b63d58193efcd05280981abbad3ee6df0d1a"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresRunStore.write_manifest",
+      "type": "symbol",
+      "name": "write_manifest",
+      "qualifiedName": "PostgresRunStore.write_manifest",
+      "kind": "function",
+      "line": 308,
+      "label": "PostgresRunStore.write_manifest",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "9eb43142376abe0570717d422ed95fef2633ac02f505ae826bb2fd8663cbe545"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "PostgresSessionStore.__init__",
+      "kind": "function",
+      "line": 136,
+      "label": "PostgresSessionStore.__init__",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "c227033807e69956c5b9f6ea0f9d529af57804db5536d858379f931b86e9847b"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.append",
+      "type": "symbol",
+      "name": "append",
+      "qualifiedName": "PostgresSessionStore.append",
+      "kind": "function",
+      "line": 144,
+      "label": "PostgresSessionStore.append",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "04786feca36786d94962f5c4c922556923b78860c8c5ad22f43b0b9845f5e28a"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.bind",
+      "type": "symbol",
+      "name": "bind",
+      "qualifiedName": "PostgresSessionStore.bind",
+      "kind": "function",
+      "line": 140,
+      "label": "PostgresSessionStore.bind",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "19682a0eec5d1fc677f3927cd47af10a96a5214cbb8c5ff8fa407afb2017eb14"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.history",
+      "type": "symbol",
+      "name": "history",
+      "qualifiedName": "PostgresSessionStore.history",
+      "kind": "function",
+      "line": 183,
+      "label": "PostgresSessionStore.history",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "c24a9783231f274f32adb42cc8973c303f96d8e6b01f999a75e077563256579b"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresTrace.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "PostgresTrace.__init__",
+      "kind": "function",
+      "line": 360,
+      "label": "PostgresTrace.__init__",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "1fc3cdab3f71516bf7cbb91f3e6269d457fe48378658c32a0e48b69b2e378c47"
+    },
+    {
+      "id": "symbol:agentsdk/postgres.py#function:PostgresTrace.reconstruct",
+      "type": "symbol",
+      "name": "reconstruct",
+      "qualifiedName": "PostgresTrace.reconstruct",
+      "kind": "function",
+      "line": 364,
+      "label": "PostgresTrace.reconstruct",
+      "path": "agentsdk/postgres.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "1ea0bbf3c3d6ee4b6618b61b592a5e766fc6c2fec771ae4fcbcd64beb90b9494"
     },
     {
       "id": "symbol:agentsdk/primitives.py#class:ContentProvenance",
@@ -7002,6 +7711,662 @@
       "contentHash": "4855c19c99f45b09e3341db1018d4f4777465c8f3c5f291ad6ccbfae3a8bca0c"
     },
     {
+      "id": "symbol:tests/test_persistence.py#class:ScriptedModel",
+      "type": "symbol",
+      "name": "ScriptedModel",
+      "qualifiedName": "ScriptedModel",
+      "kind": "class",
+      "line": 113,
+      "label": "ScriptedModel",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "d93bb8059d64ce68a27e9e352823c314cb7067bd40f923e57472caa82de3da39"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#class:test_a_failed_run_is_recorded_as_failed.Exploding",
+      "type": "symbol",
+      "name": "Exploding",
+      "qualifiedName": "test_a_failed_run_is_recorded_as_failed.Exploding",
+      "kind": "class",
+      "line": 584,
+      "label": "test_a_failed_run_is_recorded_as_failed.Exploding",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "70b1a5080873d187da80e5e8b47eca96477b9e7724a36829ba6b69047ffad59a"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#class:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken",
+      "type": "symbol",
+      "name": "HalfBroken",
+      "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken",
+      "kind": "class",
+      "line": 605,
+      "label": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1fcf3ed729f6a662a20a9a0514ad44c33b46f792b9ed703d27d6605a407c23bf"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:_requires_database",
+      "type": "symbol",
+      "name": "_requires_database",
+      "qualifiedName": "_requires_database",
+      "kind": "function",
+      "line": 73,
+      "label": "_requires_database",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1c8004e5dd3c931fe50615dd9de3dd6187a0c74046009952b4c183143e3cc7b2"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:echo_tool",
+      "type": "symbol",
+      "name": "echo_tool",
+      "qualifiedName": "echo_tool",
+      "kind": "function",
+      "line": 142,
+      "label": "echo_tool",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "b67eee18f1a0435caa5cd25abb16b89b2148c43d6ee8430ea180268caf7e1772"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:query",
+      "type": "symbol",
+      "name": "query",
+      "qualifiedName": "query",
+      "kind": "function",
+      "line": 108,
+      "label": "query",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "7f1af29eaa75bd3dc7caf12b72aa82fee4a1199a375b95363588f8253c3082f2"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:schema",
+      "type": "symbol",
+      "name": "schema",
+      "qualifiedName": "schema",
+      "kind": "function",
+      "line": 89,
+      "label": "schema",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "cdc452235da6b0ff891c654c257707c4c5fbf42d8f4a348637d06e24c84c387b"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:scope",
+      "type": "symbol",
+      "name": "scope",
+      "qualifiedName": "scope",
+      "kind": "function",
+      "line": 96,
+      "label": "scope",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1922c858fbea0a5e805ed608d1854e6bfbc0ecbab88dc267d188923377c72824"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:ScriptedModel.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "ScriptedModel.__init__",
+      "kind": "function",
+      "line": 114,
+      "label": "ScriptedModel.__init__",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "f5c07d16fcabe208662dfe08c00e6ed940ca3142735d63f6aa51b8f17d43df51"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:ScriptedModel.send",
+      "type": "symbol",
+      "name": "send",
+      "qualifiedName": "ScriptedModel.send",
+      "kind": "function",
+      "line": 118,
+      "label": "ScriptedModel.send",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "923acfa16119a71676a2eebc00bde03ce48b226dc548116480ebf9d1168b6165"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:started",
+      "type": "symbol",
+      "name": "started",
+      "qualifiedName": "started",
+      "kind": "function",
+      "line": 101,
+      "label": "started",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "d827b7b252acf5e325b17c4a5e9febe29155d8ca2485918b4b2047fc4ab159ed"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_a_bound_store_refuses_a_different_run",
+      "type": "symbol",
+      "name": "test_a_bound_store_refuses_a_different_run",
+      "qualifiedName": "test_a_bound_store_refuses_a_different_run",
+      "kind": "function",
+      "line": 178,
+      "label": "test_a_bound_store_refuses_a_different_run",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "cb96ef701898f449f50ffa3ad4327d68a3646d4ed67d19cf3112bf0ff8efa3c1"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed",
+      "type": "symbol",
+      "name": "test_a_failed_run_is_recorded_as_failed",
+      "qualifiedName": "test_a_failed_run_is_recorded_as_failed",
+      "kind": "function",
+      "line": 583,
+      "label": "test_a_failed_run_is_recorded_as_failed",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "69b5f34c4fe0838a7b938744bee65ff4e2796ff64ce7bf2185830f579be1299d"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed.Exploding.send",
+      "type": "symbol",
+      "name": "send",
+      "qualifiedName": "test_a_failed_run_is_recorded_as_failed.Exploding.send",
+      "kind": "function",
+      "line": 585,
+      "label": "test_a_failed_run_is_recorded_as_failed.Exploding.send",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "b2005180dc319661b7002017c10aa653b1c9b8d9bc4123c967318984771892a2"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
+      "type": "symbol",
+      "name": "test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
+      "qualifiedName": "test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
+      "kind": "function",
+      "line": 495,
+      "label": "test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "980d32e7b33a628e4f16c014352acd4740ad06fbc224ac5d7209bd7edf371be7"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_a_second_manifest_for_the_same_run_is_rejected",
+      "type": "symbol",
+      "name": "test_a_second_manifest_for_the_same_run_is_rejected",
+      "qualifiedName": "test_a_second_manifest_for_the_same_run_is_rejected",
+      "kind": "function",
+      "line": 363,
+      "label": "test_a_second_manifest_for_the_same_run_is_rejected",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "0e0d684a5d8702929bfd2350f18fc4bf3a49cf32fa259c6febbdb6da998ccfb1"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_a_whole_run_persists_and_reconstructs",
+      "type": "symbol",
+      "name": "test_a_whole_run_persists_and_reconstructs",
+      "qualifiedName": "test_a_whole_run_persists_and_reconstructs",
+      "kind": "function",
+      "line": 529,
+      "label": "test_a_whole_run_persists_and_reconstructs",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1ca2ae01b8207b2ad429c7af999d97a88174a7d7ba7b657747a10ff5116b55d0"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_an_unregistered_model_is_recorded_as_such_not_as_null",
+      "type": "symbol",
+      "name": "test_an_unregistered_model_is_recorded_as_such_not_as_null",
+      "qualifiedName": "test_an_unregistered_model_is_recorded_as_such_not_as_null",
+      "kind": "function",
+      "line": 479,
+      "label": "test_an_unregistered_model_is_recorded_as_such_not_as_null",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "18d71bc1debb39d9e6c0e07ac6d0fc167c4b2c5ef594e2b8dc86fc11aa42be49"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_append_and_history_round_trip_in_order",
+      "type": "symbol",
+      "name": "test_append_and_history_round_trip_in_order",
+      "qualifiedName": "test_append_and_history_round_trip_in_order",
+      "kind": "function",
+      "line": 152,
+      "label": "test_append_and_history_round_trip_in_order",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "9a621521ff0a20ff6ae746f28bb42de3ba1c593331959c0df1d46005885e82e8"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_appending_without_a_bound_scope_is_refused",
+      "type": "symbol",
+      "name": "test_appending_without_a_bound_scope_is_refused",
+      "qualifiedName": "test_appending_without_a_bound_scope_is_refused",
+      "kind": "function",
+      "line": 171,
+      "label": "test_appending_without_a_bound_scope_is_refused",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "3ebdb47a02c84bb34c9c50451b2270da6a3f691538cae1c5983a69f572dc5782"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order",
+      "type": "symbol",
+      "name": "test_concurrent_appends_never_corrupt_the_order",
+      "qualifiedName": "test_concurrent_appends_never_corrupt_the_order",
+      "kind": "function",
+      "line": 198,
+      "label": "test_concurrent_appends_never_corrupt_the_order",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "01fe016ac4dcf09fd1a9b96bab398e87b1dd5d7e837883144a5ab579607e8faf"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order.write",
+      "type": "symbol",
+      "name": "write",
+      "qualifiedName": "test_concurrent_appends_never_corrupt_the_order.write",
+      "kind": "function",
+      "line": 221,
+      "label": "test_concurrent_appends_never_corrupt_the_order.write",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "83d2df9b79e12ae08dd913b169e39e801617c52e759560571c2df9970920dc35"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_duplicate_sequence_numbers_are_impossible",
+      "type": "symbol",
+      "name": "test_duplicate_sequence_numbers_are_impossible",
+      "qualifiedName": "test_duplicate_sequence_numbers_are_impossible",
+      "kind": "function",
+      "line": 184,
+      "label": "test_duplicate_sequence_numbers_are_impossible",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "81a2a14e8d3de47a37004be1ca97f4c7433d9a11225741a13fc1ea6032de25a1"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_event_sequence_numbers_are_unique_per_run",
+      "type": "symbol",
+      "name": "test_event_sequence_numbers_are_unique_per_run",
+      "qualifiedName": "test_event_sequence_numbers_are_unique_per_run",
+      "kind": "function",
+      "line": 324,
+      "label": "test_event_sequence_numbers_are_unique_per_run",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "5cd261a7a337ec85e26c0d93ff5b9ec451de990fd5ac94946e1e7db7b12ba055"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_events_persist_with_the_full_envelope",
+      "type": "symbol",
+      "name": "test_events_persist_with_the_full_envelope",
+      "qualifiedName": "test_events_persist_with_the_full_envelope",
+      "kind": "function",
+      "line": 301,
+      "label": "test_events_persist_with_the_full_envelope",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "49e4d9380a9062e9793f2df4b4cfc8ca72cf62002329482955bfaddf644a6f32"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_exactly_one_manifest_per_run_with_every_field_populated",
+      "type": "symbol",
+      "name": "test_exactly_one_manifest_per_run_with_every_field_populated",
+      "qualifiedName": "test_exactly_one_manifest_per_run_with_every_field_populated",
+      "kind": "function",
+      "line": 339,
+      "label": "test_exactly_one_manifest_per_run_with_every_field_populated",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1b9e5cec032cd93cb33f6f911b3c9ad0f6685999534082794d4b1cbccadd3a90"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_manifest_hashes_are_stable_and_sensitive",
+      "type": "symbol",
+      "name": "test_manifest_hashes_are_stable_and_sensitive",
+      "qualifiedName": "test_manifest_hashes_are_stable_and_sensitive",
+      "kind": "function",
+      "line": 378,
+      "label": "test_manifest_hashes_are_stable_and_sensitive",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "eb9f04c1a247def6425a7848e401a1bde973037c354765d0f838b4c536745a32"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_provenance_survives_the_round_trip",
+      "type": "symbol",
+      "name": "test_provenance_survives_the_round_trip",
+      "qualifiedName": "test_provenance_survives_the_round_trip",
+      "kind": "function",
+      "line": 248,
+      "label": "test_provenance_survives_the_round_trip",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1a8d49fac12c7aaee922d70826f6f41fa5d4caf476172143802957ec080515c0"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_runs_are_isolated",
+      "type": "symbol",
+      "name": "test_runs_are_isolated",
+      "qualifiedName": "test_runs_are_isolated",
+      "kind": "function",
+      "line": 287,
+      "label": "test_runs_are_isolated",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "6ed67651546da228f8498379f7d29d23752c8956e0f98aba6a80821b190e08a1"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_schema_sql_itself_declares_the_constraints",
+      "type": "symbol",
+      "name": "test_schema_sql_itself_declares_the_constraints",
+      "qualifiedName": "test_schema_sql_itself_declares_the_constraints",
+      "kind": "function",
+      "line": 422,
+      "label": "test_schema_sql_itself_declares_the_constraints",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "cd9187c756fffd5146710ae581e7e9b956549a0f2d95c29b1a7ac3effd9219d2"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_sequence_no_is_assigned_by_the_store_not_the_caller",
+      "type": "symbol",
+      "name": "test_sequence_no_is_assigned_by_the_store_not_the_caller",
+      "qualifiedName": "test_sequence_no_is_assigned_by_the_store_not_the_caller",
+      "kind": "function",
+      "line": 162,
+      "label": "test_sequence_no_is_assigned_by_the_store_not_the_caller",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "cce721b541c265a991010b7d604ef235203b0c64c6bef5faa4807ca7b0f65fc0"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_tenancy_columns_are_indexed",
+      "type": "symbol",
+      "name": "test_tenancy_columns_are_indexed",
+      "qualifiedName": "test_tenancy_columns_are_indexed",
+      "kind": "function",
+      "line": 413,
+      "label": "test_tenancy_columns_are_indexed",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "a20e164fe187466012563cb117c4ebed8876ce732458e4ae3cf4599307ac7746"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_tenant_and_project_are_not_null_in_the_schema",
+      "type": "symbol",
+      "name": "test_tenant_and_project_are_not_null_in_the_schema",
+      "qualifiedName": "test_tenant_and_project_are_not_null_in_the_schema",
+      "kind": "function",
+      "line": 402,
+      "label": "test_tenant_and_project_are_not_null_in_the_schema",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "3ee12b6dda7c6b27895cc5796c25d32482c60d674911d1e9d911311d731a1643"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_the_database_is_actually_configured",
+      "type": "symbol",
+      "name": "test_the_database_is_actually_configured",
+      "qualifiedName": "test_the_database_is_actually_configured",
+      "kind": "function",
+      "line": 56,
+      "label": "test_the_database_is_actually_configured",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "767c94ed80d35af82cdd7170cf57d27abfd5778c59100480fb91d22003271279"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_the_database_refuses_a_row_without_a_tenant",
+      "type": "symbol",
+      "name": "test_the_database_refuses_a_row_without_a_tenant",
+      "qualifiedName": "test_the_database_refuses_a_row_without_a_tenant",
+      "kind": "function",
+      "line": 515,
+      "label": "test_the_database_refuses_a_row_without_a_tenant",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "a4fa4586a5ef66ff2dd924131df9476091a0a9362140b012412ee2882dcaceeb"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_tool_calls_survive_the_round_trip",
+      "type": "symbol",
+      "name": "test_tool_calls_survive_the_round_trip",
+      "qualifiedName": "test_tool_calls_survive_the_round_trip",
+      "kind": "function",
+      "line": 274,
+      "label": "test_tool_calls_survive_the_round_trip",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "7d0915f561ac1b93aeb00e7f3583fc0bd0cae77274431a0c0430afa5d9d94f42"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches",
+      "type": "symbol",
+      "name": "test_usage_is_reported_even_when_the_boundary_catches",
+      "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches",
+      "kind": "function",
+      "line": 602,
+      "label": "test_usage_is_reported_even_when_the_boundary_catches",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "c2b6ace21fef3b8bdb05802a8205827c066ed82864c7f894d1de2696e90db01d"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__",
+      "kind": "function",
+      "line": 606,
+      "label": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "5a33e9cd758a7639b12cffedbac3f3f8f2596d10137b75ff02111da5cb206e72"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send",
+      "type": "symbol",
+      "name": "send",
+      "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send",
+      "kind": "function",
+      "line": 609,
+      "label": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "c205da95f654bccf89eb80e595d05e82f1d63053cdb833009c0d7c95f6fa7117"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:text",
+      "type": "symbol",
+      "name": "text",
+      "qualifiedName": "text",
+      "kind": "function",
+      "line": 123,
+      "label": "text",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "5817c467a6e4e89f77b1f0049a7ae2495497607f564df43ecde0817abebb8c35"
+    },
+    {
+      "id": "symbol:tests/test_persistence.py#function:tool_call",
+      "type": "symbol",
+      "name": "tool_call",
+      "qualifiedName": "tool_call",
+      "kind": "function",
+      "line": 131,
+      "label": "tool_call",
+      "path": "tests/test_persistence.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "76b4be7e250905148a1336c7c2cc7933773f6293db7a3fe9290df1902be9f41b"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family",
       "type": "symbol",
       "name": "test_errors_sit_under_the_right_family",
@@ -7744,7 +9109,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:AgentSpec",
-      "line": 36,
+      "line": 60,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7758,7 +9123,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:RunConfig",
-      "line": 71,
+      "line": 95,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7772,7 +9137,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:Runner",
-      "line": 101,
+      "line": 125,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7786,7 +9151,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:RunResult",
-      "line": 86,
+      "line": 110,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7800,7 +9165,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:RunStatus",
-      "line": 29,
+      "line": 53,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7810,11 +9175,25 @@
       "contentHash": "d28c5ffd5163250efc16186ec007fe20ea6c32a6792b18201bd7298454858df0"
     },
     {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:_usage_from_events:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:_usage_from_events",
+      "line": 34,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "e665e7a9e9e0ffe8e8fadb1805d15da4e586028e700236b520c3ff1d5a6668a1"
+    },
+    {
       "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:AgentSpec.__post_init__:",
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:AgentSpec.__post_init__",
-      "line": 55,
+      "line": 79,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7828,7 +9207,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:AgentSpec.checker",
-      "line": 58,
+      "line": 82,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7842,7 +9221,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:RunConfig.__post_init__",
-      "line": 78,
+      "line": 102,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7856,7 +9235,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner.__init__",
-      "line": 102,
+      "line": 126,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7866,11 +9245,25 @@
       "contentHash": "06b6902152fec79bbda05d8d3a02a4d355ab089c16d60cf1e6369a75d89460b5"
     },
     {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:Runner._model_versions:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:Runner._model_versions",
+      "line": 315,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "3aa889171f9906cd843786bc0871f80d5dbd84c95b24b78266e8d824834f5ac3"
+    },
+    {
       "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:Runner._resolve_model:",
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner._resolve_model",
-      "line": 237,
+      "line": 331,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7884,7 +9277,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner._run",
-      "line": 167,
+      "line": 215,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7898,7 +9291,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner._safe_emit",
-      "line": 160,
+      "line": 208,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7908,11 +9301,25 @@
       "contentHash": "398bbbd1371317648959f4074898d71369e479b1ec26b15a72f7b2f0ce5618df"
     },
     {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:Runner._safe_finish:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:Runner._safe_finish",
+      "line": 199,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "4a3c3db2ea448c492452064ab3e60f46868464e259fdfc2c7333d59278acb7ca"
+    },
+    {
       "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:Runner.run:",
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner.run",
-      "line": 125,
+      "line": 155,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7926,7 +9333,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:RunResult.succeeded",
-      "line": 97,
+      "line": 121,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -8972,6 +10379,34 @@
       "contentHash": "324b63db6a5d495b7e950100469f34ec4806ecc6638afbf35c2e20867a6f5919"
     },
     {
+      "id": "defines:file:agentsdk/manifest.py->symbol:agentsdk/manifest.py#function:_sha256:",
+      "type": "defines",
+      "source": "file:agentsdk/manifest.py",
+      "target": "symbol:agentsdk/manifest.py#function:_sha256",
+      "line": 19,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "817820fe9c2f8e6703aeba1396fbfa84c6178b686cfb69bf9e951841de2bfd5d"
+    },
+    {
+      "id": "defines:file:agentsdk/manifest.py->symbol:agentsdk/manifest.py#function:build_manifest:",
+      "type": "defines",
+      "source": "file:agentsdk/manifest.py",
+      "target": "symbol:agentsdk/manifest.py#function:build_manifest",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "34ed040fb9c3822ad8e15fb8102657b1094ce761768177532ba611565d63e29a"
+    },
+    {
       "id": "defines:file:agentsdk/model.py->symbol:agentsdk/model.py#class:ModelClient:",
       "type": "defines",
       "source": "file:agentsdk/model.py",
@@ -9376,6 +10811,468 @@
         "source": "agentsdk/permissions.py"
       },
       "contentHash": "6027ba64743140665f8ea9a88366d3984cc1216697ea353e957f772f6784ab3d"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#class:Persistence:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#class:Persistence",
+      "line": 36,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "ebc811c63bb73e17daaacf06134672a2e1caedce436cf691aee04084862313ab"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#class:RunRecorder:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#class:RunRecorder",
+      "line": 25,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "13be6f86927a7ee2623070bb6e069dda7d164171e459f5bea7351f61aebe48c3"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#function:Persistence.event_sink_for:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#function:Persistence.event_sink_for",
+      "line": 51,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "22b9ef555143859c8edbe6656394c97c8a0e9d4b6cf64ddbf36205e1d4f841fa"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#function:Persistence.postgres:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#function:Persistence.postgres",
+      "line": 42,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "bc6faacecd585a9931bcd6ea540d50e862f504be3acd0ad9e1b5b8d73d6e6337"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#function:Persistence.session_store_for:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#function:Persistence.session_store_for",
+      "line": 47,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "0e6ba84bd2da90948a69c0c113f00d0baa46d221ec96a57ef1320da3ede33300"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#function:RunRecorder.finish_run:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#function:RunRecorder.finish_run",
+      "line": 30,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "89a391910c239fa3fc77e6adbbb4ada890b7819a12c6c383e6ec4b41beb667c2"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#function:RunRecorder.start_run:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#function:RunRecorder.start_run",
+      "line": 28,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "b86223e9f71843e0b5738bc4cf14469cadb84846ca085f3532ee0d22f679497d"
+    },
+    {
+      "id": "defines:file:agentsdk/persistence.py->symbol:agentsdk/persistence.py#function:RunRecorder.write_manifest:",
+      "type": "defines",
+      "source": "file:agentsdk/persistence.py",
+      "target": "symbol:agentsdk/persistence.py#function:RunRecorder.write_manifest",
+      "line": 32,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "05bfa58a7fb65f7114af863b559980de944f515cca7c538f80bd157ca7d6833c"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#class:PostgresEventStore:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#class:PostgresEventStore",
+      "line": 195,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "9564bf7cfe961dd2691adbc72bbd1847b3dce26ec28516ac60be842d09825e49"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#class:PostgresRunStore:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#class:PostgresRunStore",
+      "line": 267,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "f094709910fa31f360e418ce539eb31769a4af5c11169220e638fb119d4dbb4b"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#class:PostgresSessionStore:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#class:PostgresSessionStore",
+      "line": 133,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "1a68eb11eea46c29cf429797fc2fee9962b1b542f03da20bee4927070990a3dd"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#class:PostgresTrace:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#class:PostgresTrace",
+      "line": 353,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "60327147496e955dfc4e9cd4a0f7c573afcce4369c712c2db14e82f07c1a16c2"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#class:RunScope:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#class:RunScope",
+      "line": 125,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "c07737e3beffcaee2a5de866ae843abeb290a49026074e12e94041abba5eddde"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:_json_safe:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:_json_safe",
+      "line": 252,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "61d81f7ec929b929fd983f29ee8fb2bb06a672c0babea6cf87c1df3b4ca0e48f"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:_message_from_row:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:_message_from_row",
+      "line": 95,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "1ea20880c49e587862d33784df0e8b6b997008634aabeeeb59f550c21e0c63d7"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:_message_to_columns:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:_message_to_columns",
+      "line": 72,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "efb2f415fccbad034d9298789bf49cef4e6766a38e3c22fb2e25896f4bf32608"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:_provenance_from_json:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:_provenance_from_json",
+      "line": 62,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "2305f6ac70a011ae8bd73bafa63f72beedddc781df20196b88aa313c1df146e1"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:_provenance_to_json:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:_provenance_to_json",
+      "line": 52,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "07cc221eaedef8470001da88ca8c77fca17d25deb0eae5991d5e5743d7e6843f"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:apply_schema:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:apply_schema",
+      "line": 40,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "fdd9d628b5809205312900bbb276d62ae3310876968240343d083d10c72cf6d2"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresEventStore.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresEventStore.__init__",
+      "line": 198,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "9931bb5f73c43889a7ad05d4ec0aa12df7c0b3523c45e113ca788c96f97e93fe"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresEventStore.emit:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresEventStore.emit",
+      "line": 205,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "b2cd1a4dd46e4d37bf5cd2c62aea4652b4c0da4ffbdd92b02ed4ee8df1086120"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresEventStore.events:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresEventStore.events",
+      "line": 248,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "57ae81e8cf100bc45448d8ab0b7ef4d592328a7408faf94ecc82e036e2084b2b"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresRunStore.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresRunStore.__init__",
+      "line": 270,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "b86e84531d955631529df4023dc016cce702d479d7748e783e8c1f5c69da8296"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresRunStore.finish_run:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresRunStore.finish_run",
+      "line": 301,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "611a6adf71562ee33af58c6f9b0e14406f9e124d928f6f6cadf0356c191b2f72"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresRunStore.get_run:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresRunStore.get_run",
+      "line": 334,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "32698c738dc00f7b41c441676083f74dd75c56d7d58dced97a50e260b3df5abb"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresRunStore.start_run:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresRunStore.start_run",
+      "line": 273,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "358b197bfe0013ba40427e3b737b638f94d38c10cef6621679ddff405142d957"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresRunStore.write_manifest:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresRunStore.write_manifest",
+      "line": 308,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "81295020180edadb719050a8c162755e06ac7118c83ee1365dd3c3ab99b407c8"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresSessionStore.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.__init__",
+      "line": 136,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "d33687fd0afe88e1f2a6cb1a59628e692eb04aef740fad31c9cdebd9c4f3679c"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresSessionStore.append:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.append",
+      "line": 144,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "665db6fd5a03b96cd3f0b6c21bf79e0ab7a3bc30313aff068cd0a4b907dbd181"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresSessionStore.bind:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.bind",
+      "line": 140,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "0f0c66cf4b00fe5c8c1bfa358b366512d136f1513d87f2ee5a2249c485139b86"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresSessionStore.history:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresSessionStore.history",
+      "line": 183,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "44a005eecc5750fccfc6160762e98b4c0765c194caaa8869ee848b19f113768b"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresTrace.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresTrace.__init__",
+      "line": 360,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "8cfffef034422292bc42a53fa61345c0cf0fc838af9a38c31bacce9e73840973"
+    },
+    {
+      "id": "defines:file:agentsdk/postgres.py->symbol:agentsdk/postgres.py#function:PostgresTrace.reconstruct:",
+      "type": "defines",
+      "source": "file:agentsdk/postgres.py",
+      "target": "symbol:agentsdk/postgres.py#function:PostgresTrace.reconstruct",
+      "line": 364,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "07a64135c6ae1af32416d4cdace28c815d7a13d4dd98843ea0c586cf07affbeb"
     },
     {
       "id": "defines:file:agentsdk/primitives.py->symbol:agentsdk/primitives.py#class:ContentProvenance:",
@@ -13354,6 +15251,580 @@
       "contentHash": "9f660185e526ec2c62fa3d0ca3f663ba1e569cf7805068c34626a3116a1b0191"
     },
     {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#class:ScriptedModel:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#class:ScriptedModel",
+      "line": 113,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "da339c8ba98f3a7f04a25aa1c843d883798bb73a9ea7d33229a87e7d5bb28b05"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#class:test_a_failed_run_is_recorded_as_failed.Exploding:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#class:test_a_failed_run_is_recorded_as_failed.Exploding",
+      "line": 584,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "49d2afce4d3d73ef45f15daf16606d557fb980e832d3f5a462a8150ec96b7bb4"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#class:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#class:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken",
+      "line": 605,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "9858c18cdb0fce91bbc0750e4703cdf59355741a261906370825609bffa86cef"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:_requires_database:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:_requires_database",
+      "line": 73,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "aecad0b227e067a526c4c04b27e6cb785713e4808dbe633bb776414f4a1b531d"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:echo_tool:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:echo_tool",
+      "line": 142,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "f81502399d06fd3a069c8a17702cf6f0b0263575fbf731bc19f1a76b7b76ffe8"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:query:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:query",
+      "line": 108,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "f64c99de170f85c5653f70b6e2a77ceef82e4d5ee8b1e472796afd21e0c6d936"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:schema:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:schema",
+      "line": 89,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "33cf34420e2fb6e60beafac37301fe101b61e9d872f0aabd23642d32b6e6334b"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:scope:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:scope",
+      "line": 96,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "bb2c0c5e39ee6b3c12b3de41d5287d7768b17be71284a3ac60a015aeb574f292"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:ScriptedModel.__init__:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:ScriptedModel.__init__",
+      "line": 114,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1fb9d4f56001ed0c2260d12963b53d482eb01107e766e915717cddf5c6cfd637"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:ScriptedModel.send:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:ScriptedModel.send",
+      "line": 118,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "cc516b0b499db3bf4ff5e2ff1f17bc41be3dd00495c9deafe859826b608fc9c9"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:started:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:started",
+      "line": 101,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "24492873d32596cf1c6100410f8cae3d4220e27ad90d719d424fcd969e582972"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_a_bound_store_refuses_a_different_run:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_a_bound_store_refuses_a_different_run",
+      "line": 178,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "186f13bfe3bc9836251d69507a49d7b1b7176dbf3ddc15300854e673d43dda9a"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed",
+      "line": 583,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "d8b2b9479f20b0a2eff3ca9e46b803e30239c0dc03bd6a4969c82fdb0ba9f6a1"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed.Exploding.send:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed.Exploding.send",
+      "line": 585,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "77e8e37e15a771c4d82d1b215da518b9c29b37718d80bea42162e9a30cdeb26f"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_a_run_with_an_unregistered_model_still_writes_a_full_manifest:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
+      "line": 495,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "a8f0f5b54e6ef3cf0ea129ab96ade71b6b0b10339f9ba82000ad5912c1699aba"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_a_second_manifest_for_the_same_run_is_rejected:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_a_second_manifest_for_the_same_run_is_rejected",
+      "line": 363,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "46363997b2e0e8f9e386032582894c9c33400d015bccffd63acaaa0e166f43cc"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_a_whole_run_persists_and_reconstructs:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_a_whole_run_persists_and_reconstructs",
+      "line": 529,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "6f950267bcc31e962eb16fa32e105f02100badfb0daa77cdce8685c2055605da"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_an_unregistered_model_is_recorded_as_such_not_as_null:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_an_unregistered_model_is_recorded_as_such_not_as_null",
+      "line": 479,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "84d128505a35ac18e04872080937711fbfd4aa92a53abbd440508b4ae30f9f07"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_append_and_history_round_trip_in_order:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_append_and_history_round_trip_in_order",
+      "line": 152,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "97d4511064b66cbb90b5db89f9c5cee98735c39e101e4608130ab93b285b7234"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_appending_without_a_bound_scope_is_refused:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_appending_without_a_bound_scope_is_refused",
+      "line": 171,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "c2d7f22a9509479652418cc850a780f7ebe61e9e578efa7c7b74daf9bda376df"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order",
+      "line": 198,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "4d4c79603dc5d447ac066024d59b5a46a5c9ecc52e8a33ba6062838db3a9bbea"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order.write:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order.write",
+      "line": 221,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "dce449495e0f4e44e8515bf047cce7a3a832526845e5aa2a023b6f774e74aca0"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_duplicate_sequence_numbers_are_impossible:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_duplicate_sequence_numbers_are_impossible",
+      "line": 184,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "91a81b6e9f6ffd21288d27a2bca75c6e6be49d040f1d15493b83183ecd008623"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_event_sequence_numbers_are_unique_per_run:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_event_sequence_numbers_are_unique_per_run",
+      "line": 324,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "6c00bf3375b7eabb68727afc366df6ce5d9a5ddaf66a897b291228f1d50f776b"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_events_persist_with_the_full_envelope:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_events_persist_with_the_full_envelope",
+      "line": 301,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "0ee4e4e6f7be7c42eb5f98fe1ea8fa9a62596b3ee03a08a7621a21ab8983e4f0"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_exactly_one_manifest_per_run_with_every_field_populated:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_exactly_one_manifest_per_run_with_every_field_populated",
+      "line": 339,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "086766acf76dd3511f47e6f4d6ac533a8c1f3f75fffbf2b3bb929d2d8e627e3d"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_manifest_hashes_are_stable_and_sensitive:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_manifest_hashes_are_stable_and_sensitive",
+      "line": 378,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "937cd76383c18f9b4f045ee7494ffcf5423b4b297355cc1ad193e7c12b87078f"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_provenance_survives_the_round_trip:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_provenance_survives_the_round_trip",
+      "line": 248,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "ef69ae730f7977bff2d0bc851d758b79871eae5508bdd2115e887bafe4020316"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_runs_are_isolated:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_runs_are_isolated",
+      "line": 287,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "bacacd06986926061e0a9a375cbe9714e81465388299395712a180a68005e8d3"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_schema_sql_itself_declares_the_constraints:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_schema_sql_itself_declares_the_constraints",
+      "line": 422,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "6695b4cad94ceb7efb65a0912217688cbc84ab6c8c56b49f7ccf7dc9d0c54cfc"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_sequence_no_is_assigned_by_the_store_not_the_caller:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_sequence_no_is_assigned_by_the_store_not_the_caller",
+      "line": 162,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "13e14d14fcce8df294d89a87d289f0fb5f273345fdc35a3922c5051c1c83a761"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_tenancy_columns_are_indexed:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_tenancy_columns_are_indexed",
+      "line": 413,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "e9f013a2e05215b1c46cb3179cd8dab4f5b5104c04684966ba898ec4ecf4356f"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_tenant_and_project_are_not_null_in_the_schema:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_tenant_and_project_are_not_null_in_the_schema",
+      "line": 402,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "14f8ad2ce64a00503b9fc3e5987606bc49318d3c8a75baf088f59cbe84cc5d8a"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_the_database_is_actually_configured:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_the_database_is_actually_configured",
+      "line": 56,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1f5b8255a39aa8f045c565dafcbd05c8b167634c49019863410b9a70a8d58162"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_the_database_refuses_a_row_without_a_tenant:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_the_database_refuses_a_row_without_a_tenant",
+      "line": 515,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "52abff4154af8f23bb6cc376a1ab738323b90f5b642b4fd3c6c9ccdccdaefd75"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_tool_calls_survive_the_round_trip:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_tool_calls_survive_the_round_trip",
+      "line": 274,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "0ef37362b4544af932d216801bccf3f03e483d50b3ed1bbf40076baaee09adeb"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches",
+      "line": 602,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "b189fba319b679495ed1c7a78ad5a7513bf66b1b0cc437aba58cb0bb939baf90"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__",
+      "line": 606,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "2d5d0228d4f8949d30a30b591d010e2cc0c4576741bfabd2fedaa480969f208e"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send",
+      "line": 609,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "a8d7a2e84e78863bc03d560fc7bfb50382ed3a226cb028d27f3e84a874b69ea7"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:text:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:text",
+      "line": 123,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "0daa64e382682e5b1fae3887ec255b3387a85ac0ec5d4955038d17b044d51506"
+    },
+    {
+      "id": "defines:file:tests/test_persistence.py->symbol:tests/test_persistence.py#function:tool_call:",
+      "type": "defines",
+      "source": "file:tests/test_persistence.py",
+      "target": "symbol:tests/test_persistence.py#function:tool_call",
+      "line": 131,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "e35b5e750aa9296056ad8d579cf686c36e1bdc6468559b960551e4bb6d498da1"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
@@ -14043,6 +16514,21 @@
       "contentHash": "f6272051532fb6aeed70424af5f136cd8c81e9de976f7a00b514f9bc4f3349e6"
     },
     {
+      "id": "imports:file:agentsdk/__init__.py->file:agentsdk/version.py:.version",
+      "type": "imports",
+      "source": "file:agentsdk/__init__.py",
+      "target": "file:agentsdk/version.py",
+      "specifier": ".version",
+      "line": 43,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/__init__.py"
+      },
+      "contentHash": "56ecdb69bbe7f95c17da416de99ed66243ae8eb551f4f64f66f5e9c33de9004a"
+    },
+    {
       "id": "imports:file:agentsdk/api.py->file:agentsdk/context.py:.context",
       "type": "imports",
       "source": "file:agentsdk/api.py",
@@ -14148,12 +16634,27 @@
       "contentHash": "a544de34244bf53eeea3e79543e950a420f2b6f6d409791e81dfabe53a8bf2f8"
     },
     {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/manifest.py:.manifest",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/manifest.py",
+      "specifier": ".manifest",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "9af51ee30d1aa9cf16c0905cbcf0ce6f8030822b4c5aa8855d91cdf273ee84a8"
+    },
+    {
       "id": "imports:file:agentsdk/api.py->file:agentsdk/model.py:.model",
       "type": "imports",
       "source": "file:agentsdk/api.py",
       "target": "file:agentsdk/model.py",
       "specifier": ".model",
-      "line": 23,
+      "line": 24,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -14168,7 +16669,7 @@
       "source": "file:agentsdk/api.py",
       "target": "file:agentsdk/permissions.py",
       "specifier": ".permissions",
-      "line": 24,
+      "line": 25,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -14178,12 +16679,57 @@
       "contentHash": "802a0e58c0d24139ac0985946c0c6f42b13e77c4dc6752c766916ab2b9eaa21c"
     },
     {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/persistence.py:.persistence",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/persistence.py",
+      "specifier": ".persistence",
+      "line": 26,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "358bcbd2180161c478268f45796a3bf1c332e217a50d061f0dfca4fb4459b9b7"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/postgres.py:.postgres",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/postgres.py",
+      "specifier": ".postgres",
+      "line": 27,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "8695e2e4e6e2d8122e990e7a8a47711bfb6c69d425e641ac1846a97d3c829993"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/registry.py:.registry",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/registry.py",
+      "specifier": ".registry",
+      "line": 28,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "784382a439bb496d472987d5ab0e08ac68af43a7599d109710c03417c058b5f2"
+    },
+    {
       "id": "imports:file:agentsdk/api.py->file:agentsdk/session.py:.session",
       "type": "imports",
       "source": "file:agentsdk/api.py",
       "target": "file:agentsdk/session.py",
       "specifier": ".session",
-      "line": 25,
+      "line": 29,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -14198,7 +16744,7 @@
       "source": "file:agentsdk/api.py",
       "target": "file:agentsdk/tools.py",
       "specifier": ".tools",
-      "line": 26,
+      "line": 30,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -14206,6 +16752,21 @@
         "source": "agentsdk/api.py"
       },
       "contentHash": "b57a796535b0b419fe138b53bd62600ac58591560475ab0eab0f114371fd8be4"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/version.py:.version",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/version.py",
+      "specifier": ".version",
+      "line": 31,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "0eea61806d48a92fa254983ee48a9d2c9eb0058de78ffd1e772266081cd8ba4a"
     },
     {
       "id": "imports:file:agentsdk/api.py->runtime:python:__future__:__future__",
@@ -14988,6 +17549,51 @@
       "contentHash": "b59017efe799e020a57d31fa2c277a1d4ee89c027fc33ba18d8439a56acd9294"
     },
     {
+      "id": "imports:file:agentsdk/manifest.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/manifest.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 13,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "0c06e725683260e526251966dc69a3c5083ee240deb047cf39ca27fe816970a3"
+    },
+    {
+      "id": "imports:file:agentsdk/manifest.py->runtime:python:hashlib:hashlib",
+      "type": "imports",
+      "source": "file:agentsdk/manifest.py",
+      "target": "runtime:python:hashlib",
+      "specifier": "hashlib",
+      "line": 15,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "3037cb41c9ea0d9007a83ed751f37e4d98d87bdaa95f3e46bb438df2c325c7c9"
+    },
+    {
+      "id": "imports:file:agentsdk/manifest.py->runtime:python:typing:typing",
+      "type": "imports",
+      "source": "file:agentsdk/manifest.py",
+      "target": "runtime:python:typing",
+      "specifier": "typing",
+      "line": 16,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/manifest.py"
+      },
+      "contentHash": "d1cdfd61a9d16a2639f4a35c3a914b082004411178edef0e332862ca09e05351"
+    },
+    {
       "id": "imports:file:agentsdk/model.py->file:agentsdk/primitives.py:.primitives",
       "type": "imports",
       "source": "file:agentsdk/model.py",
@@ -15271,6 +17877,261 @@
         "source": "agentsdk/permissions.py"
       },
       "contentHash": "9e2b19514484ea313b9f423774646ddd775b87c7248bc9482ddcbff9f412a4c3"
+    },
+    {
+      "id": "imports:file:agentsdk/persistence.py->file:agentsdk/events.py:.events",
+      "type": "imports",
+      "source": "file:agentsdk/persistence.py",
+      "target": "file:agentsdk/events.py",
+      "specifier": ".events",
+      "line": 14,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "55c5eb7b1ae846e82928092d7c37fc54a569e05ff768e4433d61b9a9d864285f"
+    },
+    {
+      "id": "imports:file:agentsdk/persistence.py->file:agentsdk/postgres.py:.postgres",
+      "type": "imports",
+      "source": "file:agentsdk/persistence.py",
+      "target": "file:agentsdk/postgres.py",
+      "specifier": ".postgres",
+      "line": 15,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "bfa503ec817b1fdfef2ecccb2785fe058f677acd480da388cb700e7582f71703"
+    },
+    {
+      "id": "imports:file:agentsdk/persistence.py->file:agentsdk/session.py:.session",
+      "type": "imports",
+      "source": "file:agentsdk/persistence.py",
+      "target": "file:agentsdk/session.py",
+      "specifier": ".session",
+      "line": 22,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "9a0246ca374ba3e5433916289423da36ce1d38304dc3f85e1c5e4b804511286a"
+    },
+    {
+      "id": "imports:file:agentsdk/persistence.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/persistence.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 9,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "9763d09a12f5480e896cb59faf222b098b974108403af6b515d59ce41d6dc004"
+    },
+    {
+      "id": "imports:file:agentsdk/persistence.py->runtime:python:dataclasses:dataclasses",
+      "type": "imports",
+      "source": "file:agentsdk/persistence.py",
+      "target": "runtime:python:dataclasses",
+      "specifier": "dataclasses",
+      "line": 11,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "018646710f52754c3eee81367c01ac98d7798c00ebe6badd492cb6c5a2a20c10"
+    },
+    {
+      "id": "imports:file:agentsdk/persistence.py->runtime:python:typing:typing",
+      "type": "imports",
+      "source": "file:agentsdk/persistence.py",
+      "target": "runtime:python:typing",
+      "specifier": "typing",
+      "line": 12,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/persistence.py"
+      },
+      "contentHash": "e35263f793b7c60268bfaff27e50d78d0ef519134264d3151439618a8183cac2"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->file:agentsdk/events.py:.events",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "file:agentsdk/events.py",
+      "specifier": ".events",
+      "line": 24,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "2ef4987e90dad79056422288acc449e65b72b7c689ca14b48bc7b281ff7c528d"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->file:agentsdk/primitives.py:.primitives",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "file:agentsdk/primitives.py",
+      "specifier": ".primitives",
+      "line": 25,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "0f9ca3e75650cde337fda775e5fd4f3a1fabf5e9aa2d55e876688e4b76e27544"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->package:pypi:psycopg:psycopg",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "package:pypi:psycopg",
+      "specifier": "psycopg",
+      "line": 21,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "23f095d786cc5512f7799024f279c86d3771a6b26c31e22391a51dba2c4d8bce"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->package:pypi:psycopg.types.json:psycopg.types.json",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "package:pypi:psycopg.types.json",
+      "specifier": "psycopg.types.json",
+      "line": 22,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "9834067ca0418d231758f8c714d2dd2d7ece207ca382f2f961b0ab56e87600d4"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 12,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "a7e6bbc5a9e1c234160d0a7f6ccaffc57d0d1a0506a70cbdfabbb3548f4a5676"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->runtime:python:dataclasses:dataclasses",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "runtime:python:dataclasses",
+      "specifier": "dataclasses",
+      "line": 16,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "579989f1593053bafa440569c41d336b9d466d07153c5915d49123c928d26048"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->runtime:python:datetime:datetime",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "runtime:python:datetime",
+      "specifier": "datetime",
+      "line": 17,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "a2bc864f784e9c3e8031d543ac0f1b53dad86a62980033f2ebbcf16a98134c3a"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->runtime:python:json:json",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "runtime:python:json",
+      "specifier": "json",
+      "line": 14,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "3f207d6ad4b20b44dfe85cb8046cbe5a4a3acb472c08cf10ba9ffdecb7038840"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->runtime:python:pathlib:pathlib",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "runtime:python:pathlib",
+      "specifier": "pathlib",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "8c543d25c94a1d4b0b1a98703b4dd9acf4a108cfd8cd2d10df40fd4b59d4746c"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->runtime:python:typing:typing",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "runtime:python:typing",
+      "specifier": "typing",
+      "line": 19,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "03acd2a6157db9edd3b3d8ebb39daa882b0ad8e4ab3cfbfbc339c056064ec37b"
+    },
+    {
+      "id": "imports:file:agentsdk/postgres.py->runtime:python:uuid:uuid",
+      "type": "imports",
+      "source": "file:agentsdk/postgres.py",
+      "target": "runtime:python:uuid",
+      "specifier": "uuid",
+      "line": 15,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/postgres.py"
+      },
+      "contentHash": "8de993092204595437cde6a64ef5a8f3d585ec17238ced4085ea6f8fd4810ca4"
     },
     {
       "id": "imports:file:agentsdk/primitives.py->runtime:python:__future__:__future__",
@@ -16231,6 +19092,246 @@
         "source": "tests/test_model_client.py"
       },
       "contentHash": "7393303e4f6a437b020161225e2a54c9c51e79f3695fcbfec2ed451e8f26900b"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/__init__.py:agentsdk",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/__init__.py",
+      "specifier": "agentsdk",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "c35a0f76bb1bbc03c54c6ba472c8b12482a3eeeb677f723cc963f61463411529"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/config.py:agentsdk.config",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/config.py",
+      "specifier": "agentsdk.config",
+      "line": 19,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1d2a96b8ec1109a76c6f6b93b7714f4e5bd9aa4890fe0515ee664ac88ee5349e"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/events.py:agentsdk.events",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/events.py",
+      "specifier": "agentsdk.events",
+      "line": 20,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "fbed3ba04698b1a8b66ebac3653c8526c7eca20777703bc9853aafee4428bdfd"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/manifest.py:agentsdk.manifest",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/manifest.py",
+      "specifier": "agentsdk.manifest",
+      "line": 21,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "1f268900f7360b272cd9e0f39322a80cecfb6ac6d4b1a9bd3a504d772e4a9c48"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/model.py:agentsdk.model",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/model.py",
+      "specifier": "agentsdk.model",
+      "line": 22,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "b924b2db28a158df77131874723bf8098a8318ea9d4292f260aea86085f56ad5"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/persistence.py:agentsdk.persistence",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/persistence.py",
+      "specifier": "agentsdk.persistence",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "d66f35bcc489bb2a3f9958f3a12c4a70a334431c73d96f77ba9b294692763b80"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/postgres.py:agentsdk.postgres",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/postgres.py",
+      "specifier": "agentsdk.postgres",
+      "line": 24,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "a1d197093427b44139e54092c36f9f185b4b850713341a7ee50832baefd2da4d"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/primitives.py:agentsdk.primitives",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/primitives.py",
+      "specifier": "agentsdk.primitives",
+      "line": 33,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "741d196c76e298734084c0a7e46defdb6ff3aeba9ef0bc2ebc15fd9c6c8cd460"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/registry.py:agentsdk.registry",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/registry.py",
+      "specifier": "agentsdk.registry",
+      "line": 483,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "e3b9827e4d56f4d21983612b4fcf9b0856db75ecbb27bc656dfdc4f2b7c3599f"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->file:agentsdk/tools.py:agentsdk.tools",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "file:agentsdk/tools.py",
+      "specifier": "agentsdk.tools",
+      "line": 43,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "ce4fd225c4ff349db5d0d3bf2c0c76ca52779bdc04df809e69fa7015f645e3f6"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->package:pypi:dotenv:dotenv",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "package:pypi:dotenv",
+      "specifier": "dotenv",
+      "line": 45,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "26a4fb914251a932321d1c70a38593f0f3e65494be6b331e71d43e7549ddec17"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->package:pypi:psycopg:psycopg",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "package:pypi:psycopg",
+      "specifier": "psycopg",
+      "line": 15,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "43f1e2d76cf95ea9151b7ff4d8f6c041d0bcc58391509eb791c054d4d391b553"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->package:pypi:pytest:pytest",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "package:pypi:pytest",
+      "specifier": "pytest",
+      "line": 16,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "fb42adf650e7c5030a186a2c66eb8aa5eb5dc40a812a135237143af918524a76"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->runtime:python:os:os",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "runtime:python:os",
+      "specifier": "os",
+      "line": 12,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "3cd2753b92859672701222c8ea47d4e2924aeaa04d1868a1cab4a559175e9554"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->runtime:python:threading:threading",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "runtime:python:threading",
+      "specifier": "threading",
+      "line": 214,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "d74c2b12b6005fec85bbbb7605f392259455113ba7a74aa695e405bcfb6a62c3"
+    },
+    {
+      "id": "imports:file:tests/test_persistence.py->runtime:python:uuid:uuid",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "runtime:python:uuid",
+      "specifier": "uuid",
+      "line": 13,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "43167b49888860a43501c6b2a9befda858bcb776ac44ec32528432aea0849675"
     },
     {
       "id": "imports:file:tests/test_primitives.py->file:agentsdk/__init__.py:agentsdk",

@@ -1,0 +1,22 @@
+{
+  "task": "M5-postgres",
+  "gate": "unit",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests/test_persistence.py -q",
+  "started_at": "2026-09-06T13:46:14.002Z",
+  "observed_at": "2026-09-06T13:46:20.586Z",
+  "exit_code": 0,
+  "signal": null,
+  "stdout": "..............................                                           [100%]\r\n30 passed in 5.63s\r\n",
+  "stderr": "",
+  "revision": {
+    "commit": "211f766e9f5955775d3d412018471e71142c82aa",
+    "dirty": true
+  },
+  "source_hash": "d4056eb62c760c7e942d74dbfcf394e6e0da194ccaf1830a6e744b61caafca57",
+  "environment": {
+    "node": "v20.10.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "hash": "35c55d777d2b45714f0f9b8738789de33b03985befa5ab890069337398004d17"
+}
