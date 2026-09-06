@@ -1,5 +1,7 @@
 """M1 gate: primitives, provenance and the error taxonomy (FR-2, FR-13, FR-16)."""
 
+import json
+
 import pytest
 
 from agentsdk import (
@@ -235,8 +237,11 @@ def test_unstorable_reason_is_total():
     # to "could not be checked", and a run that blew the stack is not the same
     # event as one that nested too deeply.
     assert unstorable_reason(cyclic) == "nested more deeply than the store can accept"
-    assert unstorable_reason({"k": Hostile()}) is None
-    assert unstorable_reason([Hostile()]) is None
+    # An object with no JSON representation is genuinely unstorable -- psycopg
+    # raises TypeError on it too -- so being flagged is correct, not a false
+    # positive. What matters here is that deciding that never raises.
+    assert unstorable_reason({"k": Hostile()}) is not None
+    assert unstorable_reason([Hostile()]) is not None
 
 
 @pytest.mark.parametrize("value", UNSTORABLE, ids=lambda v: repr(v)[:20])
@@ -273,3 +278,53 @@ def test_a_message_refuses_content_no_store_can_hold():
 def test_ordinary_message_content_is_untouched():
     assert Message(role=Role.ASSISTANT, content="ordinary").content == "ordinary"
     assert Message(role=Role.ASSISTANT, content=None).content is None
+
+
+# --- round 4: what the named checks did not name ----------------------------
+#
+# Round 3 named NUL and non-finite floats. A lone UTF-16 surrogate walked past
+# all of them: a truncated escape is a legal RFC-8259 decode, models emit
+# truncated pairs, and both TEXT and JSONB refuse the result. The named checks
+# are now backed by attempting the serialisation the store performs, so what is
+# pinned here is the CLASS -- values that cannot be serialised -- not a list.
+
+# Built from the wire form a provider would actually send, not typed as a
+# literal: the escape is what makes it a legal RFC-8259 decode.
+LONE_SURROGATE = json.loads('"a' + chr(92) + 'ud800b"')
+
+
+def test_a_lone_surrogate_is_unstorable():
+    """Verified against Postgres: TEXT raises UnicodeEncodeError and JSONB
+    raises InvalidTextRepresentation for exactly this value."""
+    assert unstorable_reason(LONE_SURROGATE) is not None
+    assert unstorable_reason({"text": LONE_SURROGATE}) is not None
+
+
+def test_a_model_delivered_surrogate_flags_the_tool_call():
+    call = ToolCall(id="c1", name="echo", arguments={"text": LONE_SURROGATE})
+    assert call.arguments_error is not None
+    assert call.arguments == {}
+
+
+def test_surrogate_content_is_refused():
+    with pytest.raises(ValueError, match="cannot be stored"):
+        Message(role=Role.ASSISTANT, content=LONE_SURROGATE)
+
+
+def test_an_integer_beyond_the_serialisers_limit_is_unstorable():
+    """Not model-reachable -- json.loads refuses it before the SDK sees it, and
+    _decode_arguments routes that to arguments_error -- but developer code can
+    build one, and JSONB refuses it."""
+    assert unstorable_reason(10 ** 5000) is not None
+    assert unstorable_reason({"n": 10 ** 5000}) is not None
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["rocket " + chr(0x1F680), chr(0x2A6B2), int(1e308), 1.7976931348623157e308, "ok"],
+    ids=["astral-emoji", "4-byte-CJK", "big-but-storable-int", "max-float", "plain"],
+)
+def test_values_postgres_accepts_are_not_rejected(value):
+    """The other direction. A helper that over-rejects fails runs that should
+    work, which is a defect too -- each of these was confirmed to store fine."""
+    assert unstorable_reason(value) is None

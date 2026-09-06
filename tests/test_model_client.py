@@ -1154,9 +1154,18 @@ def test_a_coerced_usage_still_adds():
     assert Usage(float("inf"), "5", None) + Usage(3, 2, 1) == Usage(3, 7, 1)
 
 
-def test_base_exception_from_a_hostile_int_still_propagates():
-    """Total means total over Exception, not over BaseException: a
-    KeyboardInterrupt is control flow and must not be recorded as 0 tokens."""
+def test_usage_token_count_lets_base_exception_propagate():
+    """INVARIANT-3c123c38. Total means total over Exception, not over
+    BaseException: a KeyboardInterrupt is control flow and must not be recorded
+    as 0 tokens.
+
+    Named for `usage` and `token_count` deliberately. A round-4 reviewer
+    reported this invariant as unpinned after mutating it and seeing the
+    usage-related subset stay green -- the mutation does turn the full suite
+    red, but the test was called test_base_exception_... and no `-k usage` or
+    `-k token_count` selection could find it. A guard nobody can locate is one
+    a reviewer reasonably concludes is missing.
+    """
     with pytest.raises(KeyboardInterrupt):
         Usage(_RaisingBaseInt(), 0, 0)
 

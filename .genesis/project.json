@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-06T16:54:51.397Z"
+    "updated_at": "2026-09-06T18:17:04.544Z"
   },
   "policy": {
     "ponytail": "full",
@@ -405,6 +405,22 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-06T16:53:59.425Z"
+    },
+    {
+      "id": "KNOWLEDGE-eaf9f702",
+      "title": "Name what you can, then back it with a total check",
+      "text": "unstorable_reason has two layers: named checks (NUL, non-finite, depth) for a precise diagnosis, and a backstop that attempts the serialisation the store actually performs -- json.dumps(allow_nan=False, ensure_ascii=False).encode('utf-8'). Round 3 shipped only the named layer and round 4 found a lone UTF-16 surrogate walking past it: a truncated surrogate escape is a legal RFC-8259 decode, models emit truncated pairs, and both TEXT and JSONB refuse the result. The backstop catches the CLASS (anything the serialiser cannot express) rather than the instance, which also closed huge integers for free. Same structure as the ModelClient total boundary: specific guards for good messages, one total guard for correctness. Verified in BOTH directions against a live database -- astral emoji, 4-byte CJK and int(1e308) are still accepted, so the helper does not over-reject and fail runs that should work.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-06T18:16:32.000Z"
+    },
+    {
+      "id": "KNOWLEDGE-f1c4e06e",
+      "title": "Name a test after the invariant it pins",
+      "text": "A round-4 reviewer reported INVARIANT-3c123c38 (token_count must not swallow BaseException) as unpinned, having mutated it and seen the usage-related subset stay green. The mutation does turn the FULL suite red -- the test existed -- but it was named test_base_exception_from_a_hostile_int_still_propagates, so no 'pytest -k usage' or '-k token_count' selection could find it. Renamed to test_usage_token_count_lets_base_exception_propagate; all three selections now go red. A guard nobody can locate is one a reviewer reasonably concludes is missing, and reviewers work by subset selection.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-06T18:16:32.136Z"
     }
   ],
   "tasks": [
@@ -638,9 +654,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "b6a175479974664ff53c772f4270ce24de48051b91dc0267ceaa9c8e12d2899d",
-            "hash": "71c18c1adf2ee9bd81f4e5601ffbb4799e0b0f4382d0c4dcc3499015393ebb78",
-            "observed_at": "2026-09-06T16:54:18.836Z"
+            "source_hash": "31d16670cf8d7cacc5e1f8284e361eeaeecceeddd84f7f559992828ce08b5d39",
+            "hash": "f77cdcad9d9e77488272d9a10c845cbc387e7258a937206c30f55d1b2febc68a",
+            "observed_at": "2026-09-06T18:16:13.063Z"
           }
         },
         {
@@ -660,7 +676,7 @@
         "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-06T16:54:18.965Z"
+      "updated_at": "2026-09-06T18:16:13.201Z"
     },
     {
       "id": "M6-golden-eval",
@@ -872,15 +888,33 @@
       "human": "Opus 5 (implementer)",
       "reason": "Round-3 defect fixed upstream in the primitives, not the persistence layer: unstorable tool arguments route onto arguments_error (cleared, not just flagged), unstorable Message.content raises, an unstorable tool result becomes an ordinary tool error. Verified convergence through a CUSTOM ModelClient across all four channels the reviewer did not fully enumerate. Both named blind spots closed: arguments_error round trip pinned, and message tenancy now derived from the run row. 332 tests, 12/12 mutations killed.",
       "revision": null
+    },
+    {
+      "id": "fb58fc71-3957-4e36-a46e-b08dabc8307a",
+      "at": "2026-09-06T17:54:14.348Z",
+      "action": "reject",
+      "task": "M5-postgres",
+      "human": "L4 reviewer (fresh session, round 4, Sonnet 5)",
+      "reason": "unstorable_reason (agentsdk/primitives.py) is a false negative for at least two value classes Postgres actually refuses, reproducing the exact round-3 cross-backend divergence for new value shapes. (1) A Python int whose digit count exceeds sys.get_int_max_str_digits() (default 4300, e.g. 10**5000) nested inside ToolCall.arguments passes unstorable_reason as storable and ToolCall/Message construction succeeds, but PostgresSessionStore.append() raises a raw ValueError from psycopg's own JSON serialisation (Exceeds the limit for integer string conversion) -- caught only by Runner.run()'s outer boundary, turning a run that completes in memory into RunStatus.FAILED against Postgres. (2) A lone UTF-16 surrogate (e.g. json.loads of a malformed \\ud800 escape -- exactly the RFC-8259-legal-but-DB-hostile class the round-3 fix targeted) passes unstorable_reason on Message.content, so Message.__post_init__ does not raise; append() then raises UnicodeEncodeError from psycopg's UTF-8 encoding of the same in-memory-valid message. Both reproduced live against the project's Postgres 16 instance with synthetic tenant/run ids, cleaned up afterward (0 leftover probe rows, orphan count unchanged at 979). Verified sound: AC-6 atomicity holds under an injected mid-transaction KeyError (no runs row survives); 12-writer concurrency probe committed 10 unique contiguous rows with 2 UniqueViolation losers, matching the documented safety-over-availability tradeoff; gates match claims (test_persistence.py 45 passed, full suite 332 passed); 5 targeted mutations (NUL-not-unstorable, non-finite-not-unstorable via existing test, manifest hash ignoring instructions) all killed cleanly, all files restored and SHA-256 verified identical. Caveat/blind spot (not a defect -- code is correct): token_count's 'except Exception' (not bare except) correctly lets KeyboardInterrupt/BaseException propagate, but no test pins this; flipping it to 'except BaseException' survived the full suite (39/39 token_count-related tests still passed) despite genuinely changing behaviour, confirmed with a hostile __int__ raising KeyboardInterrupt.",
+      "revision": null
+    },
+    {
+      "id": "05a28312-0bff-45be-a165-be2f5221757d",
+      "at": "2026-09-06T18:16:32.274Z",
+      "action": "retry",
+      "task": "M5-postgres",
+      "human": "Opus 5 (implementer)",
+      "reason": "Round-4 defect fixed: unstorable_reason now backs its named checks with the serialisation the store performs, catching lone surrogates and oversized integers as a class. Verified against a live database in both directions -- no false positives on astral emoji, 4-byte CJK or int(1e308). The reviewer's third finding was checked and is incorrect: INVARIANT-3c123c38 was pinned all along (full suite goes red); the test was merely unfindable by -k selection, and is renamed. 343 tests, 7/8 mutations killed with the survivor documented as a deliberate equivalent mutant.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-06T16:54:51.333Z",
+    "at": "2026-09-06T18:17:04.480Z",
     "revision": {
-      "commit": "f19a6a33814bb105a5f7ff049392f1bbbd7acf37",
+      "commit": "d854a5d5b8c3dd068ee98c837684c78a1c0ae84e",
       "dirty": true,
-      "source_hash": "b6a175479974664ff53c772f4270ce24de48051b91dc0267ceaa9c8e12d2899d"
+      "source_hash": "31d16670cf8d7cacc5e1f8284e361eeaeecceeddd84f7f559992828ce08b5d39"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."

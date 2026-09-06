@@ -2,7 +2,7 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
-## Rounds 1-3 -- what was rejected, and what changed
+## Rounds 1-4 -- what was rejected, and what changed
 
 A previous reviewer rejected this milestone and was right to. Their finding, and the response:
 
@@ -31,8 +31,19 @@ Round 3 confirmed both earlier fixes dead and rejected on a third defect, in a r
 
 **Both named blind spots are closed.** `arguments_error` now has a round-trip test (the Phase 6 replay hazard: a dropped flag turns an undecodable call back into a valid empty-args call that step 2 waves through). And message tenancy is taken from the **run row** inside the INSERT, with the caller's scope matched in the WHERE, so a mismatch errors instead of silently filing a message under the wrong tenant.
 
+Round 4 confirmed rounds 1 and 3 dead, and rejected on a fourth defect inside the round-3 fix itself.
+
+**Round 4's defect.** `unstorable_reason` -- the single source of truth for what a primitive may hold -- did not check for lone UTF-16 surrogates. A truncated surrogate escape is a legal RFC-8259 decode, models emit truncated pairs, and both TEXT and JSONB refuse the result. Round 3's bug shape, unchanged, in the helper written to close it.
+
+**The fix generalises rather than adds a case.** The helper now has two layers, the same structure as the ModelClient boundary: named checks (NUL, non-finite, depth) for a precise diagnosis, backed by attempting the serialisation the store actually performs -- `json.dumps(allow_nan=False, ensure_ascii=False).encode("utf-8")`. That catches the CLASS rather than the instance, and closed oversized integers for free. Verified against the live database in **both** directions: astral emoji, 4-byte CJK and `int(1e308)` still store fine, so it does not over-reject.
+
+**One round-4 finding was checked and is wrong.** The report said `INVARIANT-3c123c38` (`token_count` must not swallow `BaseException`) had no test. It did: mutating it turns the full suite red. The test was named `test_base_exception_from_a_hostile_int_still_propagates`, so no `-k usage` or `-k token_count` selection could find it -- which is a real problem of its own, and it has been renamed so all three selections now go red. Verify this yourself rather than taking either account on trust.
+
+**Known equivalent mutant.** Flipping the backstop's `allow_nan=False` to `True` leaves the suite green, because the named layer catches non-finite floats first. It is kept deliberately as overlapping defence, and documented in the code. Do not report it as a fresh blind spot without saying why the overlap should go.
+
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
-- `unstorable_reason` decides what every primitive will accept. Find a value Postgres refuses that it passes, or a value it rejects that would have stored fine (a false positive is a defect too -- it fails runs that should work).
+- `unstorable_reason` decides what every primitive will accept, and has now been wrong twice. Find a value Postgres refuses that it passes, or one it rejects that would have stored fine. Probe the DATABASE for the answer rather than reasoning about it -- both previous holes were found that way, and the helper's verdicts are only worth what a live comparison says.
+- The backstop calls `json.dumps` on every tool-call argument dict. Is that a cost worth paying on a hot path, and can a large or deeply nested argument make it pathological?
 - **Raising in `Message.__post_init__` is the riskiest thing here.** Find a path where that raise is not contained by a total boundary, or where it fires on an error path and takes down a handler.
 - `ToolCall.__post_init__` silently empties `arguments`. Is the reason always preserved, and can a caller be confused by arguments that vanish?
 - The message INSERT is now a `LEFT JOIN ... GROUP BY`. Re-measure concurrency: the author saw safety unchanged but availability *improved* (0-1 of 12 losers, previously 4 of 12). Confirm or refute.
@@ -96,8 +107,8 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
 1. Read the files, `SPEC.md`, and the decisions/invariants/knowledge in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 45
-   .venv\Scripts\python.exe -m pytest -q                             # expect 332
+   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 47
+   .venv\Scripts\python.exe -m pytest -q                             # expect 343
    ```
    A different number is itself a finding.
 3. **Mutation-test.** Round 1: 21 mutations, six survivors. Round 2's reviewer ran 56 and found 12 blind spots. Round 3: 12 targeted, 12 killed. Round 4: 12 targeted at the storability work, 12 killed -- one initially survived (removing the cycle-depth guard) because the outer catch absorbed the RecursionError, so the test now pins the *diagnosis* rather than mere survival. Every round's reviewer has found blind spots the author's own matrix did not; assume more exist. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
@@ -118,6 +129,8 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
    ToolCall flags but does not clear   Message accepts unstorable content
    arguments_error dropped on write    arguments_error dropped on read
    message tenancy from the caller     missing run no longer detected
+   serialisation backstop removed      backstop keeps ensure_ascii
+   backstop drops the encode step      backstop is not total
    messages tenant nullable            run_events tenant nullable
    messages sequence not unique        manifest primary key relaxed
    tenancy index removed               run never marked finished

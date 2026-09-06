@@ -6,6 +6,7 @@ module knows what a provider is.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any
@@ -213,26 +214,52 @@ _NUL = "\x00"
 _MAX_DEPTH = 60
 
 
-def unstorable_reason(value: Any, _depth: int = 0) -> str | None:
+def unstorable_reason(value: Any) -> str | None:
     """Why `value` could not survive a round trip through a durable store.
 
     Returns None when it can. Total by intent: it must never raise, because it
     runs on paths that are themselves boundaries.
 
-    Postgres rejects two things the SDK's own decoding admits with no adversary
-    involved. `json.loads` is RFC-8259-correct and turns `1e400` into `inf` and
-    `\u0000` into a NUL character; JSONB has no representation for a non-finite
-    number, and neither TEXT nor JSONB accepts NUL. A model can emit either by
-    accident.
+    Two layers, for the same reason the ModelClient boundary has two: a named
+    diagnosis is worth more than a generic one, but an enumeration of known bad
+    values cannot be complete. Round 3 named NUL and non-finite floats; round 4
+    found a lone UTF-16 surrogate walking straight past. A truncated surrogate
+    escape is a legal RFC-8259 decode, models emit truncated pairs, and both
+    TEXT and JSONB refuse the result. So the named checks are backed by
+    attempting the serialisation the store performs, which catches the CLASS
+    rather than the instance.
 
     The check lives here, above every store, rather than in postgres.py. That
     module promises "the loop cannot tell whether it is talking to memory or
     Postgres", and deciding this at write time is what made the promise false:
-    the same run completed in memory and failed against the database. Rejecting
-    upstream restores it -- both backends now behave identically -- and keeps
-    the alternative fixes off the table, since silently dropping NULs or
-    nulling out an infinity would corrupt the record NFR-3 calls authoritative.
+    the same run completed in memory and failed against the database.
     """
+    named = _named_unstorable_reason(value)
+    if named is not None:
+        return named
+    # The backstop. json.dumps with allow_nan=False and ensure_ascii=False is
+    # the closest thing to what psycopg then hands Postgres, so a value that
+    # cannot get through here cannot get into a row: lone surrogates fail the
+    # encode, integers past the interpreter digit limit fail the dump, and so
+    # does any object with no JSON representation.
+    #
+    # allow_nan=False is redundant today -- the named layer already catches
+    # non-finite floats, so mutating it to True changes nothing the suite can
+    # see. It stays because the two layers are meant to overlap: the named one
+    # exists for better messages, not as the only defence, and a future edit
+    # there should not silently reopen this.
+    try:
+        json.dumps(value, allow_nan=False, ensure_ascii=False).encode("utf-8")
+    except Exception as exc:  # noqa: BLE001 - total by intent
+        try:
+            return f"cannot be serialised for storage: {type(exc).__name__}"
+        except Exception:  # noqa: BLE001
+            return "cannot be serialised for storage"
+    return None
+
+
+def _named_unstorable_reason(value: Any, _depth: int = 0) -> str | None:
+    """The diagnosable half: the failures worth naming precisely."""
     try:
         if _depth > _MAX_DEPTH:
             return "nested more deeply than the store can accept"
@@ -248,20 +275,19 @@ def unstorable_reason(value: Any, _depth: int = 0) -> str | None:
             return None
         if isinstance(value, dict):
             for key, item in value.items():
-                reason = unstorable_reason(key, _depth + 1)
+                reason = _named_unstorable_reason(key, _depth + 1)
                 if reason is None:
-                    reason = unstorable_reason(item, _depth + 1)
+                    reason = _named_unstorable_reason(item, _depth + 1)
                 if reason is not None:
                     return reason
             return None
         if isinstance(value, (list, tuple, set, frozenset)):
             for item in value:
-                reason = unstorable_reason(item, _depth + 1)
+                reason = _named_unstorable_reason(item, _depth + 1)
                 if reason is not None:
                     return reason
             return None
-        # Anything else is not reachable from decoded JSON, which is the only
-        # way provider data enters these primitives.
+        # Not reachable from decoded JSON. The backstop above decides it.
         return None
-    except Exception:  # noqa: BLE001 - total by intent, see the docstring
+    except Exception:  # noqa: BLE001 - total by intent, see unstorable_reason
         return "could not be checked for storability"

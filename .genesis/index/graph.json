@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "agent-sdk",
-  "revision": "f19a6a33814bb105a5f7ff049392f1bbbd7acf37",
-  "sourceHash": "cb0a2cd56534d8c25cc4ac2bfc47c1a1f3b8b19c0b25a67d01c02a69299c6623",
+  "revision": "d854a5d5b8c3dd068ee98c837684c78a1c0ae84e",
+  "sourceHash": "c3245239f459c818ef058ff64f4ce1a7b1a89d626cd3d6c7403e2a329c82707e",
   "provenance": {
     "tool": "genesis-graphizer",
     "method": "static-analysis",
@@ -228,7 +228,7 @@
         "extractor": "filesystem",
         "source": "agentsdk/primitives.py"
       },
-      "contentHash": "c23b0b04926416b164c319575041667cab70dd0ef1ac4d37268bb84080d50c2e"
+      "contentHash": "c31fce122118da2789add7aff31d571188829d8b2d0827236278bee459e95825"
     },
     {
       "id": "file:agentsdk/providers/__init__.py",
@@ -345,7 +345,7 @@
         "extractor": "filesystem",
         "source": "tests/test_model_client.py"
       },
-      "contentHash": "c5a27abbfd805e57df3bdc9c6adc28b8827ad7acfb83f789cf7259f5e2525cbd"
+      "contentHash": "230ac0b26711957c6b5afb9c7d9970c52e6813435efa61e46937d116aa8dc5d2"
     },
     {
       "id": "file:tests/test_persistence.py",
@@ -358,7 +358,7 @@
         "extractor": "filesystem",
         "source": "tests/test_persistence.py"
       },
-      "contentHash": "b36155ef08b318820aa52efbfa9bc083def5419ecd96d0a64eaba67c1e628ddc"
+      "contentHash": "2f3563e3fd7f9b727ae1989e7d16b8e930da396920e2e68728a51f45e031c3e5"
     },
     {
       "id": "file:tests/test_primitives.py",
@@ -371,7 +371,7 @@
         "extractor": "filesystem",
         "source": "tests/test_primitives.py"
       },
-      "contentHash": "e799af46de8d68f4af114528a07cb844e79edb77177aa105ed2d7526f1608b67"
+      "contentHash": "49172441ec799189bff60265762769356d5e444a494ef1a3fd1bf2238d917e61"
     },
     {
       "id": "file:tests/test_tool_executor.py",
@@ -574,7 +574,7 @@
       "confidence": 1,
       "provenance": {
         "extractor": "standard-library",
-        "source": "tests/test_model_client.py"
+        "source": "tests/test_primitives.py"
       },
       "contentHash": "6f37f6a05e2fd9821d46f9c71a4ae5642cc4a8392959110f34947e4fecc47d62"
     },
@@ -3204,7 +3204,7 @@
       "name": "ContentProvenance",
       "qualifiedName": "ContentProvenance",
       "kind": "class",
-      "line": 57,
+      "line": 58,
       "label": "ContentProvenance",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3220,7 +3220,7 @@
       "name": "InstructionAuthority",
       "qualifiedName": "InstructionAuthority",
       "kind": "class",
-      "line": 32,
+      "line": 33,
       "label": "InstructionAuthority",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3236,7 +3236,7 @@
       "name": "Message",
       "qualifiedName": "Message",
       "kind": "class",
-      "line": 185,
+      "line": 186,
       "label": "Message",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3252,7 +3252,7 @@
       "name": "Origin",
       "qualifiedName": "Origin",
       "kind": "class",
-      "line": 22,
+      "line": 23,
       "label": "Origin",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3268,7 +3268,7 @@
       "name": "Role",
       "qualifiedName": "Role",
       "kind": "class",
-      "line": 14,
+      "line": 15,
       "label": "Role",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3284,7 +3284,7 @@
       "name": "TaintFlag",
       "qualifiedName": "TaintFlag",
       "kind": "class",
-      "line": 44,
+      "line": 45,
       "label": "TaintFlag",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3300,7 +3300,7 @@
       "name": "ToolCall",
       "qualifiedName": "ToolCall",
       "kind": "class",
-      "line": 127,
+      "line": 128,
       "label": "ToolCall",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3316,7 +3316,7 @@
       "name": "ToolResult",
       "qualifiedName": "ToolResult",
       "kind": "class",
-      "line": 163,
+      "line": 164,
       "label": "ToolResult",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3332,7 +3332,7 @@
       "name": "TrustZone",
       "qualifiedName": "TrustZone",
       "kind": "class",
-      "line": 38,
+      "line": 39,
       "label": "TrustZone",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3343,12 +3343,28 @@
       "contentHash": "1f3a8b7d254fbe106079a91d80daeaefe1e200da0f60ed34ed0d2824fe5cb16c"
     },
     {
+      "id": "symbol:agentsdk/primitives.py#function:_named_unstorable_reason",
+      "type": "symbol",
+      "name": "_named_unstorable_reason",
+      "qualifiedName": "_named_unstorable_reason",
+      "kind": "function",
+      "line": 261,
+      "label": "_named_unstorable_reason",
+      "path": "agentsdk/primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/primitives.py"
+      },
+      "contentHash": "e90089c4c5e1db66b15234186f1128bef20713dcb5bbefb58a7715b964f2e1a1"
+    },
+    {
       "id": "symbol:agentsdk/primitives.py#function:ContentProvenance.__post_init__",
       "type": "symbol",
       "name": "__post_init__",
       "qualifiedName": "ContentProvenance.__post_init__",
       "kind": "function",
-      "line": 71,
+      "line": 72,
       "label": "ContentProvenance.__post_init__",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3364,7 +3380,7 @@
       "name": "from_model",
       "qualifiedName": "ContentProvenance.from_model",
       "kind": "function",
-      "line": 94,
+      "line": 95,
       "label": "ContentProvenance.from_model",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3380,7 +3396,7 @@
       "name": "internal_tool",
       "qualifiedName": "ContentProvenance.internal_tool",
       "kind": "function",
-      "line": 78,
+      "line": 79,
       "label": "ContentProvenance.internal_tool",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3396,7 +3412,7 @@
       "name": "is_tainted",
       "qualifiedName": "ContentProvenance.is_tainted",
       "kind": "function",
-      "line": 122,
+      "line": 123,
       "label": "ContentProvenance.is_tainted",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3412,7 +3428,7 @@
       "name": "with_taint",
       "qualifiedName": "ContentProvenance.with_taint",
       "kind": "function",
-      "line": 118,
+      "line": 119,
       "label": "ContentProvenance.with_taint",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3428,7 +3444,7 @@
       "name": "__post_init__",
       "qualifiedName": "Message.__post_init__",
       "kind": "function",
-      "line": 191,
+      "line": 192,
       "label": "Message.__post_init__",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3444,7 +3460,7 @@
       "name": "__post_init__",
       "qualifiedName": "ToolCall.__post_init__",
       "kind": "function",
-      "line": 139,
+      "line": 140,
       "label": "ToolCall.__post_init__",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3460,7 +3476,7 @@
       "name": "__post_init__",
       "qualifiedName": "ToolResult.__post_init__",
       "kind": "function",
-      "line": 176,
+      "line": 177,
       "label": "ToolResult.__post_init__",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -3476,7 +3492,7 @@
       "name": "unstorable_reason",
       "qualifiedName": "unstorable_reason",
       "kind": "function",
-      "line": 216,
+      "line": 217,
       "label": "unstorable_reason",
       "path": "agentsdk/primitives.py",
       "confidence": 1,
@@ -6815,22 +6831,6 @@
       "contentHash": "5c5b15cf98a968037a2a28fa7ed17e7c05a016f32b8dc176dbc3b650cef6d23e"
     },
     {
-      "id": "symbol:tests/test_model_client.py#function:test_base_exception_from_a_hostile_int_still_propagates",
-      "type": "symbol",
-      "name": "test_base_exception_from_a_hostile_int_still_propagates",
-      "qualifiedName": "test_base_exception_from_a_hostile_int_still_propagates",
-      "kind": "function",
-      "line": 1157,
-      "label": "test_base_exception_from_a_hostile_int_still_propagates",
-      "path": "tests/test_model_client.py",
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_model_client.py"
-      },
-      "contentHash": "97bfb3e94bebe9a33559dc8531a3cb80873d55c1a3b731b388eac1feabcc38d0"
-    },
-    {
       "id": "symbol:tests/test_model_client.py#function:test_client_error_surfaces_as_model_error_not_a_raw_provider_exception",
       "type": "symbol",
       "name": "test_client_error_surfaces_as_model_error_not_a_raw_provider_exception",
@@ -7812,7 +7812,7 @@
       "name": "test_the_adapter_no_longer_coerces_token_counts_itself",
       "qualifiedName": "test_the_adapter_no_longer_coerces_token_counts_itself",
       "kind": "function",
-      "line": 1164,
+      "line": 1173,
       "label": "test_the_adapter_no_longer_coerces_token_counts_itself",
       "path": "tests/test_model_client.py",
       "confidence": 1,
@@ -7999,6 +7999,22 @@
       "contentHash": "59e1deafafdad9147b2e2d8983f0f90a74595d28ebc2e2f36bc1875eb4e19233"
     },
     {
+      "id": "symbol:tests/test_model_client.py#function:test_usage_token_count_lets_base_exception_propagate",
+      "type": "symbol",
+      "name": "test_usage_token_count_lets_base_exception_propagate",
+      "qualifiedName": "test_usage_token_count_lets_base_exception_propagate",
+      "kind": "function",
+      "line": 1157,
+      "label": "test_usage_token_count_lets_base_exception_propagate",
+      "path": "tests/test_model_client.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_model_client.py"
+      },
+      "contentHash": "a6fbefad7da256680c6ca504577bc06f698a641387b87a525cce7e5d66808f3e"
+    },
+    {
       "id": "symbol:tests/test_model_client.py#function:test_wrapped_failure_keeps_the_original_cause_for_debugging",
       "type": "symbol",
       "name": "test_wrapped_failure_keeps_the_original_cause_for_debugging",
@@ -8036,7 +8052,7 @@
       "name": "ScriptedModel",
       "qualifiedName": "ScriptedModel",
       "kind": "class",
-      "line": 140,
+      "line": 141,
       "label": "ScriptedModel",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8052,7 +8068,7 @@
       "name": "Exploding",
       "qualifiedName": "test_a_failed_run_is_recorded_as_failed.Exploding",
       "kind": "class",
-      "line": 826,
+      "line": 827,
       "label": "test_a_failed_run_is_recorded_as_failed.Exploding",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8068,7 +8084,7 @@
       "name": "Awkward",
       "qualifiedName": "test_event_payloads_survive_values_json_cannot_hold.Awkward",
       "kind": "class",
-      "line": 379,
+      "line": 380,
       "label": "test_event_payloads_survive_values_json_cannot_hold.Awkward",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8084,7 +8100,7 @@
       "name": "Provider",
       "qualifiedName": "test_persistence_does_not_change_the_outcome.Provider",
       "kind": "class",
-      "line": 961,
+      "line": 966,
       "label": "test_persistence_does_not_change_the_outcome.Provider",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8100,7 +8116,7 @@
       "name": "HalfBroken",
       "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken",
       "kind": "class",
-      "line": 847,
+      "line": 848,
       "label": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8116,7 +8132,7 @@
       "name": "_requires_database",
       "qualifiedName": "_requires_database",
       "kind": "function",
-      "line": 80,
+      "line": 81,
       "label": "_requires_database",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8132,7 +8148,7 @@
       "name": "a_manifest",
       "qualifiedName": "a_manifest",
       "kind": "function",
-      "line": 107,
+      "line": 108,
       "label": "a_manifest",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8148,7 +8164,7 @@
       "name": "echo_tool",
       "qualifiedName": "echo_tool",
       "kind": "function",
-      "line": 169,
+      "line": 170,
       "label": "echo_tool",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8164,7 +8180,7 @@
       "name": "query",
       "qualifiedName": "query",
       "kind": "function",
-      "line": 135,
+      "line": 136,
       "label": "query",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8180,7 +8196,7 @@
       "name": "schema",
       "qualifiedName": "schema",
       "kind": "function",
-      "line": 96,
+      "line": 97,
       "label": "schema",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8196,7 +8212,7 @@
       "name": "scope",
       "qualifiedName": "scope",
       "kind": "function",
-      "line": 103,
+      "line": 104,
       "label": "scope",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8212,7 +8228,7 @@
       "name": "__init__",
       "qualifiedName": "ScriptedModel.__init__",
       "kind": "function",
-      "line": 141,
+      "line": 142,
       "label": "ScriptedModel.__init__",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8228,7 +8244,7 @@
       "name": "send",
       "qualifiedName": "ScriptedModel.send",
       "kind": "function",
-      "line": 145,
+      "line": 146,
       "label": "ScriptedModel.send",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8244,7 +8260,7 @@
       "name": "started",
       "qualifiedName": "started",
       "kind": "function",
-      "line": 123,
+      "line": 124,
       "label": "started",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8260,7 +8276,7 @@
       "name": "test_a_bound_store_refuses_a_different_run",
       "qualifiedName": "test_a_bound_store_refuses_a_different_run",
       "kind": "function",
-      "line": 205,
+      "line": 206,
       "label": "test_a_bound_store_refuses_a_different_run",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8276,7 +8292,7 @@
       "name": "test_a_failed_run_is_recorded_as_failed",
       "qualifiedName": "test_a_failed_run_is_recorded_as_failed",
       "kind": "function",
-      "line": 825,
+      "line": 826,
       "label": "test_a_failed_run_is_recorded_as_failed",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8292,7 +8308,7 @@
       "name": "send",
       "qualifiedName": "test_a_failed_run_is_recorded_as_failed.Exploding.send",
       "kind": "function",
-      "line": 827,
+      "line": 828,
       "label": "test_a_failed_run_is_recorded_as_failed.Exploding.send",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8308,7 +8324,7 @@
       "name": "test_a_failed_tool_result_is_still_a_failure_after_a_round_trip",
       "qualifiedName": "test_a_failed_tool_result_is_still_a_failure_after_a_round_trip",
       "kind": "function",
-      "line": 301,
+      "line": 302,
       "label": "test_a_failed_tool_result_is_still_a_failure_after_a_round_trip",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8324,7 +8340,7 @@
       "name": "test_a_message_cannot_be_filed_under_another_tenant",
       "qualifiedName": "test_a_message_cannot_be_filed_under_another_tenant",
       "kind": "function",
-      "line": 910,
+      "line": 911,
       "label": "test_a_message_cannot_be_filed_under_another_tenant",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8340,7 +8356,7 @@
       "name": "test_a_run_row_is_never_written_without_its_manifest",
       "qualifiedName": "test_a_run_row_is_never_written_without_its_manifest",
       "kind": "function",
-      "line": 490,
+      "line": 491,
       "label": "test_a_run_row_is_never_written_without_its_manifest",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8356,7 +8372,7 @@
       "name": "test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
       "qualifiedName": "test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
       "kind": "function",
-      "line": 656,
+      "line": 657,
       "label": "test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8372,7 +8388,7 @@
       "name": "test_a_second_manifest_for_the_same_run_is_rejected",
       "qualifiedName": "test_a_second_manifest_for_the_same_run_is_rejected",
       "kind": "function",
-      "line": 485,
+      "line": 486,
       "label": "test_a_second_manifest_for_the_same_run_is_rejected",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8388,7 +8404,7 @@
       "name": "test_a_tool_call_the_store_cannot_hold_round_trips_as_an_error",
       "qualifiedName": "test_a_tool_call_the_store_cannot_hold_round_trips_as_an_error",
       "kind": "function",
-      "line": 893,
+      "line": 894,
       "label": "test_a_tool_call_the_store_cannot_hold_round_trips_as_an_error",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8404,7 +8420,7 @@
       "name": "test_a_transient_failure_at_start_leaves_nothing_unexplainable",
       "qualifiedName": "test_a_transient_failure_at_start_leaves_nothing_unexplainable",
       "kind": "function",
-      "line": 776,
+      "line": 777,
       "label": "test_a_transient_failure_at_start_leaves_nothing_unexplainable",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8420,7 +8436,7 @@
       "name": "boom",
       "qualifiedName": "test_a_transient_failure_at_start_leaves_nothing_unexplainable.boom",
       "kind": "function",
-      "line": 785,
+      "line": 786,
       "label": "test_a_transient_failure_at_start_leaves_nothing_unexplainable.boom",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8436,7 +8452,7 @@
       "name": "test_a_whole_run_persists_and_reconstructs",
       "qualifiedName": "test_a_whole_run_persists_and_reconstructs",
       "kind": "function",
-      "line": 690,
+      "line": 691,
       "label": "test_a_whole_run_persists_and_reconstructs",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8452,7 +8468,7 @@
       "name": "test_an_unregistered_model_is_recorded_as_such_not_as_null",
       "qualifiedName": "test_an_unregistered_model_is_recorded_as_such_not_as_null",
       "kind": "function",
-      "line": 640,
+      "line": 641,
       "label": "test_an_unregistered_model_is_recorded_as_such_not_as_null",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8468,7 +8484,7 @@
       "name": "test_append_and_history_round_trip_in_order",
       "qualifiedName": "test_append_and_history_round_trip_in_order",
       "kind": "function",
-      "line": 179,
+      "line": 180,
       "label": "test_append_and_history_round_trip_in_order",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8484,7 +8500,7 @@
       "name": "test_appending_to_a_run_that_does_not_exist_is_refused",
       "qualifiedName": "test_appending_to_a_run_that_does_not_exist_is_refused",
       "kind": "function",
-      "line": 926,
+      "line": 927,
       "label": "test_appending_to_a_run_that_does_not_exist_is_refused",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8500,7 +8516,7 @@
       "name": "test_appending_without_a_bound_scope_is_refused",
       "qualifiedName": "test_appending_without_a_bound_scope_is_refused",
       "kind": "function",
-      "line": 198,
+      "line": 199,
       "label": "test_appending_without_a_bound_scope_is_refused",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8516,7 +8532,7 @@
       "name": "test_arguments_error_survives_the_round_trip",
       "qualifiedName": "test_arguments_error_survives_the_round_trip",
       "kind": "function",
-      "line": 870,
+      "line": 871,
       "label": "test_arguments_error_survives_the_round_trip",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8532,7 +8548,7 @@
       "name": "test_concurrent_appends_never_corrupt_the_order",
       "qualifiedName": "test_concurrent_appends_never_corrupt_the_order",
       "kind": "function",
-      "line": 225,
+      "line": 226,
       "label": "test_concurrent_appends_never_corrupt_the_order",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8548,7 +8564,7 @@
       "name": "write",
       "qualifiedName": "test_concurrent_appends_never_corrupt_the_order.write",
       "kind": "function",
-      "line": 248,
+      "line": 249,
       "label": "test_concurrent_appends_never_corrupt_the_order.write",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8564,7 +8580,7 @@
       "name": "test_duplicate_sequence_numbers_are_impossible",
       "qualifiedName": "test_duplicate_sequence_numbers_are_impossible",
       "kind": "function",
-      "line": 211,
+      "line": 212,
       "label": "test_duplicate_sequence_numbers_are_impossible",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8580,7 +8596,7 @@
       "name": "test_event_payloads_survive_values_json_cannot_hold",
       "qualifiedName": "test_event_payloads_survive_values_json_cannot_hold",
       "kind": "function",
-      "line": 374,
+      "line": 375,
       "label": "test_event_payloads_survive_values_json_cannot_hold",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8596,7 +8612,7 @@
       "name": "__str__",
       "qualifiedName": "test_event_payloads_survive_values_json_cannot_hold.Awkward.__str__",
       "kind": "function",
-      "line": 380,
+      "line": 381,
       "label": "test_event_payloads_survive_values_json_cannot_hold.Awkward.__str__",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8612,7 +8628,7 @@
       "name": "test_event_sequence_numbers_are_unique_per_run",
       "qualifiedName": "test_event_sequence_numbers_are_unique_per_run",
       "kind": "function",
-      "line": 454,
+      "line": 455,
       "label": "test_event_sequence_numbers_are_unique_per_run",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8628,7 +8644,7 @@
       "name": "test_events_persist_with_the_full_envelope",
       "qualifiedName": "test_events_persist_with_the_full_envelope",
       "kind": "function",
-      "line": 431,
+      "line": 432,
       "label": "test_events_persist_with_the_full_envelope",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8644,7 +8660,7 @@
       "name": "test_every_run_this_suite_started_has_exactly_one_manifest",
       "qualifiedName": "test_every_run_this_suite_started_has_exactly_one_manifest",
       "kind": "function",
-      "line": 808,
+      "line": 809,
       "label": "test_every_run_this_suite_started_has_exactly_one_manifest",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8660,7 +8676,7 @@
       "name": "test_exactly_one_manifest_per_run_with_every_field_populated",
       "qualifiedName": "test_exactly_one_manifest_per_run_with_every_field_populated",
       "kind": "function",
-      "line": 469,
+      "line": 470,
       "label": "test_exactly_one_manifest_per_run_with_every_field_populated",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8676,7 +8692,7 @@
       "name": "test_history_orders_by_sequence_no_not_by_insertion",
       "qualifiedName": "test_history_orders_by_sequence_no_not_by_insertion",
       "kind": "function",
-      "line": 322,
+      "line": 323,
       "label": "test_history_orders_by_sequence_no_not_by_insertion",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8692,7 +8708,7 @@
       "name": "test_manifest_hashes_are_stable_and_sensitive",
       "qualifiedName": "test_manifest_hashes_are_stable_and_sensitive",
       "kind": "function",
-      "line": 528,
+      "line": 529,
       "label": "test_manifest_hashes_are_stable_and_sensitive",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8708,7 +8724,7 @@
       "name": "test_persistence_does_not_change_the_outcome",
       "qualifiedName": "test_persistence_does_not_change_the_outcome",
       "kind": "function",
-      "line": 951,
+      "line": 956,
       "label": "test_persistence_does_not_change_the_outcome",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8724,7 +8740,7 @@
       "name": "send",
       "qualifiedName": "test_persistence_does_not_change_the_outcome.Provider.send",
       "kind": "function",
-      "line": 962,
+      "line": 967,
       "label": "test_persistence_does_not_change_the_outcome.Provider.send",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8740,7 +8756,7 @@
       "name": "run",
       "qualifiedName": "test_persistence_does_not_change_the_outcome.run",
       "kind": "function",
-      "line": 973,
+      "line": 978,
       "label": "test_persistence_does_not_change_the_outcome.run",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8756,7 +8772,7 @@
       "name": "test_provenance_survives_the_round_trip",
       "qualifiedName": "test_provenance_survives_the_round_trip",
       "kind": "function",
-      "line": 275,
+      "line": 276,
       "label": "test_provenance_survives_the_round_trip",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8772,7 +8788,7 @@
       "name": "test_runs_are_isolated",
       "qualifiedName": "test_runs_are_isolated",
       "kind": "function",
-      "line": 412,
+      "line": 413,
       "label": "test_runs_are_isolated",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8788,7 +8804,7 @@
       "name": "test_schema_sql_itself_declares_the_constraints",
       "qualifiedName": "test_schema_sql_itself_declares_the_constraints",
       "kind": "function",
-      "line": 583,
+      "line": 584,
       "label": "test_schema_sql_itself_declares_the_constraints",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8804,7 +8820,7 @@
       "name": "test_sequence_no_is_assigned_by_the_store_not_the_caller",
       "qualifiedName": "test_sequence_no_is_assigned_by_the_store_not_the_caller",
       "kind": "function",
-      "line": 189,
+      "line": 190,
       "label": "test_sequence_no_is_assigned_by_the_store_not_the_caller",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8820,7 +8836,7 @@
       "name": "test_tenancy_columns_are_indexed",
       "qualifiedName": "test_tenancy_columns_are_indexed",
       "kind": "function",
-      "line": 574,
+      "line": 575,
       "label": "test_tenancy_columns_are_indexed",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8836,7 +8852,7 @@
       "name": "test_tenant_and_project_are_not_null_in_the_schema",
       "qualifiedName": "test_tenant_and_project_are_not_null_in_the_schema",
       "kind": "function",
-      "line": 563,
+      "line": 564,
       "label": "test_tenant_and_project_are_not_null_in_the_schema",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8852,7 +8868,7 @@
       "name": "test_the_database_is_actually_configured",
       "qualifiedName": "test_the_database_is_actually_configured",
       "kind": "function",
-      "line": 63,
+      "line": 64,
       "label": "test_the_database_is_actually_configured",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8868,7 +8884,7 @@
       "name": "test_the_database_refuses_a_row_without_a_tenant",
       "qualifiedName": "test_the_database_refuses_a_row_without_a_tenant",
       "kind": "function",
-      "line": 676,
+      "line": 677,
       "label": "test_the_database_refuses_a_row_without_a_tenant",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8884,7 +8900,7 @@
       "name": "test_the_manifest_records_the_principal_context_run_settings",
       "qualifiedName": "test_the_manifest_records_the_principal_context_run_settings",
       "kind": "function",
-      "line": 513,
+      "line": 514,
       "label": "test_the_manifest_records_the_principal_context_run_settings",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8900,7 +8916,7 @@
       "name": "test_the_stored_tenancy_comes_from_the_run_not_the_caller",
       "qualifiedName": "test_the_stored_tenancy_comes_from_the_run_not_the_caller",
       "kind": "function",
-      "line": 934,
+      "line": 935,
       "label": "test_the_stored_tenancy_comes_from_the_run_not_the_caller",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8916,7 +8932,7 @@
       "name": "test_the_trace_reconstructs_in_order_however_the_rows_were_written",
       "qualifiedName": "test_the_trace_reconstructs_in_order_however_the_rows_were_written",
       "kind": "function",
-      "line": 344,
+      "line": 345,
       "label": "test_the_trace_reconstructs_in_order_however_the_rows_were_written",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8932,7 +8948,7 @@
       "name": "test_tool_calls_survive_the_round_trip",
       "qualifiedName": "test_tool_calls_survive_the_round_trip",
       "kind": "function",
-      "line": 399,
+      "line": 400,
       "label": "test_tool_calls_survive_the_round_trip",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8948,7 +8964,7 @@
       "name": "test_usage_is_reported_even_when_the_boundary_catches",
       "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches",
       "kind": "function",
-      "line": 844,
+      "line": 845,
       "label": "test_usage_is_reported_even_when_the_boundary_catches",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8964,7 +8980,7 @@
       "name": "__init__",
       "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__",
       "kind": "function",
-      "line": 848,
+      "line": 849,
       "label": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8980,7 +8996,7 @@
       "name": "send",
       "qualifiedName": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send",
       "kind": "function",
-      "line": 851,
+      "line": 852,
       "label": "test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -8996,7 +9012,7 @@
       "name": "text",
       "qualifiedName": "text",
       "kind": "function",
-      "line": 150,
+      "line": 151,
       "label": "text",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -9012,7 +9028,7 @@
       "name": "tool_call",
       "qualifiedName": "tool_call",
       "kind": "function",
-      "line": 158,
+      "line": 159,
       "label": "tool_call",
       "path": "tests/test_persistence.py",
       "confidence": 1,
@@ -9028,7 +9044,7 @@
       "name": "Hostile",
       "qualifiedName": "test_unstorable_reason_is_total.Hostile",
       "kind": "class",
-      "line": 225,
+      "line": 227,
       "label": "test_unstorable_reason_is_total.Hostile",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9039,12 +9055,28 @@
       "contentHash": "3a458b73e5de1513af9d7fdccf52c73bb592888f2af8220400af24e35ca935d9"
     },
     {
+      "id": "symbol:tests/test_primitives.py#function:test_a_lone_surrogate_is_unstorable",
+      "type": "symbol",
+      "name": "test_a_lone_surrogate_is_unstorable",
+      "qualifiedName": "test_a_lone_surrogate_is_unstorable",
+      "kind": "function",
+      "line": 296,
+      "label": "test_a_lone_surrogate_is_unstorable",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "5fc4f9ed84cb14f16d67e0ab4f03ace5190b0768eaac5179d9acfc7c3897de7d"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_a_message_refuses_content_no_store_can_hold",
       "type": "symbol",
       "name": "test_a_message_refuses_content_no_store_can_hold",
       "qualifiedName": "test_a_message_refuses_content_no_store_can_hold",
       "kind": "function",
-      "line": 265,
+      "line": 270,
       "label": "test_a_message_refuses_content_no_store_can_hold",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9055,12 +9087,28 @@
       "contentHash": "4ef682cd6bafc52dafce1410da4d3cdab5cbe5f70d361b1136f3cdd0ee7ed200"
     },
     {
+      "id": "symbol:tests/test_primitives.py#function:test_a_model_delivered_surrogate_flags_the_tool_call",
+      "type": "symbol",
+      "name": "test_a_model_delivered_surrogate_flags_the_tool_call",
+      "qualifiedName": "test_a_model_delivered_surrogate_flags_the_tool_call",
+      "kind": "function",
+      "line": 303,
+      "label": "test_a_model_delivered_surrogate_flags_the_tool_call",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "600343d13f43254d58dabcbcbb5589233452ba1c578ca64b3df380fc54ce4467"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_a_tool_call_keeps_an_existing_arguments_error",
       "type": "symbol",
       "name": "test_a_tool_call_keeps_an_existing_arguments_error",
       "qualifiedName": "test_a_tool_call_keeps_an_existing_arguments_error",
       "kind": "function",
-      "line": 254,
+      "line": 259,
       "label": "test_a_tool_call_keeps_an_existing_arguments_error",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9076,7 +9124,7 @@
       "name": "test_a_tool_call_with_unstorable_arguments_flags_itself",
       "qualifiedName": "test_a_tool_call_with_unstorable_arguments_flags_itself",
       "kind": "function",
-      "line": 243,
+      "line": 248,
       "label": "test_a_tool_call_with_unstorable_arguments_flags_itself",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9087,12 +9135,28 @@
       "contentHash": "40b8debf6ca71f109ebbe5d8faf37c045d3aa37dd8c697b4f275934978a50ef7"
     },
     {
+      "id": "symbol:tests/test_primitives.py#function:test_an_integer_beyond_the_serialisers_limit_is_unstorable",
+      "type": "symbol",
+      "name": "test_an_integer_beyond_the_serialisers_limit_is_unstorable",
+      "qualifiedName": "test_an_integer_beyond_the_serialisers_limit_is_unstorable",
+      "kind": "function",
+      "line": 314,
+      "label": "test_an_integer_beyond_the_serialisers_limit_is_unstorable",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "8cabaefd088d8af7de6a84c721ea59b7f73b3ea3bfa4ec6287242c291bbfde7b"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family",
       "type": "symbol",
       "name": "test_errors_sit_under_the_right_family",
       "qualifiedName": "test_errors_sit_under_the_right_family",
       "kind": "function",
-      "line": 142,
+      "line": 144,
       "label": "test_errors_sit_under_the_right_family",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9108,7 +9172,7 @@
       "name": "test_every_tool_result_carries_exactly_one_provenance",
       "qualifiedName": "test_every_tool_result_carries_exactly_one_provenance",
       "kind": "function",
-      "line": 67,
+      "line": 69,
       "label": "test_every_tool_result_carries_exactly_one_provenance",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9124,7 +9188,7 @@
       "name": "test_families_are_disjoint",
       "qualifiedName": "test_families_are_disjoint",
       "kind": "function",
-      "line": 147,
+      "line": 149,
       "label": "test_families_are_disjoint",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9140,7 +9204,7 @@
       "name": "test_internal_tool_default_matches_lld",
       "qualifiedName": "test_internal_tool_default_matches_lld",
       "kind": "function",
-      "line": 58,
+      "line": 60,
       "label": "test_internal_tool_default_matches_lld",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9156,7 +9220,7 @@
       "name": "test_message_normalises_sequences_to_tuples",
       "qualifiedName": "test_message_normalises_sequences_to_tuples",
       "kind": "function",
-      "line": 120,
+      "line": 122,
       "label": "test_message_normalises_sequences_to_tuples",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9172,7 +9236,7 @@
       "name": "test_model_output_does_not_launder_taint",
       "qualifiedName": "test_model_output_does_not_launder_taint",
       "kind": "function",
-      "line": 77,
+      "line": 79,
       "label": "test_model_output_does_not_launder_taint",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9188,7 +9252,7 @@
       "name": "test_model_output_from_clean_inputs_stays_clean",
       "qualifiedName": "test_model_output_from_clean_inputs_stays_clean",
       "kind": "function",
-      "line": 105,
+      "line": 107,
       "label": "test_model_output_from_clean_inputs_stays_clean",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9204,7 +9268,7 @@
       "name": "test_model_output_takes_least_trusted_input_and_union_of_taint",
       "qualifiedName": "test_model_output_takes_least_trusted_input_and_union_of_taint",
       "kind": "function",
-      "line": 95,
+      "line": 97,
       "label": "test_model_output_takes_least_trusted_input_and_union_of_taint",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9220,7 +9284,7 @@
       "name": "test_only_completed_and_failed_are_reachable_in_phase0",
       "qualifiedName": "test_only_completed_and_failed_are_reachable_in_phase0",
       "kind": "function",
-      "line": 155,
+      "line": 157,
       "label": "test_only_completed_and_failed_are_reachable_in_phase0",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9236,7 +9300,7 @@
       "name": "test_ordinary_message_content_is_untouched",
       "qualifiedName": "test_ordinary_message_content_is_untouched",
       "kind": "function",
-      "line": 273,
+      "line": 278,
       "label": "test_ordinary_message_content_is_untouched",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9252,7 +9316,7 @@
       "name": "test_ordinary_tool_call_arguments_are_untouched",
       "qualifiedName": "test_ordinary_tool_call_arguments_are_untouched",
       "kind": "function",
-      "line": 259,
+      "line": 264,
       "label": "test_ordinary_tool_call_arguments_are_untouched",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9268,7 +9332,7 @@
       "name": "test_outcomes_share_one_base_so_the_contract_never_changes",
       "qualifiedName": "test_outcomes_share_one_base_so_the_contract_never_changes",
       "kind": "function",
-      "line": 164,
+      "line": 166,
       "label": "test_outcomes_share_one_base_so_the_contract_never_changes",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9284,7 +9348,7 @@
       "name": "test_provenance_is_immutable",
       "qualifiedName": "test_provenance_is_immutable",
       "kind": "function",
-      "line": 111,
+      "line": 113,
       "label": "test_provenance_is_immutable",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9300,7 +9364,7 @@
       "name": "test_role_values_match_messages_table_enum",
       "qualifiedName": "test_role_values_match_messages_table_enum",
       "kind": "function",
-      "line": 40,
+      "line": 42,
       "label": "test_role_values_match_messages_table_enum",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9316,7 +9380,7 @@
       "name": "test_run_interruption_type_exists_without_persistence",
       "qualifiedName": "test_run_interruption_type_exists_without_persistence",
       "kind": "function",
-      "line": 174,
+      "line": 176,
       "label": "test_run_interruption_type_exists_without_persistence",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9332,7 +9396,7 @@
       "name": "test_storable_values_pass",
       "qualifiedName": "test_storable_values_pass",
       "kind": "function",
-      "line": 210,
+      "line": 212,
       "label": "test_storable_values_pass",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9343,12 +9407,28 @@
       "contentHash": "7cc944bf96862f53572123c035e503a4f5079708cede833f534fc16cc9f7fb96"
     },
     {
+      "id": "symbol:tests/test_primitives.py#function:test_surrogate_content_is_refused",
+      "type": "symbol",
+      "name": "test_surrogate_content_is_refused",
+      "qualifiedName": "test_surrogate_content_is_refused",
+      "kind": "function",
+      "line": 309,
+      "label": "test_surrogate_content_is_refused",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "9d3de2a1de90ed68863a0580cf112357f1e4d454b01a2d638c8e0c9d386b968c"
+    },
+    {
       "id": "symbol:tests/test_primitives.py#function:test_tool_result_rejects_non_provenance",
       "type": "symbol",
       "name": "test_tool_result_rejects_non_provenance",
       "qualifiedName": "test_tool_result_rejects_non_provenance",
       "kind": "function",
-      "line": 53,
+      "line": 55,
       "label": "test_tool_result_rejects_non_provenance",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9364,7 +9444,7 @@
       "name": "test_tool_result_requires_provenance",
       "qualifiedName": "test_tool_result_requires_provenance",
       "kind": "function",
-      "line": 48,
+      "line": 50,
       "label": "test_tool_result_requires_provenance",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9380,7 +9460,7 @@
       "name": "test_unstorable_reason_is_total",
       "qualifiedName": "test_unstorable_reason_is_total",
       "kind": "function",
-      "line": 219,
+      "line": 221,
       "label": "test_unstorable_reason_is_total",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9396,7 +9476,7 @@
       "name": "__eq__",
       "qualifiedName": "test_unstorable_reason_is_total.Hostile.__eq__",
       "kind": "function",
-      "line": 226,
+      "line": 228,
       "label": "test_unstorable_reason_is_total.Hostile.__eq__",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9412,7 +9492,7 @@
       "name": "__hash__",
       "qualifiedName": "test_unstorable_reason_is_total.Hostile.__hash__",
       "kind": "function",
-      "line": 229,
+      "line": 231,
       "label": "test_unstorable_reason_is_total.Hostile.__hash__",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9428,7 +9508,7 @@
       "name": "test_unstorable_values_are_found_however_deeply_nested",
       "qualifiedName": "test_unstorable_values_are_found_however_deeply_nested",
       "kind": "function",
-      "line": 214,
+      "line": 216,
       "label": "test_unstorable_values_are_found_however_deeply_nested",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9444,7 +9524,7 @@
       "name": "test_unstorable_values_are_named",
       "qualifiedName": "test_unstorable_values_are_named",
       "kind": "function",
-      "line": 202,
+      "line": 204,
       "label": "test_unstorable_values_are_named",
       "path": "tests/test_primitives.py",
       "confidence": 1,
@@ -9453,6 +9533,22 @@
         "source": "tests/test_primitives.py"
       },
       "contentHash": "3769cd3f3524b20409468f566c04e44e932613e2b62c0f62a6f1c1b6405910d9"
+    },
+    {
+      "id": "symbol:tests/test_primitives.py#function:test_values_postgres_accepts_are_not_rejected",
+      "type": "symbol",
+      "name": "test_values_postgres_accepts_are_not_rejected",
+      "qualifiedName": "test_values_postgres_accepts_are_not_rejected",
+      "kind": "function",
+      "line": 327,
+      "label": "test_values_postgres_accepts_are_not_rejected",
+      "path": "tests/test_primitives.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "ab85af74314d6528fb99c3323376d4b6ef92599485f1bcaaa2ea6b043769418d"
     },
     {
       "id": "symbol:tests/test_tool_executor.py#class:SpyTool",
@@ -12187,7 +12283,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:ContentProvenance",
-      "line": 57,
+      "line": 58,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12201,7 +12297,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:InstructionAuthority",
-      "line": 32,
+      "line": 33,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12215,7 +12311,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:Message",
-      "line": 185,
+      "line": 186,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12229,7 +12325,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:Origin",
-      "line": 22,
+      "line": 23,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12243,7 +12339,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:Role",
-      "line": 14,
+      "line": 15,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12257,7 +12353,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:TaintFlag",
-      "line": 44,
+      "line": 45,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12271,7 +12367,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:ToolCall",
-      "line": 127,
+      "line": 128,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12285,7 +12381,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:ToolResult",
-      "line": 163,
+      "line": 164,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12299,7 +12395,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#class:TrustZone",
-      "line": 38,
+      "line": 39,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12309,11 +12405,25 @@
       "contentHash": "d794e1bfd0570b8e8efe4f57cdc72bfa9fb6b88c0d30299b94c3e39ef8720ca1"
     },
     {
+      "id": "defines:file:agentsdk/primitives.py->symbol:agentsdk/primitives.py#function:_named_unstorable_reason:",
+      "type": "defines",
+      "source": "file:agentsdk/primitives.py",
+      "target": "symbol:agentsdk/primitives.py#function:_named_unstorable_reason",
+      "line": 261,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/primitives.py"
+      },
+      "contentHash": "79956df8e0178498219929eb8797d7d14ed36f068fa88c277216336af1e357c8"
+    },
+    {
       "id": "defines:file:agentsdk/primitives.py->symbol:agentsdk/primitives.py#function:ContentProvenance.__post_init__:",
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:ContentProvenance.__post_init__",
-      "line": 71,
+      "line": 72,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12327,7 +12437,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:ContentProvenance.from_model",
-      "line": 94,
+      "line": 95,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12341,7 +12451,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:ContentProvenance.internal_tool",
-      "line": 78,
+      "line": 79,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12355,7 +12465,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:ContentProvenance.is_tainted",
-      "line": 122,
+      "line": 123,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12369,7 +12479,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:ContentProvenance.with_taint",
-      "line": 118,
+      "line": 119,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12383,7 +12493,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:Message.__post_init__",
-      "line": 191,
+      "line": 192,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12397,7 +12507,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:ToolCall.__post_init__",
-      "line": 139,
+      "line": 140,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12411,7 +12521,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:ToolResult.__post_init__",
-      "line": 176,
+      "line": 177,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -12425,7 +12535,7 @@
       "type": "defines",
       "source": "file:agentsdk/primitives.py",
       "target": "symbol:agentsdk/primitives.py#function:unstorable_reason",
-      "line": 216,
+      "line": 217,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -15347,20 +15457,6 @@
       "contentHash": "113ec823983f21ee64ba6056c835febd12f2dd73bdf56bef151917fe746e32fb"
     },
     {
-      "id": "defines:file:tests/test_model_client.py->symbol:tests/test_model_client.py#function:test_base_exception_from_a_hostile_int_still_propagates:",
-      "type": "defines",
-      "source": "file:tests/test_model_client.py",
-      "target": "symbol:tests/test_model_client.py#function:test_base_exception_from_a_hostile_int_still_propagates",
-      "line": 1157,
-      "resolved": true,
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_model_client.py"
-      },
-      "contentHash": "d45d0a9e42bf8d59883ea1cf66864826735d25dfe443e93f88258ca5566d5516"
-    },
-    {
       "id": "defines:file:tests/test_model_client.py->symbol:tests/test_model_client.py#function:test_client_error_surfaces_as_model_error_not_a_raw_provider_exception:",
       "type": "defines",
       "source": "file:tests/test_model_client.py",
@@ -16219,7 +16315,7 @@
       "type": "defines",
       "source": "file:tests/test_model_client.py",
       "target": "symbol:tests/test_model_client.py#function:test_the_adapter_no_longer_coerces_token_counts_itself",
-      "line": 1164,
+      "line": 1173,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16383,6 +16479,20 @@
       "contentHash": "49b1df6b080a54489f70a9a39adf52fdf81fc9766e766e1b772fe8c5985e270d"
     },
     {
+      "id": "defines:file:tests/test_model_client.py->symbol:tests/test_model_client.py#function:test_usage_token_count_lets_base_exception_propagate:",
+      "type": "defines",
+      "source": "file:tests/test_model_client.py",
+      "target": "symbol:tests/test_model_client.py#function:test_usage_token_count_lets_base_exception_propagate",
+      "line": 1157,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_model_client.py"
+      },
+      "contentHash": "bd688936583c5789eec0c7faaf8ef1d5a0aec79fa03a4fa693f23b9a9382c7cc"
+    },
+    {
       "id": "defines:file:tests/test_model_client.py->symbol:tests/test_model_client.py#function:test_wrapped_failure_keeps_the_original_cause_for_debugging:",
       "type": "defines",
       "source": "file:tests/test_model_client.py",
@@ -16415,7 +16525,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#class:ScriptedModel",
-      "line": 140,
+      "line": 141,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16429,7 +16539,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#class:test_a_failed_run_is_recorded_as_failed.Exploding",
-      "line": 826,
+      "line": 827,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16443,7 +16553,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#class:test_event_payloads_survive_values_json_cannot_hold.Awkward",
-      "line": 379,
+      "line": 380,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16457,7 +16567,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#class:test_persistence_does_not_change_the_outcome.Provider",
-      "line": 961,
+      "line": 966,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16471,7 +16581,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#class:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken",
-      "line": 847,
+      "line": 848,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16485,7 +16595,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:_requires_database",
-      "line": 80,
+      "line": 81,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16499,7 +16609,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:a_manifest",
-      "line": 107,
+      "line": 108,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16513,7 +16623,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:echo_tool",
-      "line": 169,
+      "line": 170,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16527,7 +16637,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:query",
-      "line": 135,
+      "line": 136,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16541,7 +16651,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:schema",
-      "line": 96,
+      "line": 97,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16555,7 +16665,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:scope",
-      "line": 103,
+      "line": 104,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16569,7 +16679,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:ScriptedModel.__init__",
-      "line": 141,
+      "line": 142,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16583,7 +16693,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:ScriptedModel.send",
-      "line": 145,
+      "line": 146,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16597,7 +16707,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:started",
-      "line": 123,
+      "line": 124,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16611,7 +16721,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_bound_store_refuses_a_different_run",
-      "line": 205,
+      "line": 206,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16625,7 +16735,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed",
-      "line": 825,
+      "line": 826,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16639,7 +16749,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed.Exploding.send",
-      "line": 827,
+      "line": 828,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16653,7 +16763,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_failed_tool_result_is_still_a_failure_after_a_round_trip",
-      "line": 301,
+      "line": 302,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16667,7 +16777,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_message_cannot_be_filed_under_another_tenant",
-      "line": 910,
+      "line": 911,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16681,7 +16791,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_run_row_is_never_written_without_its_manifest",
-      "line": 490,
+      "line": 491,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16695,7 +16805,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_run_with_an_unregistered_model_still_writes_a_full_manifest",
-      "line": 656,
+      "line": 657,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16709,7 +16819,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_second_manifest_for_the_same_run_is_rejected",
-      "line": 485,
+      "line": 486,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16723,7 +16833,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_tool_call_the_store_cannot_hold_round_trips_as_an_error",
-      "line": 893,
+      "line": 894,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16737,7 +16847,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_transient_failure_at_start_leaves_nothing_unexplainable",
-      "line": 776,
+      "line": 777,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16751,7 +16861,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_transient_failure_at_start_leaves_nothing_unexplainable.boom",
-      "line": 785,
+      "line": 786,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16765,7 +16875,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_a_whole_run_persists_and_reconstructs",
-      "line": 690,
+      "line": 691,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16779,7 +16889,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_an_unregistered_model_is_recorded_as_such_not_as_null",
-      "line": 640,
+      "line": 641,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16793,7 +16903,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_append_and_history_round_trip_in_order",
-      "line": 179,
+      "line": 180,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16807,7 +16917,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_appending_to_a_run_that_does_not_exist_is_refused",
-      "line": 926,
+      "line": 927,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16821,7 +16931,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_appending_without_a_bound_scope_is_refused",
-      "line": 198,
+      "line": 199,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16835,7 +16945,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_arguments_error_survives_the_round_trip",
-      "line": 870,
+      "line": 871,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16849,7 +16959,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order",
-      "line": 225,
+      "line": 226,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16863,7 +16973,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_concurrent_appends_never_corrupt_the_order.write",
-      "line": 248,
+      "line": 249,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16877,7 +16987,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_duplicate_sequence_numbers_are_impossible",
-      "line": 211,
+      "line": 212,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16891,7 +17001,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_event_payloads_survive_values_json_cannot_hold",
-      "line": 374,
+      "line": 375,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16905,7 +17015,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_event_payloads_survive_values_json_cannot_hold.Awkward.__str__",
-      "line": 380,
+      "line": 381,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16919,7 +17029,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_event_sequence_numbers_are_unique_per_run",
-      "line": 454,
+      "line": 455,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16933,7 +17043,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_events_persist_with_the_full_envelope",
-      "line": 431,
+      "line": 432,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16947,7 +17057,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_every_run_this_suite_started_has_exactly_one_manifest",
-      "line": 808,
+      "line": 809,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16961,7 +17071,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_exactly_one_manifest_per_run_with_every_field_populated",
-      "line": 469,
+      "line": 470,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16975,7 +17085,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_history_orders_by_sequence_no_not_by_insertion",
-      "line": 322,
+      "line": 323,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -16989,7 +17099,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_manifest_hashes_are_stable_and_sensitive",
-      "line": 528,
+      "line": 529,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17003,7 +17113,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_persistence_does_not_change_the_outcome",
-      "line": 951,
+      "line": 956,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17017,7 +17127,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_persistence_does_not_change_the_outcome.Provider.send",
-      "line": 962,
+      "line": 967,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17031,7 +17141,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_persistence_does_not_change_the_outcome.run",
-      "line": 973,
+      "line": 978,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17045,7 +17155,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_provenance_survives_the_round_trip",
-      "line": 275,
+      "line": 276,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17059,7 +17169,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_runs_are_isolated",
-      "line": 412,
+      "line": 413,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17073,7 +17183,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_schema_sql_itself_declares_the_constraints",
-      "line": 583,
+      "line": 584,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17087,7 +17197,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_sequence_no_is_assigned_by_the_store_not_the_caller",
-      "line": 189,
+      "line": 190,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17101,7 +17211,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_tenancy_columns_are_indexed",
-      "line": 574,
+      "line": 575,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17115,7 +17225,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_tenant_and_project_are_not_null_in_the_schema",
-      "line": 563,
+      "line": 564,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17129,7 +17239,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_the_database_is_actually_configured",
-      "line": 63,
+      "line": 64,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17143,7 +17253,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_the_database_refuses_a_row_without_a_tenant",
-      "line": 676,
+      "line": 677,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17157,7 +17267,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_the_manifest_records_the_principal_context_run_settings",
-      "line": 513,
+      "line": 514,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17171,7 +17281,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_the_stored_tenancy_comes_from_the_run_not_the_caller",
-      "line": 934,
+      "line": 935,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17185,7 +17295,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_the_trace_reconstructs_in_order_however_the_rows_were_written",
-      "line": 344,
+      "line": 345,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17199,7 +17309,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_tool_calls_survive_the_round_trip",
-      "line": 399,
+      "line": 400,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17213,7 +17323,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches",
-      "line": 844,
+      "line": 845,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17227,7 +17337,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.__init__",
-      "line": 848,
+      "line": 849,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17241,7 +17351,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:test_usage_is_reported_even_when_the_boundary_catches.HalfBroken.send",
-      "line": 851,
+      "line": 852,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17255,7 +17365,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:text",
-      "line": 150,
+      "line": 151,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17269,7 +17379,7 @@
       "type": "defines",
       "source": "file:tests/test_persistence.py",
       "target": "symbol:tests/test_persistence.py#function:tool_call",
-      "line": 158,
+      "line": 159,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17283,7 +17393,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#class:test_unstorable_reason_is_total.Hostile",
-      "line": 225,
+      "line": 227,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17293,11 +17403,25 @@
       "contentHash": "9967376f8f9af1cc5d6842ff81a5cbb096970cb5539d2b8119aa54757342dd9a"
     },
     {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_lone_surrogate_is_unstorable:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_a_lone_surrogate_is_unstorable",
+      "line": 296,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "a2be44dd3f7b90ead036e0bb08f7088841875956c65b8ab5810c5913007c46f9"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_message_refuses_content_no_store_can_hold:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_message_refuses_content_no_store_can_hold",
-      "line": 265,
+      "line": 270,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17307,11 +17431,25 @@
       "contentHash": "35bd1f34f226431586b37fc3b0a35895eb82428b834fcea66a175b29a229a9b6"
     },
     {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_model_delivered_surrogate_flags_the_tool_call:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_a_model_delivered_surrogate_flags_the_tool_call",
+      "line": 303,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "982969bf4246a1c1b36f4f5ee410c0769f34e993fe259c44c289a24445a262d3"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_a_tool_call_keeps_an_existing_arguments_error:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_tool_call_keeps_an_existing_arguments_error",
-      "line": 254,
+      "line": 259,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17325,7 +17463,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_a_tool_call_with_unstorable_arguments_flags_itself",
-      "line": 243,
+      "line": 248,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17335,11 +17473,25 @@
       "contentHash": "063539ac293bfe093cbc994fc029d21236bd6028975928465dd5aacbd1d2749e"
     },
     {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_an_integer_beyond_the_serialisers_limit_is_unstorable:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_an_integer_beyond_the_serialisers_limit_is_unstorable",
+      "line": 314,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "5120244dedf6afbc888b58b87d385ad74350d94ef0e90f8158617321da282f50"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family",
-      "line": 142,
+      "line": 144,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17353,7 +17505,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_every_tool_result_carries_exactly_one_provenance",
-      "line": 67,
+      "line": 69,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17367,7 +17519,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_families_are_disjoint",
-      "line": 147,
+      "line": 149,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17381,7 +17533,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_internal_tool_default_matches_lld",
-      "line": 58,
+      "line": 60,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17395,7 +17547,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_message_normalises_sequences_to_tuples",
-      "line": 120,
+      "line": 122,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17409,7 +17561,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_model_output_does_not_launder_taint",
-      "line": 77,
+      "line": 79,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17423,7 +17575,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_model_output_from_clean_inputs_stays_clean",
-      "line": 105,
+      "line": 107,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17437,7 +17589,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_model_output_takes_least_trusted_input_and_union_of_taint",
-      "line": 95,
+      "line": 97,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17451,7 +17603,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_only_completed_and_failed_are_reachable_in_phase0",
-      "line": 155,
+      "line": 157,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17465,7 +17617,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_ordinary_message_content_is_untouched",
-      "line": 273,
+      "line": 278,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17479,7 +17631,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_ordinary_tool_call_arguments_are_untouched",
-      "line": 259,
+      "line": 264,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17493,7 +17645,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_outcomes_share_one_base_so_the_contract_never_changes",
-      "line": 164,
+      "line": 166,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17507,7 +17659,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_provenance_is_immutable",
-      "line": 111,
+      "line": 113,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17521,7 +17673,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_role_values_match_messages_table_enum",
-      "line": 40,
+      "line": 42,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17535,7 +17687,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_run_interruption_type_exists_without_persistence",
-      "line": 174,
+      "line": 176,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17549,7 +17701,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_storable_values_pass",
-      "line": 210,
+      "line": 212,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17559,11 +17711,25 @@
       "contentHash": "17b32e906637daad48f6f8185e58bc3da16c9c5ac58b9d441e815ea1bccb216d"
     },
     {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_surrogate_content_is_refused:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_surrogate_content_is_refused",
+      "line": 309,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "12fad33f2c828d9b48c6fde39fe9512d23e9083cc7c76168d816b3c0869ae659"
+    },
+    {
       "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_tool_result_rejects_non_provenance:",
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_tool_result_rejects_non_provenance",
-      "line": 53,
+      "line": 55,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17577,7 +17743,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_tool_result_requires_provenance",
-      "line": 48,
+      "line": 50,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17591,7 +17757,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_reason_is_total",
-      "line": 219,
+      "line": 221,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17605,7 +17771,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_reason_is_total.Hostile.__eq__",
-      "line": 226,
+      "line": 228,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17619,7 +17785,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_reason_is_total.Hostile.__hash__",
-      "line": 229,
+      "line": 231,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17633,7 +17799,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_values_are_found_however_deeply_nested",
-      "line": 214,
+      "line": 216,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17647,7 +17813,7 @@
       "type": "defines",
       "source": "file:tests/test_primitives.py",
       "target": "symbol:tests/test_primitives.py#function:test_unstorable_values_are_named",
-      "line": 202,
+      "line": 204,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17655,6 +17821,20 @@
         "source": "tests/test_primitives.py"
       },
       "contentHash": "1450ad6257a1acf5c8a5eb383529b66f230b74e6307041d8e4066e911c044805"
+    },
+    {
+      "id": "defines:file:tests/test_primitives.py->symbol:tests/test_primitives.py#function:test_values_postgres_accepts_are_not_rejected:",
+      "type": "defines",
+      "source": "file:tests/test_primitives.py",
+      "target": "symbol:tests/test_primitives.py#function:test_values_postgres_accepts_are_not_rejected",
+      "line": 327,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "ce624ceb1626fd0199a7f8c45883b4df4431dba5a5d4483b2acc540d566417ff"
     },
     {
       "id": "defines:file:tests/test_tool_executor.py->symbol:tests/test_tool_executor.py#class:SpyTool:",
@@ -19804,7 +19984,7 @@
       "source": "file:agentsdk/primitives.py",
       "target": "runtime:python:dataclasses",
       "specifier": "dataclasses",
-      "line": 9,
+      "line": 10,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -19819,7 +19999,7 @@
       "source": "file:agentsdk/primitives.py",
       "target": "runtime:python:enum",
       "specifier": "enum",
-      "line": 10,
+      "line": 11,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -19829,12 +20009,27 @@
       "contentHash": "f4e38c8058ce5b973e6e36c073877296f067ac54bcc6567905861ee60798b632"
     },
     {
+      "id": "imports:file:agentsdk/primitives.py->runtime:python:json:json",
+      "type": "imports",
+      "source": "file:agentsdk/primitives.py",
+      "target": "runtime:python:json",
+      "specifier": "json",
+      "line": 9,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/primitives.py"
+      },
+      "contentHash": "251b33351c6346a1ba3e18727060d80600a0d2563d208cdb4435cef7606fefe3"
+    },
+    {
       "id": "imports:file:agentsdk/primitives.py->runtime:python:typing:typing",
       "type": "imports",
       "source": "file:agentsdk/primitives.py",
       "target": "runtime:python:typing",
       "specifier": "typing",
-      "line": 11,
+      "line": 12,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20749,7 +20944,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/__init__.py",
       "specifier": "agentsdk",
-      "line": 19,
+      "line": 20,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20764,7 +20959,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/config.py",
       "specifier": "agentsdk.config",
-      "line": 20,
+      "line": 21,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20779,7 +20974,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/events.py",
       "specifier": "agentsdk.events",
-      "line": 21,
+      "line": 22,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20794,7 +20989,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/manifest.py",
       "specifier": "agentsdk.manifest",
-      "line": 22,
+      "line": 23,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20809,7 +21004,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/model.py",
       "specifier": "agentsdk.model",
-      "line": 23,
+      "line": 24,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20824,7 +21019,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/persistence.py",
       "specifier": "agentsdk.persistence",
-      "line": 24,
+      "line": 25,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20839,7 +21034,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/postgres.py",
       "specifier": "agentsdk.postgres",
-      "line": 26,
+      "line": 27,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20854,7 +21049,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/primitives.py",
       "specifier": "agentsdk.primitives",
-      "line": 35,
+      "line": 36,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20869,7 +21064,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/registry.py",
       "specifier": "agentsdk.registry",
-      "line": 644,
+      "line": 645,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20884,7 +21079,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/tools.py",
       "specifier": "agentsdk.tools",
-      "line": 45,
+      "line": 46,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20899,7 +21094,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "file:agentsdk/version.py",
       "specifier": "agentsdk.version",
-      "line": 46,
+      "line": 47,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20914,7 +21109,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "package:pypi:dotenv",
       "specifier": "dotenv",
-      "line": 48,
+      "line": 49,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20929,7 +21124,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "package:pypi:psycopg",
       "specifier": "psycopg",
-      "line": 16,
+      "line": 17,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20944,7 +21139,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "package:pypi:pytest",
       "specifier": "pytest",
-      "line": 17,
+      "line": 18,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20959,7 +21154,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "runtime:python:datetime",
       "specifier": "datetime",
-      "line": 14,
+      "line": 15,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20969,12 +21164,27 @@
       "contentHash": "90b1d4bd6532063aa6aaf152f3ec2c5abc8ba9b5898cf739fd67e10cf6e1033b"
     },
     {
+      "id": "imports:file:tests/test_persistence.py->runtime:python:json:json",
+      "type": "imports",
+      "source": "file:tests/test_persistence.py",
+      "target": "runtime:python:json",
+      "specifier": "json",
+      "line": 12,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_persistence.py"
+      },
+      "contentHash": "e1050239d9dd9501e32779fd349056ecb40e871c31bed70809102eb527938eb8"
+    },
+    {
       "id": "imports:file:tests/test_persistence.py->runtime:python:os:os",
       "type": "imports",
       "source": "file:tests/test_persistence.py",
       "target": "runtime:python:os",
       "specifier": "os",
-      "line": 12,
+      "line": 13,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -20989,7 +21199,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "runtime:python:threading",
       "specifier": "threading",
-      "line": 241,
+      "line": 242,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -21004,7 +21214,7 @@
       "source": "file:tests/test_persistence.py",
       "target": "runtime:python:uuid",
       "specifier": "uuid",
-      "line": 13,
+      "line": 14,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -21019,7 +21229,7 @@
       "source": "file:tests/test_primitives.py",
       "target": "file:agentsdk/__init__.py",
       "specifier": "agentsdk",
-      "line": 5,
+      "line": 7,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -21034,7 +21244,7 @@
       "source": "file:tests/test_primitives.py",
       "target": "file:agentsdk/outcomes.py",
       "specifier": "agentsdk.outcomes",
-      "line": 25,
+      "line": 27,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -21049,7 +21259,7 @@
       "source": "file:tests/test_primitives.py",
       "target": "file:agentsdk/primitives.py",
       "specifier": "agentsdk.primitives",
-      "line": 24,
+      "line": 26,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -21064,7 +21274,7 @@
       "source": "file:tests/test_primitives.py",
       "target": "package:pypi:pytest",
       "specifier": "pytest",
-      "line": 3,
+      "line": 5,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -21072,6 +21282,21 @@
         "source": "tests/test_primitives.py"
       },
       "contentHash": "a8192b7487b4de7aa7916861cd4b327e6ceee8fb132143f2d40065dac7593044"
+    },
+    {
+      "id": "imports:file:tests/test_primitives.py->runtime:python:json:json",
+      "type": "imports",
+      "source": "file:tests/test_primitives.py",
+      "target": "runtime:python:json",
+      "specifier": "json",
+      "line": 3,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_primitives.py"
+      },
+      "contentHash": "c3ae6c52c1d0741f7b5d2e94da3add34ebd5d054a4e5b9b5e87b0bc661cdd877"
     },
     {
       "id": "imports:file:tests/test_tool_executor.py->file:agentsdk/errors.py:agentsdk.errors",

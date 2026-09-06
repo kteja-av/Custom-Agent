@@ -9,6 +9,7 @@ run_id per test and asserts only on that run, so tests are isolated without
 tearing down tables another developer may be looking at.
 """
 
+import json
 import os
 import uuid
 from datetime import datetime, timezone
@@ -945,8 +946,12 @@ def test_the_stored_tenancy_comes_from_the_run_not_the_caller(started):
     [
         (None, {"text": "x", "n": float("inf")}),
         (None, {"text": "a" + chr(0) + "b"}),
+        # Round 4: a truncated surrogate escape is a legal RFC-8259 decode that
+        # walked past every named check. Built from the wire form on purpose.
+        (None, {"text": json.loads('"a' + chr(92) + 'ud800b"')}),
+        (None, {"text": "x", "n": 10 ** 5000}),
     ],
-    ids=["inf-argument", "nul-argument"],
+    ids=["inf-argument", "nul-argument", "surrogate-argument", "huge-int-argument"],
 )
 async def test_persistence_does_not_change_the_outcome(content, arguments):
     """The defect itself, as a regression test.
