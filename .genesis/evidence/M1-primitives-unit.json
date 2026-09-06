@@ -1,0 +1,22 @@
+{
+  "task": "M1-primitives",
+  "gate": "unit",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests/test_primitives.py -q",
+  "started_at": "2026-09-05T18:27:58.209Z",
+  "observed_at": "2026-09-05T18:27:58.873Z",
+  "exit_code": 0,
+  "signal": null,
+  "stdout": "..................                                                       [100%]\r\n18 passed in 0.05s\r\n",
+  "stderr": "",
+  "revision": {
+    "commit": null,
+    "dirty": null
+  },
+  "source_hash": "4fddfd732e28ece0595cbfa0c4707bad52f3633aa93b98b138ece4adc283709d",
+  "environment": {
+    "node": "v20.10.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "hash": "95b58b479a10d310d89028db3df833df5c4aa6199113b3c50f12a3f6d96a1daa"
+}

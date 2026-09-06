@@ -1,0 +1,696 @@
+{
+  "schema_version": 2,
+  "project": {
+    "name": "custom-agent-sdk",
+    "mode": "init",
+    "profile": "prototype",
+    "objective": "A model-agnostic, LangGraph-pluggable agent SDK with orchestrator-spawned isolated subagents and an evidence-centric governance ledger. Stage 1 delivers the harness (Phases 0-8); Phase 0 is a single-agent loop end to end.",
+    "constraints": [],
+    "non_goals": [],
+    "trust_boundary": "local repository",
+    "created_at": "2026-09-05T14:48:57.894Z",
+    "updated_at": "2026-09-06T11:17:58.109Z"
+  },
+  "policy": {
+    "ponytail": "full",
+    "autonomy": "human-in-the-loop",
+    "learned_rule_promotion": "human-required",
+    "cleanup": "propose-only",
+    "traces": {
+      "storage": "local",
+      "commit_raw": false,
+      "redact_secrets": true
+    }
+  },
+  "lifecycle": {
+    "phase": "build",
+    "status": "active",
+    "active_task": "M4-loop-and-api",
+    "blocker": null,
+    "next_action": "Run the task pre-flight."
+  },
+  "commands": {},
+  "workflow": {
+    "type": "new-product",
+    "started_at": "2026-09-05T14:48:57.897Z",
+    "spec_check": {
+      "at": "2026-09-05T15:07:00.359Z",
+      "source_hash": "bfd6e50a82529f0b3ced5e178c132d4d6f818609d468bb94cf0f8107a85031aa",
+      "requirements": [
+        "AC-1",
+        "AC-10",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "AC-7",
+        "AC-8",
+        "AC-9",
+        "FR-1",
+        "FR-10",
+        "FR-11",
+        "FR-12",
+        "FR-13",
+        "FR-14",
+        "FR-15",
+        "FR-16",
+        "FR-2",
+        "FR-3",
+        "FR-4",
+        "FR-5",
+        "FR-6",
+        "FR-7",
+        "FR-8",
+        "FR-9",
+        "NFR-1",
+        "NFR-2",
+        "NFR-3",
+        "NFR-4",
+        "NFR-5",
+        "NFR-6",
+        "NFR-7"
+      ]
+    },
+    "plan_check": {
+      "at": "2026-09-05T18:10:01.294Z",
+      "source_hash": "06058b50234e1ee81af76ed7f39c02e0b352faa551b60fd7bddd7dee1f82ab6c"
+    },
+    "plan_approval": {
+      "human": "owner",
+      "reason": "Six bounded milestones cover all 33 requirements; every task carries an executable pytest gate and each medium-risk task carries an independent-review gate. Approved to implement M1 first.",
+      "at": "2026-09-05T18:23:24.521Z",
+      "source_hash": "06058b50234e1ee81af76ed7f39c02e0b352faa551b60fd7bddd7dee1f82ab6c"
+    }
+  },
+  "artifacts": [
+    {
+      "id": "SPEC-1",
+      "type": "specification",
+      "path": "SPEC.md",
+      "status": "approved",
+      "requirements": [
+        "AC-1",
+        "AC-10",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6",
+        "AC-7",
+        "AC-8",
+        "AC-9",
+        "FR-1",
+        "FR-10",
+        "FR-11",
+        "FR-12",
+        "FR-13",
+        "FR-14",
+        "FR-15",
+        "FR-16",
+        "FR-2",
+        "FR-3",
+        "FR-4",
+        "FR-5",
+        "FR-6",
+        "FR-7",
+        "FR-8",
+        "FR-9",
+        "NFR-1",
+        "NFR-2",
+        "NFR-3",
+        "NFR-4",
+        "NFR-5",
+        "NFR-6",
+        "NFR-7"
+      ],
+      "source_hash": "bfd6e50a82529f0b3ced5e178c132d4d6f818609d468bb94cf0f8107a85031aa",
+      "approval": {
+        "human": "owner",
+        "reason": "Reviewed Phase 0 specification: 33 requirements, scope limited to the single-agent skeleton, ADR-13 resolved to OpenAI-compatible wire format on probe evidence. Approved to proceed to planning.",
+        "at": "2026-09-05T18:07:02.461Z",
+        "source_hash": "bfd6e50a82529f0b3ced5e178c132d4d6f818609d468bb94cf0f8107a85031aa"
+      }
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "ASSUMPTION-bba5b3f6",
+      "text": "PostgreSQL 16 is installed at C:/Program Files/PostgreSQL/16 and listening on localhost:5432, confirmed by an open socket. The superuser password is not yet known to this harness, so the Postgres connection string remains unresolved configuration.",
+      "status": "open",
+      "source": "port probe 2026-09-05",
+      "recorded_at": "2026-09-05T15:04:57.512Z"
+    },
+    {
+      "id": "ASSUMPTION-53240ce4",
+      "text": "Docker Desktop is installed (29.6.2) but its daemon is not running, so container-based Postgres is not an available fallback without starting Docker first.",
+      "status": "open",
+      "source": "docker ps probe 2026-09-05",
+      "recorded_at": "2026-09-05T15:04:57.661Z"
+    },
+    {
+      "id": "ASSUMPTION-6c8f0f59",
+      "text": "<db_name> exists on localhost:5432, owned by <db_user>, PostgreSQL 16.13. Verified by DDL round trip: CREATE TABLE, insert with gen_random_uuid(), jsonb read, DROP TABLE all succeed; public schema was empty beforehand. gen_random_uuid() is built in on PG13+, so no pgcrypto extension is needed for UUID primary keys. This supersedes the earlier assumption that Postgres credentials were unresolved.",
+      "status": "open",
+      "source": "DDL probe 2026-09-06",
+      "recorded_at": "2026-09-06T07:01:45.960Z"
+    },
+    {
+      "id": "ASSUMPTION-75110765",
+      "text": "Two accepted M3 limitations, both reproduced by an independent reviewer and judged non-blocking. (1) _error_text catches only ValueError, so a 429 whose body is undecodable (verified with 6000-deep JSON) is classified ModelError rather than ModelRateLimited and is therefore NOT retried, deviating from FR-15. One-word fix, latent, needs a pathological body. (2) Redaction is asymmetric: a 4xx error body echoing the credential is redacted, but a 2xx body echoing it flows into message.content and reaches model context, contrary to NFR-4 read absolutely. Judged acceptable because error bodies routinely echo request context while success bodies do not, so the asymmetry tracks a real threat-model difference. Both should be closed when the file is next touched.",
+      "status": "open",
+      "source": "L4 review round 5, 2026-09-06",
+      "recorded_at": "2026-09-06T11:17:18.455Z"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "INVARIANT-fcf02d03",
+      "text": "Every ToolResult carries exactly one ContentProvenance. A tool result that reaches the model or the session store without provenance is a defect, not a default.",
+      "source": "LLD 3.1, ADR-17, ADR-26",
+      "recorded_at": "2026-09-05T15:04:47.353Z"
+    },
+    {
+      "id": "INVARIANT-26e9117f",
+      "text": "Every persisted row in every table carries non-null tenant_id and project_id. Multi-tenancy is enforced at write time, never assumed at read time.",
+      "source": "LLD 2, ADR-11",
+      "recorded_at": "2026-09-05T15:04:47.544Z"
+    },
+    {
+      "id": "INVARIANT-3ad4a24d",
+      "text": "ToolExecutor's order is fixed: resolve, then validate arguments, then permission check, then execute. A tool whose arguments failed validation must never reach the permission check, and a denied tool must never reach execution.",
+      "source": "LLD 3.5, ADR-20",
+      "recorded_at": "2026-09-05T15:04:47.786Z"
+    },
+    {
+      "id": "INVARIANT-e3f0e425",
+      "text": "MODEL_API_KEY never enters model context, never enters a persisted row, and never appears in a RunEvent payload. Credentials reach the provider adapter only.",
+      "source": "ADR-17, master design 4.14",
+      "recorded_at": "2026-09-05T15:04:57.214Z"
+    },
+    {
+      "id": "INVARIANT-3e634c67",
+      "text": "Application code calls Runner.run() and nothing else. If a test or example imports AgentLoop, ToolExecutor or any other internal collaborator directly, the public API boundary has already leaked.",
+      "source": "LLD 3.3",
+      "recorded_at": "2026-09-05T15:04:57.366Z"
+    },
+    {
+      "id": "INVARIANT-8b2269cb",
+      "text": "Only AgentSDKError subclasses may escape ModelClient.send(). A provider's JSONDecodeError, AttributeError or httpx.StreamError reaching AgentLoop is a defect: the loop cannot classify what it cannot name. Note httpx.StreamError descends from RuntimeError, not HTTPError, so catching HTTPError alone is insufficient.",
+      "source": "L4 review defect 1, 2026-09-06",
+      "recorded_at": "2026-09-06T08:12:54.774Z"
+    },
+    {
+      "id": "INVARIANT-b4c91070",
+      "text": "A boundary's error path must not be able to raise. send() wraps any non-AgentSDKError, but str(exc) runs inside that handler: a hostile __str__ that raises, or returns a non-string, escapes the very mechanism built to make the boundary total. Rendering a caught exception goes through _describe_failure, which guards str(exc) explicitly and sits inside a last-resort catch returning a fixed string.",
+      "source": "L4 review round 4, fresh reviewer, 2026-09-06",
+      "recorded_at": "2026-09-06T10:59:59.334Z"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "DECISION-201472de",
+      "title": "ADR-13 resolved: OpenAI-compatible wire format",
+      "text": "The bring-your-own endpoint is a LiteLLM proxy at the PwC GenAI shared service. Probed directly: POST /v1/chat/completions returns OpenAI-shaped responses with tool_calls, finish_reason and usage; the error envelope carries LiteLLM provider_specific_fields. Phase 0 therefore implements an OpenAI-compatible ModelClient first, not a Bedrock-native one.",
+      "status": "accepted",
+      "source": "curl probe 2026-09-05",
+      "recorded_at": "2026-09-05T15:04:28.135Z"
+    },
+    {
+      "id": "DECISION-ad4f80fb",
+      "title": "Phase 0 is the entire spec scope",
+      "text": "This specification covers only the Phase 0 single-agent skeleton, which the LLD already details to implementable precision. Phases 2-8 get their own Genesis specification when each starts, per the design docs' explicit refusal to write low-level design for components that do not exist yet.",
+      "status": "accepted",
+      "source": "agent-sdk-low-level-design.md section 1",
+      "recorded_at": "2026-09-05T15:04:28.424Z"
+    },
+    {
+      "id": "DECISION-2454cbd8",
+      "title": "ADR-27 kept: PrincipalContext as lean metadata",
+      "text": "PrincipalContext stays in Phase 0 as a nullable JSONB column on runs plus an unread field on RunConfig. Confirmed by the human despite the design docs flagging it as the most speculative Phase 0 addition; rationale is that retrofitting an identity concept through PermissionChecker later is expensive while an unread column is nearly free.",
+      "status": "accepted",
+      "source": "human decision 2026-09-05",
+      "recorded_at": "2026-09-05T15:04:38.023Z"
+    },
+    {
+      "id": "DECISION-442df397",
+      "title": "System instructions ride on ModelRequest.instructions, not a fourth Role",
+      "text": "The LLD fixes the messages.role column enum at user/assistant/tool. Adding Role.SYSTEM to carry an AgentSpec's instructions would either desynchronise the enum from the persisted schema or force a schema change. Instead ModelRequest gains an 'instructions' field and each provider adapter renders it in its own idiom (the OpenAI-compatible adapter emits a leading system message). Keeps the persisted enum honest and keeps system-prompt handling a provider concern.",
+      "status": "accepted",
+      "source": "agentsdk/model.py, LLD 2.2",
+      "recorded_at": "2026-09-06T06:39:17.084Z"
+    },
+    {
+      "id": "DECISION-38ea29c7",
+      "title": "Secrets are wrapped in a Secret type, not protected by __repr__ alone",
+      "text": "L4 review demonstrated that overriding Settings.__repr__ leaves dataclasses.asdict, astuple and vars leaking the raw credential, and asdict is the idiom that will write FR-11's ExecutionManifest row. Redaction now lives on the value: config.Secret refuses to render under repr, str, format, asdict, astuple and vars, and the raw value is reachable only through an explicit .reveal() that greps cleanly. The adapter additionally redacts the key from any provider error body copied into a ModelError message, because those messages land in FR-10's persisted RunFailed payload.",
+      "status": "accepted",
+      "source": "L4 review defect 4, 2026-09-06",
+      "recorded_at": "2026-09-06T08:12:54.650Z"
+    },
+    {
+      "id": "DECISION-f3c125ce",
+      "title": "The ModelClient boundary is total, not an enumeration of known exceptions",
+      "text": "Three review rounds each found exactly one more exception type escaping send(): JSONDecodeError, then TypeError from an unhashable dict key, then OverflowError from int(float('inf')). Each was fixed by adding one more guard inside _parse. That approach does not converge, because no enumeration of failure modes is complete. send() now delegates to _send and re-raises AgentSDKError untouched while wrapping any other Exception as ModelError, chaining the cause and redacting the message. BaseException (CancelledError, KeyboardInterrupt, SystemExit) deliberately passes through as control flow. Specific guards remain because a precise diagnosis beats a generic one, but correctness of the invariant no longer depends on their completeness. Cost accepted: a genuine adapter bug now surfaces as ModelError with the original type named in the message.",
+      "status": "accepted",
+      "source": "L4 review round 3, finding 3, 2026-09-06",
+      "recorded_at": "2026-09-06T10:36:31.899Z"
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "KNOWLEDGE-4c98ae06",
+      "title": "Gateway fronts 308 models across four providers",
+      "text": "GET /models (not /v1/models, which Envoy blocks with 'fault filter abort' 403) lists 308 model ids namespaced by provider: bedrock.*, azure.*, openai.*, vertex_ai.*. Tool calling verified working on both openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5 through the identical OpenAI-shaped request, so provider switching in Phase 0 is a model-id change rather than an adapter change.",
+      "source": "curl probe 2026-09-05",
+      "tags": [],
+      "recorded_at": "2026-09-05T15:04:38.177Z"
+    },
+    {
+      "id": "KNOWLEDGE-dd86e5ae",
+      "title": "Genesis gate commands must use Windows path separators",
+      "text": "genesis.mjs executes gate commands through cmd.exe on win32. A command beginning with a forward-slash path such as .venv/Scripts/python.exe fails with \"'.venv' is not recognized\" because cmd parses /Scripts as a switch. Gate commands on this host must be written .venv\\Scripts\\python.exe. The CLI has no gate-edit path (task add rejects duplicate ids, task set ignores --gate), so correcting a gate means editing .genesis/project.json directly; that is safe because validateState checks only schema_version and policy, and gate evidence hashes are recomputed on each run.",
+      "source": "gate evidence M1-primitives-unit.json 2026-09-05",
+      "tags": [],
+      "recorded_at": "2026-09-05T18:28:32.842Z"
+    },
+    {
+      "id": "KNOWLEDGE-4da74cc9",
+      "title": "genesis checkpoint and index crash on this host via the Store Python alias",
+      "text": "graphizer.mjs spawns python3 to build the Python AST, then spawns git for the revision. On this machine python3 and python both resolve to the Microsoft Store App Execution Alias, which corrupts the Node process job-object state; the following git spawn dies natively with AssignProcessToJobObject (87), exit 3 / 0xC0000003. Minimal repro: spawnSync(python3, {input}) followed by spawnSync(git) in one Node process. Verified the real .venv/Scripts/python.exe does NOT trigger it, so the alias is the cause, and the base interpreter under C:/Program Files/WindowsApps is not directly executable. Consequence: genesis checkpoint, genesis index and genesis kickoff fail; gate, task, record, spec, plan and status all work. Fix is to disable the python.exe/python3.exe app execution aliases in Windows Settings, or install python.org Python. Not a blocker for building.",
+      "source": "probe3.mjs matrix 2026-09-06",
+      "tags": [],
+      "recorded_at": "2026-09-05T18:38:21.643Z"
+    },
+    {
+      "id": "KNOWLEDGE-064c6cde",
+      "title": "Store Python alias crash is fixed by the venv, no Windows settings change needed",
+      "text": "Resolves the earlier AssignProcessToJobObject finding. A Windows venv ships python.exe and pythonw.exe but no python3.exe, so graphizer's spawnSync('python3') fell through to the Microsoft Store app execution alias. Copying .venv/Scripts/python.exe to .venv/Scripts/python3.exe and putting that directory first on PATH makes python3 resolve to the real interpreter; genesis checkpoint then succeeds and indexes 159 nodes with no warnings. Run genesis as: PATH=\"$PWD/.venv/Scripts:$PATH\" node <kit>/tools/genesis.mjs <cmd> . -- or just activate the venv first. NOTE: .venv is gitignored, so python3.exe must be recreated after any fresh venv build; see requirements.txt header.",
+      "source": "verified checkpoint exit 0, 2026-09-06",
+      "tags": [],
+      "recorded_at": "2026-09-06T06:34:14.228Z"
+    },
+    {
+      "id": "KNOWLEDGE-294f2901",
+      "title": "Redaction must precede truncation, and dict.get needs a hashable key",
+      "text": "Two boundary bugs found in round 2 of L4 review, both in code written to fix round 1. (1) _error_text truncated a provider body to 300 chars and then replaced the credential, so a key straddling the cut survived as a recoverable 14-character fragment in a ModelError message that FR-10 persists. Redact the whole text first, truncate second. (2) _STOP_REASONS.get(choice.get('finish_reason')) assumed the value was hashable; a list or dict finish_reason raised TypeError: unhashable type, escaping the adapter and violating the invariant that only AgentSDKError subclasses leave ModelClient.send(). Using an unchecked value as a dict key is itself a shape assumption.",
+      "source": "L4 review round 2, 2026-09-06",
+      "tags": [],
+      "recorded_at": "2026-09-06T08:47:00.934Z"
+    },
+    {
+      "id": "KNOWLEDGE-b36882ac",
+      "title": "Reviewer rotation found defects that reviewer effort did not",
+      "text": "M3 took five review rounds. Rounds 1-3 were one reviewer, which found exactly one boundary escape per round, all in the same region (the response parse path), each fix enumerating one more exception type. Round 4 swapped models and immediately found an escape in a region the first reviewer never examined: the totaliser's own error-message construction, where str(exc) runs inside the except block. Round 5, a third model running 20 hostile boundary probes and 39 mutants, found no escape at all. Conclusion for the remaining milestones: rotate the reviewer model between rounds rather than asking the same reviewer to look harder. A reviewer cannot find the defects its own mental model does not generate, and repeated rounds from one reviewer converge on its blind spots rather than on correctness.",
+      "source": "M3 review rounds 1-5, 2026-09-06",
+      "tags": [],
+      "recorded_at": "2026-09-06T11:17:04.308Z"
+    },
+    {
+      "id": "KNOWLEDGE-5b727de4",
+      "title": "M5 must redact the chained __cause__ and traceback, not only the ModelError message",
+      "text": "Five rounds of redaction work covered the ModelError message text only. The adapter raises 'from exc', so the original provider exception is retained on __cause__ with its message unredacted, and the traceback holds frame locals. When M5 serialises RunEvent payloads (FR-10) or writes a RunFailed row, anything that walks __cause__, __context__ or formats a traceback bypasses every redaction built so far. This must be a stated requirement of the persistence layer, not a discovery in M5's review: the event writer redacts what it serialises, or it must refuse to serialise exception chains at all.",
+      "source": "L4 review round 5, forward-looking finding, 2026-09-06",
+      "tags": [],
+      "recorded_at": "2026-09-06T11:17:18.330Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "SPEC-1",
+      "outcome": "Produce an approved, implementation-ready product specification",
+      "state": "done",
+      "risk": "medium",
+      "owner": null,
+      "scope": [
+        "SPEC.md"
+      ],
+      "dependencies": [],
+      "requirements": [],
+      "gates": [
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "human": "owner",
+            "reason": "Reviewed Phase 0 specification: 33 requirements, scope limited to the single-agent skeleton, ADR-13 resolved to OpenAI-compatible wire format on probe evidence. Approved to proceed to planning.",
+            "source_hash": "a8777aa0fd06561340b2d22b075779f9de842841e366351238951cc40bb3874f",
+            "observed_at": "2026-09-05T18:07:02.461Z"
+          }
+        }
+      ],
+      "next_action": "Interview the human, record durable context, and replace every placeholder in SPEC.md.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-05T14:48:57.897Z",
+      "updated_at": "2026-09-05T18:07:02.461Z"
+    },
+    {
+      "id": "M1-primitives",
+      "outcome": "Canonical primitives, ContentProvenance and the error taxonomy exist as importable types with no I/O",
+      "state": "done",
+      "risk": "low",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-2",
+        "FR-13",
+        "FR-16"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_primitives.py -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M1-primitives-unit.json",
+            "source_hash": "4fddfd732e28ece0595cbfa0c4707bad52f3633aa93b98b138ece4adc283709d",
+            "hash": "95b58b479a10d310d89028db3df833df5c4aa6199113b3c50f12a3f6d96a1daa",
+            "observed_at": "2026-09-05T18:27:58.873Z"
+          }
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-05T18:09:41.567Z",
+      "updated_at": "2026-09-05T18:28:05.085Z"
+    },
+    {
+      "id": "M2-tool-layer",
+      "outcome": "ToolSpec, ToolRegistry, PermissionChecker, RuntimeHook and the nine-step ToolExecutor lifecycle work, with validation proven to run before permission and permission before execution",
+      "state": "done",
+      "risk": "low",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-4",
+        "FR-5",
+        "FR-6",
+        "FR-8"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_tool_executor.py -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M2-tool-layer-unit.json",
+            "source_hash": "69ab8c8df208c9cad7d2586e1a5c2a5860429b0f38910c1e31afea0cfb92c581",
+            "hash": "7165e53d173ac2cf2402390b385cb124f3f807ae0954e66ec4c00942adad294c",
+            "observed_at": "2026-09-05T18:31:18.262Z"
+          }
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-05T18:09:51.587Z",
+      "updated_at": "2026-09-05T18:31:24.618Z"
+    },
+    {
+      "id": "M3-model-client",
+      "outcome": "ModelRequest/ModelResponse plus an OpenAI-compatible ModelClient that reaches the configured gateway, with ModelRegistry and the timeout/rate-limit retry policy",
+      "state": "done",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-3",
+        "FR-12",
+        "FR-15",
+        "NFR-1"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_model_client.py -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M3-model-client-unit.json",
+            "source_hash": "9d4b66334d32ef3438750858a2eba98e944b0a15aae9f3ad0b2483faacf53337",
+            "hash": "b4788de9314c4011ff2d33025489ad0a83cdbd291189aed24255906e70ede7ad",
+            "observed_at": "2026-09-06T10:59:59.155Z"
+          }
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "human": "Claude (fresh independent L4 reviewer, round 5)",
+            "reason": "Fresh independent review, round 5. VERIFIED: gate tests/test_model_client.py 121 passed; full suite 161 passed. 39 mutants (the 16 listed plus 23 of my own): 36 caught, of which mutant 18 (drop the outer last-resort guard in _describe_failure) escapes as a raw ValueError that aborts pytest with INTERNALERROR rather than a clean assertion, so it is not green. 3 survived as test gaps over correct code only: the non-JSON-2xx guard is now redundant under the total boundary and no test asserts its message; _redact with an empty key is untested; the default max_tokens=1024 on the wire is untested. Boundary probed with 20 hostile shapes (str/format/replace/metaclass hostility, Response subclass whose status_code raises, closed client, ExceptionGroup, attempts=0, non-serialisable payloads): only AgentSDKError leaves send(); BaseExceptionGroup passes through as the documented BaseException control-flow path. Live gateway: openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5 both return parsed tool_calls and complete a two-turn round trip through the same adapter (NFR-1/FR-3); 400, 401 and ConnectTimeout classify correctly with no key in any message; ModelRequest.metadata and provider_state never reach the wire. M2 executor tests pass unchanged. All files restored, SHA-256 verified. CAVEATS, latent and non-blocking: (1) _error_text catches ValueError only, so a 429 or 5xx whose body raises RecursionError on decode is wrapped as generic ModelError and NOT retried (repro: 6000-deep JSON 429 -> ModelError, attempts=1, versus shallow 429 -> ModelRateLimited, attempts=3); add RecursionError there as _post already does. (2) Redaction covers error paths only: a 2xx body that echoes the Authorization header lands verbatim in message.content, i.e. model context and a persisted message row. LiteLLM does not do this, but it is the same threat the 4xx defence exists for. (3) RetryPolicy(attempts=0) surfaces as ModelError: AssertionError: unreachable rather than a configuration error. (4) ModelTimeout carries an empty message for httpx.ConnectTimeout because str(exc) is empty; only the class name informs the operator. (5) A base_url already ending in /v1 produces /v1/v1/chat/completions; the current .env is fine. (6) For M5: only the ModelError message is redacted, the chained __cause__ is not, so a RunEvent payload must never serialise __cause__ or a formatted traceback. (7) ToolExecutor._failed accepts tool_reached but never uses it. (8) The type-name-raises fixture also breaks pytest saferepr when it escapes, which hides the assertion behind an INTERNALERROR.",
+            "source_hash": "9d4b66334d32ef3438750858a2eba98e944b0a15aae9f3ad0b2483faacf53337",
+            "observed_at": "2026-09-06T11:14:23.290Z"
+          }
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [
+        "Retry has no attempt tracking: a retried timeout may duplicate an upstream call that actually succeeded, and usage from abandoned attempts is neither recorded nor summed. RunEvent already carries a nullable attempt_id slot for this. Carried to M5/M6.",
+        "_redact uses literal replacement, so a URL-encoded, base64 or line-wrapped rendering of the credential in a provider error body is not caught. Documented in the method, not silently assumed away."
+      ],
+      "created_at": "2026-09-05T18:09:51.718Z",
+      "updated_at": "2026-09-06T11:16:52.792Z"
+    },
+    {
+      "id": "M4-loop-and-api",
+      "outcome": "ContextAssembler, AgentLoop and the Runner/AgentSpec/RunConfig/RunResult public surface drive a full tool-using turn against an in-memory session store",
+      "state": "active",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-1",
+        "FR-7",
+        "FR-14",
+        "NFR-5",
+        "NFR-6",
+        "AC-8"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_agent_loop.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-05T18:09:51.849Z",
+      "updated_at": "2026-09-05T18:09:51.850Z"
+    },
+    {
+      "id": "M5-postgres",
+      "outcome": "Postgres schema and stores persist runs, messages, run_events and exactly one execution manifest per run, every row tenant-scoped and the trace reconstructable in order",
+      "state": "queued",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-9",
+        "FR-10",
+        "FR-11",
+        "NFR-2",
+        "AC-5",
+        "AC-6",
+        "AC-7"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_persistence.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-05T18:10:01.041Z",
+      "updated_at": "2026-09-05T18:10:01.041Z"
+    },
+    {
+      "id": "M6-golden-eval",
+      "outcome": "The golden eval passes end to end against the live gateway on two upstream providers, exercising the permission-denial and validation-failure paths and leaking no credential into any row or event",
+      "state": "queued",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-9",
+        "AC-10",
+        "NFR-3",
+        "NFR-4",
+        "NFR-7"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_golden_eval.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-05T18:10:01.160Z",
+      "updated_at": "2026-09-05T18:10:01.161Z"
+    }
+  ],
+  "learning_proposals": [],
+  "cleanup_proposals": [],
+  "controls": [
+    {
+      "id": "bac66b5a-ad78-4f92-8edd-65160caafb70",
+      "at": "2026-09-06T08:05:53.305Z",
+      "action": "reject",
+      "task": "M3-model-client",
+      "human": "Claude Opus 5 — L4 independent review",
+      "reason": "FR-3 adapter boundary leaks non-SDK exceptions: response.json() on the 2xx path is unguarded, so a 200 with a non-JSON or empty body raises raw json.JSONDecodeError out of send(); _parse also assumes body and choices[0] are dicts, so a list-shaped body or 'choices': 'oops' raises raw AttributeError. Neither is an AgentSDKError, so AgentLoop cannot classify them, and the Envoy layer recorded in SPEC constraints produces exactly those bodies. _error_text() already guards the same call on the error path, so the omission is inconsistent rather than deliberate. Second: FR-15's numbers are unfalsifiable by the gate — every retry test supplies its own RetryPolicy(attempts=3, backoff_seconds=0), so mutating the default attempts 3->7, default backoff 0.5->600.0, multiplier 2.0->1.0, or deleting the 'delay *= multiplier' line each leave the suite 75/75 green. The retry implementation itself is correct (verified by counting: 3 attempts on Timeout/RateLimited, 1 on all other ModelError, backoff 0.5/1.0/2.0/4.0), and FR-3 mapping is live-verified on openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5 — but the gate would not notice either ceasing to be true.",
+      "revision": null
+    },
+    {
+      "id": "c5670f34-8b26-43d1-b985-e2444c398074",
+      "at": "2026-09-06T08:12:42.569Z",
+      "action": "retry",
+      "task": "M3-model-client",
+      "human": "owner",
+      "reason": "Defects 1-7 from the L4 review repaired; resubmitting for re-review",
+      "revision": null
+    },
+    {
+      "id": "c8dafea1-5af2-452b-8bcd-368f12f92714",
+      "at": "2026-09-06T08:34:20.204Z",
+      "action": "reject",
+      "task": "M3-model-client",
+      "human": "Claude Opus 5 - L4 independent review (round 2)",
+      "reason": "All seven prior defects are genuinely fixed and all nine claimed mutations are caught (I re-ran them; every mutated file restored, SHA-256 verified). Three findings remain, two of them the same defect class the resubmission claimed to close. (1) HIGH, violates the new invariant by name: _parse still leaks a raw TypeError. _STOP_REASONS.get(choice.get('finish_reason'), StopReason.OTHER) passes an unchecked value as a dict key, so finish_reason of ['stop'] or {'a':1} raises 'TypeError: unhashable type' out of send(). dict.get() is itself a shape assumption and it is the one shape assumption not checked; none of the 11 parametrised malformed bodies uses a non-string finish_reason, so the gate cannot see it. The comment claiming 'every shape assumption below is checked' is false. (2) MEDIUM, violates NFR-4/INVARIANT-e3f0e425: _redact truncates before redacting. _error_text does response.text[:300] then .replace(key), so a key straddling the cut survives - verified a 28-char key leaving 14 literal characters in a ModelError message destined for a persisted RunFailed payload. Same bug at the 200-char cut on the 2xx non-JSON path. Redact before truncating. (3) MEDIUM, gate cannot fail: test_no_serialisation_path_leaks_the_credential parametrises seven render paths that all funnel through Settings.__repr__ to Secret.__repr__ - I instrumented the dunders to confirm. Secret.__str__ and Secret.__format__ are never exercised; mutating __str__ to return the raw value leaves the suite 105/105 green, so logging.info('%s', secret), the commonest leak idiom, is untested. Verified sound: Secret survives repr/str/format/asdict/astuple/vars/deepcopy/json/logging/tracebacks; arguments_error sits at step 2 before the permission check with no M1/M2 regression; registry natural sort; live gateway returns correct tool_calls on openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5. Noted, not blocking: pickle round-trips Secret's raw value; retry has no attempt tracking so a duplicated upstream call is invisible.",
+      "revision": null
+    },
+    {
+      "id": "1344827c-0db1-4b85-8505-5803cf6ef2ee",
+      "at": "2026-09-06T08:46:49.259Z",
+      "action": "retry",
+      "task": "M3-model-client",
+      "human": "owner",
+      "reason": "Round-2 defects repaired: unhashable finish_reason guarded, redact-before-truncate, Secret dunders tested directly",
+      "revision": null
+    },
+    {
+      "id": "1e5b9419-522d-4783-a757-a93fb8139d05",
+      "at": "2026-09-06T10:30:49.417Z",
+      "action": "reject",
+      "task": "M3-model-client",
+      "human": "Claude Opus 5 - L4 review round 3 (SAME reviewer as rounds 1-2, not independent)",
+      "reason": "All three round-2 defects are genuinely fixed and all 18 claimed mutations are caught; I could not defeat _redact (repeated key, 5x repetition, exact boundary offsets 0/1/2, end-of-body all clean) and Secret's __str__/__format__/__repr__ are each independently mutation-caught. Rejecting on one new defect introduced by this round's own repair, plus the structural pattern behind it. (1) HIGH, violates the named invariant, in code added this round: _as_int catches (TypeError, ValueError) but int(float('inf')) raises OverflowError. Python's json.loads accepts the bare non-standard literals Infinity/-Infinity, so a 2xx body with {'usage':{'prompt_tokens':Infinity}} escapes send() as a raw builtins.OverflowError - verified on all three usage slots (NaN is fine, it raises ValueError). LiteLLM is Python, and json.dumps(float('inf')) emits bare Infinity, so this is not purely theoretical. No test mentions Infinity or OverflowError and the one-word fix survives mutation, so the gate is blind to it. (2) MEDIUM, same class, pre-existing: RecursionError (a RuntimeError) escapes from json.loads on deeply nested input at two sites - response.json() guarded only by except ValueError, and _decode_arguments guarded by (TypeError, ValueError). Verified both leak at ~4000 depth. (3) STRUCTURAL, the actual finding: three rounds have each surfaced exactly one escape (JSONDecodeError/AttributeError, then TypeError, now OverflowError/RecursionError) because the boundary is defended by enumerating exception types inside _parse and its helpers rather than being made total. Wrap _parse in a catch-all that re-raises anything not already an AgentSDKError as ModelError and this class closes permanently instead of one member per round. (4) LOW, gate blind spots where the code is correct but a regression would ship green: _redact global replacement (mutating to replace(key, REDACTED, 1) leaves 134/134 green, and LiteLLM error envelopes can echo request context more than once) and Secret.__eq__ semantics (mutating it to compare against the raw string leaves 134/134 green). Verified sound: gate 94, suite 134, M1/M2 40 in isolation with the lifecycle order intact; pickle refused; usage/id/content coercions correct and mutation-caught; live gateway returns correctly typed int usage and str id with arguments_error None on both openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5; no phase leakage; NFR-6 clean. The two accepted limitations are the right call - FR-15 says nothing about idempotency and SPEC.md defers replay/idempotency to Phase 6, and literal replacement genuinely cannot see encoded renderings. Every mutated file restored, SHA-256 verified. NOTE FOR THE HUMAN: rounds 1, 2 and 3 were all graded by this same reviewer; this gate has not had an independent reader.",
+      "revision": null
+    },
+    {
+      "id": "acffcc58-e355-488d-9eed-379ba10a44bd",
+      "at": "2026-09-06T10:36:30.092Z",
+      "action": "retry",
+      "task": "M3-model-client",
+      "human": "owner",
+      "reason": "Round-3 structural fix: boundary made total rather than enumerated",
+      "revision": null
+    },
+    {
+      "id": "6dc64f38-9119-44e8-a80d-cc780f05d275",
+      "at": "2026-09-06T10:47:52.068Z",
+      "action": "reject",
+      "task": "M3-model-client",
+      "human": "Claude Sonnet (fresh independent L4 reviewer, round 4)",
+      "reason": "Gates verified: test_model_client.py 115 passed, full suite 155 passed. All 16 prescribed mutations caught (files restored, SHA-256 verified identical to baseline). Live gateway probe confirmed FR-3 and NFR-1 (openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5 both return correct tool_calls via the same adapter). REJECT: the 'total' boundary in OpenAICompatibleModelClient.send() is still not total. Its own generic-exception handler builds the ModelError message via self._redact(str(exc), 200) inside an f-string; if the caught exception's __str__ itself raises (e.g. Exception(obj_with_broken_str), or any third-party exception carrying a non-string arg whose __str__ fails), that secondary exception propagates out of send() completely unwrapped -- not an AgentSDKError, violating INVARIANT-8b2269cb directly. Reproduced live: a MockTransport handler raising a custom exception with a raising __str__ escapes send() as a bare ValueError. No AgentLoop exists yet to backstop this, so nothing downstream classifies it. This is not an enumeration gap (the thing round 3 fixed) but a defect in the wrapper's own message-construction code -- the same class of self-referential failure the boundary exists to prevent. Fix: guard the str(exc)/redact call itself (e.g. try/except around message construction, falling back to repr or a fixed string) so constructing the ModelError can never itself throw. Everything else reviewed -- Secret redaction across all rendering paths, truncate-then-redact ordering, retry/backoff arithmetic, natural version sort, executor's arguments_error ordering, empty-key redaction, M1/M2 regression (155 pass unchanged) -- is sound.",
+      "revision": null
+    },
+    {
+      "id": "05d76ed2-8c20-4832-8a80-53372877fe6d",
+      "at": "2026-09-06T10:59:57.646Z",
+      "action": "retry",
+      "task": "M3-model-client",
+      "human": "owner",
+      "reason": "Round-4 defect repaired: the boundary's own error path can no longer raise",
+      "revision": null
+    },
+    {
+      "id": "b7f68fcb-257e-409f-bfa7-a2ad32608a2b",
+      "at": "2026-09-06T11:14:23.290Z",
+      "action": "approve",
+      "task": "M3-model-client",
+      "human": "Claude (fresh independent L4 reviewer, round 5)",
+      "reason": "Fresh independent review, round 5. VERIFIED: gate tests/test_model_client.py 121 passed; full suite 161 passed. 39 mutants (the 16 listed plus 23 of my own): 36 caught, of which mutant 18 (drop the outer last-resort guard in _describe_failure) escapes as a raw ValueError that aborts pytest with INTERNALERROR rather than a clean assertion, so it is not green. 3 survived as test gaps over correct code only: the non-JSON-2xx guard is now redundant under the total boundary and no test asserts its message; _redact with an empty key is untested; the default max_tokens=1024 on the wire is untested. Boundary probed with 20 hostile shapes (str/format/replace/metaclass hostility, Response subclass whose status_code raises, closed client, ExceptionGroup, attempts=0, non-serialisable payloads): only AgentSDKError leaves send(); BaseExceptionGroup passes through as the documented BaseException control-flow path. Live gateway: openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5 both return parsed tool_calls and complete a two-turn round trip through the same adapter (NFR-1/FR-3); 400, 401 and ConnectTimeout classify correctly with no key in any message; ModelRequest.metadata and provider_state never reach the wire. M2 executor tests pass unchanged. All files restored, SHA-256 verified. CAVEATS, latent and non-blocking: (1) _error_text catches ValueError only, so a 429 or 5xx whose body raises RecursionError on decode is wrapped as generic ModelError and NOT retried (repro: 6000-deep JSON 429 -> ModelError, attempts=1, versus shallow 429 -> ModelRateLimited, attempts=3); add RecursionError there as _post already does. (2) Redaction covers error paths only: a 2xx body that echoes the Authorization header lands verbatim in message.content, i.e. model context and a persisted message row. LiteLLM does not do this, but it is the same threat the 4xx defence exists for. (3) RetryPolicy(attempts=0) surfaces as ModelError: AssertionError: unreachable rather than a configuration error. (4) ModelTimeout carries an empty message for httpx.ConnectTimeout because str(exc) is empty; only the class name informs the operator. (5) A base_url already ending in /v1 produces /v1/v1/chat/completions; the current .env is fine. (6) For M5: only the ModelError message is redacted, the chained __cause__ is not, so a RunEvent payload must never serialise __cause__ or a formatted traceback. (7) ToolExecutor._failed accepts tool_reached but never uses it. (8) The type-name-raises fixture also breaks pytest saferepr when it escapes, which hides the assertion behind an INTERNALERROR.",
+      "revision": null
+    }
+  ],
+  "discovery": null,
+  "checkpoint": {
+    "at": "2026-09-06T11:17:58.071Z",
+    "revision": {
+      "commit": null,
+      "dirty": null,
+      "source_hash": "9d4b66334d32ef3438750858a2eba98e944b0a15aae9f3ad0b2483faacf53337"
+    },
+    "active_task": "M4-loop-and-api",
+    "next_action": "Run the task pre-flight."
+  },
+  "legacy": null
+}

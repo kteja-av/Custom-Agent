@@ -1,0 +1,20 @@
+# Custom Agent SDK - Phase 0 dependencies
+#
+#   .venv\Scripts\python.exe -m pip install -r requirements.txt
+#
+# Deliberately absent: langgraph, anthropic, openai, and every other vendor
+# agent SDK. NFR-6 requires this package to import and run with none of them
+# installed, so nothing here may pull one in. The model layer speaks HTTP to an
+# OpenAI-compatible endpoint through httpx and nothing else.
+
+# --- runtime ---------------------------------------------------------------
+httpx==0.28.1              # ModelClient transport (FR-3)
+jsonschema==4.26.0         # ToolExecutor argument validation, step 2 (FR-5)
+psycopg[binary]==3.3.5     # SessionStore / EventStore over Postgres (FR-9, FR-10)
+python-dotenv==1.2.3       # loads MODEL_API_KEY, BASE_URL, DATABASE_URL from .env
+
+# --- test ------------------------------------------------------------------
+# Kept in this file rather than a second one because every Genesis gate command
+# is a pytest invocation: without these the gates cannot be computed at all.
+pytest==9.1.1
+pytest-asyncio==1.4.0
