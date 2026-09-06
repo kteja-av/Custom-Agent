@@ -931,3 +931,57 @@ def test_no_module_imports_a_vendor_agent_sdk():
                 if name.split(".")[0] in BANNED:
                     offenders.append(f"{path.name}:{node.lineno} imports {name}")
     assert not offenders, offenders
+
+
+@pytest.mark.parametrize(
+    "hostile",
+    [float("nan"), float("inf"), float("-inf"), "abc", None, [1, 2]],
+    ids=lambda v: repr(v)[:12],
+)
+async def test_misreported_usage_cannot_break_the_boundary_error_path(hostile):
+    """M5 round-2 defect: a ModelClient that misreports usage took down
+    Runner.run() from inside its own except block.
+
+    The model must be called twice here -- the reconstruction only runs once a
+    ModelCalled event exists, so a single-turn probe would pass while proving
+    nothing.
+    """
+
+    class ToolThenExplode:
+        def __init__(self):
+            self.calls = 0
+
+        async def send(self, request):
+            self.calls += 1
+            if self.calls == 1:
+                return tool_response(usage=Usage(hostile, hostile, hostile))
+            raise RuntimeError("exploded after reporting nonsense usage")
+
+    client = ToolThenExplode()
+    result = await Runner({"gw": client}, tools=[echo_tool()]).run(spec(), "go", config())
+
+    assert client.calls == 2, "the error path was never reached"
+    assert result.status is RunStatus.FAILED
+    assert "exploded after reporting nonsense usage" in result.error
+    assert result.usage == Usage(0, 0, 0)
+
+
+async def test_reconstructed_usage_still_reports_what_was_actually_spent():
+    """The guard must not turn every reconstructed usage into zero -- that was
+    the M4 limitation this reconstruction exists to fix."""
+
+    class ToolThenExplode:
+        def __init__(self):
+            self.calls = 0
+
+        async def send(self, request):
+            self.calls += 1
+            if self.calls == 1:
+                return tool_response(usage=Usage(11, 4, 15))
+            raise RuntimeError("boom")
+
+    result = await Runner({"gw": ToolThenExplode()}, tools=[echo_tool()]).run(
+        spec(), "go", config()
+    )
+    assert result.status is RunStatus.FAILED
+    assert result.usage == Usage(11, 4, 15)

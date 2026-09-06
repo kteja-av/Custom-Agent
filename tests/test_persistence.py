@@ -22,6 +22,7 @@ from agentsdk.events import EventType
 from agentsdk.manifest import build_manifest
 from agentsdk.model import ModelResponse, StopReason, Usage
 from agentsdk.persistence import Persistence
+from agentsdk.registry import default_registry
 from agentsdk.postgres import (
     SCHEMA_PATH,
     PostgresEventStore,
@@ -42,6 +43,7 @@ from agentsdk.primitives import (
     TrustZone,
 )
 from agentsdk.tools import Tool, ToolSpec
+from agentsdk.version import __version__ as agentsdk_version
 
 from dotenv import load_dotenv
 
@@ -720,9 +722,41 @@ async def test_a_whole_run_persists_and_reconstructs():
         range(1, len(trace["events"]) + 1)
     )
 
-    # AC-6: exactly one manifest, fully populated.
+    # AC-6: exactly one manifest, fully populated -- and populated with what
+    # this run actually used. "not None" left four separate mutations to the
+    # manifest the Runner builds (tool hashes, instructions, sdk_version,
+    # agent_spec_id) alive: every one of them still produced a non-null row.
     assert trace["manifest"] is not None
     assert all(field is not None for field in trace["manifest"])
+    (
+        sdk_version, agent_spec_hash, instructions_hash, manifest_model_id,
+        model_version, adapter_version, tool_spec_hashes, policy_version,
+    ) = trace["manifest"]
+
+    expected = build_manifest(
+        sdk_version=agentsdk_version,
+        agent_spec_id="persist-spec",
+        instructions="be terse",
+        tool_profile=("echo",),
+        tool_spec_hashes=[ToolSpec(name="echo", description="Echo",
+                                   input_schema=ECHO_SCHEMA).schema_hash()],
+        model_id="openai.gpt-4o-mini",
+    )
+    assert sdk_version == agentsdk_version
+    assert agent_spec_hash == expected["agent_spec_hash"]
+    assert instructions_hash == expected["instructions_hash"]
+    assert manifest_model_id == "openai.gpt-4o-mini"
+    # The versions come from the model registry, not from a default: this model
+    # is registered, so the manifest must carry its real entry.
+    registered = default_registry().resolve("openai.gpt-4o-mini")
+    assert (model_version, adapter_version) == (
+        registered.model_version,
+        registered.adapter_version,
+    )
+    assert tool_spec_hashes == expected["tool_spec_hashes"], (
+        "the manifest's tool hashes are not the hashes of the tools this run had"
+    )
+    assert policy_version == "AllowlistPermissionChecker"
 
     # AC-4 persisted: every stored tool result still carries provenance.
     tool_messages = [m for m in trace["messages"] if m["role"] == "tool"]

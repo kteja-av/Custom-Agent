@@ -37,15 +37,19 @@ def _usage_from_events(events: tuple[RunEvent, ...]) -> Usage:
     Used when the total boundary catches a non-SDK exception and never sees the
     loop's accumulator. The tokens were spent either way; reporting zero would
     quietly under-report cost on exactly the runs someone is investigating.
+
+    Runs on the error path, so it must not be able to raise: `Usage` coerces
+    every field it is handed, which is what makes the bare reads below safe
+    even when a ModelClient reported NaN, Infinity or a string.
     """
     total = Usage()
     for event in events:
         raw = event.payload.get("usage") if isinstance(event.payload, dict) else None
         if isinstance(raw, dict):
             total = total + Usage(
-                prompt_tokens=int(raw.get("prompt_tokens", 0) or 0),
-                completion_tokens=int(raw.get("completion_tokens", 0) or 0),
-                total_tokens=int(raw.get("total_tokens", 0) or 0),
+                prompt_tokens=raw.get("prompt_tokens", 0),
+                completion_tokens=raw.get("completion_tokens", 0),
+                total_tokens=raw.get("total_tokens", 0),
             )
     return total
 

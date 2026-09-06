@@ -361,13 +361,14 @@ class OpenAICompatibleModelClient:
         return ModelResponse(
             message=message,
             stop_reason=stop_reason,
-            # Coerced rather than trusted: these fields are typed int/str and
-            # feed FR-11's manifest and usage accounting. A provider sending a
-            # string token count must not make the dataclass lie.
+            # Not coerced here: `Usage` coerces every field it is given, so
+            # this adapter cannot forget to and no future adapter has to
+            # remember. A provider sending a string token count still cannot
+            # make the dataclass lie.
             usage=Usage(
-                prompt_tokens=_as_int(usage.get("prompt_tokens")),
-                completion_tokens=_as_int(usage.get("completion_tokens")),
-                total_tokens=_as_int(usage.get("total_tokens")),
+                prompt_tokens=usage.get("prompt_tokens"),
+                completion_tokens=usage.get("completion_tokens"),
+                total_tokens=usage.get("total_tokens"),
             ),
             provider_response_id=str(response_id) if response_id is not None else None,
             provider_metadata={
@@ -375,21 +376,6 @@ class OpenAICompatibleModelClient:
                 "finish_reason": finish_reason,
             },
         )
-
-
-def _as_int(value: Any) -> int:
-    """Token counts arrive typed by the provider's whim; Usage says int.
-
-    OverflowError is not a ValueError: `json.loads` accepts the bare non-standard
-    literals `Infinity` and `-Infinity`, and `int(float('inf'))` raises
-    OverflowError. A nonsense token count degrades to 0 rather than failing an
-    otherwise valid response -- usage accounting is not worth losing the reply
-    over.
-    """
-    try:
-        return int(value)
-    except (TypeError, ValueError, OverflowError):
-        return 0
 
 
 def _decode_arguments(raw: Any) -> tuple[dict[str, Any], str | None]:

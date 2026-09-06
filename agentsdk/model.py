@@ -29,11 +29,47 @@ class StopReason(str, Enum):
     OTHER = "other"
 
 
+def token_count(value: Any) -> int:
+    """The one place a provider-supplied number becomes an int.
+
+    Three rejections across three milestones were the same defect wearing a
+    different call site: M3 round 3 found `int(float('inf'))` raising
+    OverflowError in the adapter, and M5 round 2 found it again in usage
+    reconstruction -- on the total boundary's error path, where raising is
+    worst. Each was fixed where it was found, which guaranteed the next
+    unguarded `int()` would be a fresh defect rather than a caught regression.
+
+    So the coercion lives on the type instead of at the call sites: a `Usage`
+    cannot hold a value that is not an int, whoever constructs it. Nonsense
+    degrades to 0 -- token accounting is never worth failing a run over --
+    and everything a provider can express is treated as possible input: NaN,
+    Infinity (both are legal `json.loads` output), a string, None, or an
+    object whose `__int__` raises.
+
+    BaseException still propagates: that is control flow, not a token count.
+    """
+    if isinstance(value, bool):
+        return 0  # bool is an int in Python; a flag is not a token count
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except Exception:  # noqa: BLE001 - total by intent, see the docstring
+        return 0
+
+
 @dataclass(frozen=True)
 class Usage:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
+
+    def __post_init__(self) -> None:
+        # Enforced here rather than trusted from the caller: this dataclass is
+        # built from provider JSON and from replayed event payloads, neither of
+        # which is under our control.
+        for name in ("prompt_tokens", "completion_tokens", "total_tokens"):
+            object.__setattr__(self, name, token_count(getattr(self, name)))
 
     def __add__(self, other: Usage) -> Usage:
         return Usage(

@@ -156,7 +156,9 @@ digraph genesis {
   "symbol:agentsdk/model.py#function:ModelClient.send" [label="ModelClient.send",class="symbol"];
   "symbol:agentsdk/model.py#function:ModelRequest.__post_init__" [label="ModelRequest.__post_init__",class="symbol"];
   "symbol:agentsdk/model.py#function:ModelResponse.tool_calls" [label="ModelResponse.tool_calls",class="symbol"];
+  "symbol:agentsdk/model.py#function:token_count" [label="token_count",class="symbol"];
   "symbol:agentsdk/model.py#function:Usage.__add__" [label="Usage.__add__",class="symbol"];
+  "symbol:agentsdk/model.py#function:Usage.__post_init__" [label="Usage.__post_init__",class="symbol"];
   "symbol:agentsdk/outcomes.py#class:ApprovalRequired" [label="ApprovalRequired",class="symbol"];
   "symbol:agentsdk/outcomes.py#class:Cancelled" [label="Cancelled",class="symbol"];
   "symbol:agentsdk/outcomes.py#class:Completed" [label="Completed",class="symbol"];
@@ -228,7 +230,6 @@ digraph genesis {
   "symbol:agentsdk/primitives.py#function:ToolResult.__post_init__" [label="ToolResult.__post_init__",class="symbol"];
   "symbol:agentsdk/providers/openai_compatible.py#class:OpenAICompatibleModelClient" [label="OpenAICompatibleModelClient",class="symbol"];
   "symbol:agentsdk/providers/openai_compatible.py#class:RetryPolicy" [label="RetryPolicy",class="symbol"];
-  "symbol:agentsdk/providers/openai_compatible.py#function:_as_int" [label="_as_int",class="symbol"];
   "symbol:agentsdk/providers/openai_compatible.py#function:_decode_arguments" [label="_decode_arguments",class="symbol"];
   "symbol:agentsdk/providers/openai_compatible.py#function:OpenAICompatibleModelClient.__aenter__" [label="OpenAICompatibleModelClient.__aenter__",class="symbol"];
   "symbol:agentsdk/providers/openai_compatible.py#function:OpenAICompatibleModelClient.__aexit__" [label="OpenAICompatibleModelClient.__aexit__",class="symbol"];
@@ -298,7 +299,9 @@ digraph genesis {
   "symbol:tests/test_agent_loop.py#class:test_an_exception_that_cannot_be_rendered_is_still_contained.Exploding" [label="test_an_exception_that_cannot_be_rendered_is_still_contained.Exploding",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_an_exception_that_cannot_be_rendered_is_still_contained.ExplodingStr" [label="test_an_exception_that_cannot_be_rendered_is_still_contained.ExplodingStr",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_cancellation_is_not_swallowed_by_the_total_boundary.Cancelling" [label="test_cancellation_is_not_swallowed_by_the_total_boundary.Cancelling",class="symbol"];
+  "symbol:tests/test_agent_loop.py#class:test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode" [label="test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_no_unforeseen_exception_type_escapes_the_runner.Exploding" [label="test_no_unforeseen_exception_type_escapes_the_runner.Exploding",class="symbol"];
+  "symbol:tests/test_agent_loop.py#class:test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode" [label="test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:config" [label="config",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:echo_tool" [label="echo_tool",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:ExplodingHook.__init__" [label="ExplodingHook.__init__",class="symbol"];
@@ -378,6 +381,9 @@ digraph genesis {
   "symbol:tests/test_agent_loop.py#function:test_max_turns_exceeded_is_a_terminal_status_not_a_raise" [label="test_max_turns_exceeded_is_a_terminal_status_not_a_raise",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_max_turns_of_one_still_allows_a_single_answer" [label="test_max_turns_of_one_still_allows_a_single_answer",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_max_turns_run_emits_run_failed_with_a_reason" [label="test_max_turns_run_emits_run_failed_with_a_reason",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_misreported_usage_cannot_break_the_boundary_error_path" [label="test_misreported_usage_cannot_break_the_boundary_error_path",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode.__init__" [label="test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode.__init__",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode.send" [label="test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode.send",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_model_override_beats_the_spec_preference" [label="test_model_override_beats_the_spec_preference",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_no_module_imports_a_vendor_agent_sdk" [label="test_no_module_imports_a_vendor_agent_sdk",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_no_unforeseen_exception_type_escapes_the_runner" [label="test_no_unforeseen_exception_type_escapes_the_runner",class="symbol"];
@@ -386,6 +392,9 @@ digraph genesis {
   "symbol:tests/test_agent_loop.py#function:test_phase2_identifier_slots_exist_but_stay_empty_in_phase0" [label="test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_principal_context_is_recorded_but_never_read" [label="test_principal_context_is_recorded_but_never_read",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_provenance_travels_as_metadata_not_as_model_readable_text" [label="test_provenance_travels_as_metadata_not_as_model_readable_text",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_reconstructed_usage_still_reports_what_was_actually_spent" [label="test_reconstructed_usage_still_reports_what_was_actually_spent",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode.__init__" [label="test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode.__init__",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode.send" [label="test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode.send",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_returned_history_cannot_mutate_the_store" [label="test_returned_history_cannot_mutate_the_store",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_run_id_is_returned_and_unique_per_run" [label="test_run_id_is_returned_and_unique_per_run",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_runs_are_isolated_from_each_other" [label="test_runs_are_isolated_from_each_other",class="symbol"];
@@ -404,6 +413,8 @@ digraph genesis {
   "symbol:tests/test_model_client.py#class:_HostileMeta" [label="_HostileMeta",class="symbol"];
   "symbol:tests/test_model_client.py#class:_HostileName" [label="_HostileName",class="symbol"];
   "symbol:tests/test_model_client.py#class:_NonStringStr" [label="_NonStringStr",class="symbol"];
+  "symbol:tests/test_model_client.py#class:_RaisingBaseInt" [label="_RaisingBaseInt",class="symbol"];
+  "symbol:tests/test_model_client.py#class:_RaisingInt" [label="_RaisingInt",class="symbol"];
   "symbol:tests/test_model_client.py#class:test_hostile_exception_message_is_still_redacted._LeakyStr" [label="test_hostile_exception_message_is_still_redacted._LeakyStr",class="symbol"];
   "symbol:tests/test_model_client.py#function:_BadArg.__repr__" [label="_BadArg.__repr__",class="symbol"];
   "symbol:tests/test_model_client.py#function:_BadArg.__str__" [label="_BadArg.__str__",class="symbol"];
@@ -412,9 +423,12 @@ digraph genesis {
   "symbol:tests/test_model_client.py#function:_ExplodingStr.__str__" [label="_ExplodingStr.__str__",class="symbol"];
   "symbol:tests/test_model_client.py#function:_HostileMeta.__name__" [label="_HostileMeta.__name__",class="symbol"];
   "symbol:tests/test_model_client.py#function:_NonStringStr.__str__" [label="_NonStringStr.__str__",class="symbol"];
+  "symbol:tests/test_model_client.py#function:_RaisingBaseInt.__int__" [label="_RaisingBaseInt.__int__",class="symbol"];
+  "symbol:tests/test_model_client.py#function:_RaisingInt.__int__" [label="_RaisingInt.__int__",class="symbol"];
   "symbol:tests/test_model_client.py#function:build" [label="build",class="symbol"];
   "symbol:tests/test_model_client.py#function:completion" [label="completion",class="symbol"];
   "symbol:tests/test_model_client.py#function:simple" [label="simple",class="symbol"];
+  "symbol:tests/test_model_client.py#function:test_a_coerced_usage_still_adds" [label="test_a_coerced_usage_still_adds",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_a_flagged_tool_call_is_rejected_before_the_tool_runs" [label="test_a_flagged_tool_call_is_rejected_before_the_tool_runs",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_absent_arguments_are_not_flagged_as_malformed" [label="test_absent_arguments_are_not_flagged_as_malformed",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_adapter_satisfies_the_model_client_protocol" [label="test_adapter_satisfies_the_model_client_protocol",class="symbol"];
@@ -422,6 +436,7 @@ digraph genesis {
   "symbol:tests/test_model_client.py#function:test_anthropic_style_tool_ids_parse_identically" [label="test_anthropic_style_tool_ids_parse_identically",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_assistant_tool_calls_are_serialised_with_json_arguments" [label="test_assistant_tool_calls_are_serialised_with_json_arguments",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_assistant_tool_calls_are_serialised_with_json_arguments.handler" [label="test_assistant_tool_calls_are_serialised_with_json_arguments.handler",class="symbol"];
+  "symbol:tests/test_model_client.py#function:test_base_exception_from_a_hostile_int_still_propagates" [label="test_base_exception_from_a_hostile_int_still_propagates",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_client_error_surfaces_as_model_error_not_a_raw_provider_exception" [label="test_client_error_surfaces_as_model_error_not_a_raw_provider_exception",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_client_repr_never_contains_the_api_key" [label="test_client_repr_never_contains_the_api_key",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_control_flow_exceptions_are_never_swallowed" [label="test_control_flow_exceptions_are_never_swallowed",class="symbol"];
@@ -483,8 +498,10 @@ digraph genesis {
   "symbol:tests/test_model_client.py#function:test_stream_error_is_wrapped_even_though_it_is_not_an_http_error" [label="test_stream_error_is_wrapped_even_though_it_is_not_an_http_error",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_stream_error_is_wrapped_even_though_it_is_not_an_http_error.handler" [label="test_stream_error_is_wrapped_even_though_it_is_not_an_http_error.handler",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_text_response_maps_to_end_turn_with_usage" [label="test_text_response_maps_to_end_turn_with_usage",class="symbol"];
+  "symbol:tests/test_model_client.py#function:test_the_adapter_no_longer_coerces_token_counts_itself" [label="test_the_adapter_no_longer_coerces_token_counts_itself",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_timeout_is_retried" [label="test_timeout_is_retried",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_timeout_is_retried.handler" [label="test_timeout_is_retried.handler",class="symbol"];
+  "symbol:tests/test_model_client.py#function:test_token_count_is_total" [label="test_token_count_is_total",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_tool_call_response_is_parsed_into_canonical_tool_calls" [label="test_tool_call_response_is_parsed_into_canonical_tool_calls",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_tool_message_fans_out_to_one_wire_message_per_result" [label="test_tool_message_fans_out_to_one_wire_message_per_result",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_tool_message_fans_out_to_one_wire_message_per_result.handler" [label="test_tool_message_fans_out_to_one_wire_message_per_result.handler",class="symbol"];
@@ -492,6 +509,7 @@ digraph genesis {
   "symbol:tests/test_model_client.py#function:test_tool_schemas_are_forwarded.handler" [label="test_tool_schemas_are_forwarded.handler",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_unhashable_or_odd_finish_reason_maps_to_other" [label="test_unhashable_or_odd_finish_reason_maps_to_other",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_unrenderable_exception_still_yields_a_usable_message_and_cause" [label="test_unrenderable_exception_still_yields_a_usable_message_and_cause",class="symbol"];
+  "symbol:tests/test_model_client.py#function:test_usage_cannot_hold_a_value_that_is_not_an_int" [label="test_usage_cannot_hold_a_value_that_is_not_an_int",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_wrapped_failure_keeps_the_original_cause_for_debugging" [label="test_wrapped_failure_keeps_the_original_cause_for_debugging",class="symbol"];
   "symbol:tests/test_model_client.py#function:test_wrapped_failure_message_is_redacted" [label="test_wrapped_failure_message_is_redacted",class="symbol"];
   "symbol:tests/test_persistence.py#class:ScriptedModel" [label="ScriptedModel",class="symbol"];
@@ -694,7 +712,9 @@ digraph genesis {
   "file:agentsdk/model.py" -> "symbol:agentsdk/model.py#function:ModelClient.send" [label="defines"];
   "file:agentsdk/model.py" -> "symbol:agentsdk/model.py#function:ModelRequest.__post_init__" [label="defines"];
   "file:agentsdk/model.py" -> "symbol:agentsdk/model.py#function:ModelResponse.tool_calls" [label="defines"];
+  "file:agentsdk/model.py" -> "symbol:agentsdk/model.py#function:token_count" [label="defines"];
   "file:agentsdk/model.py" -> "symbol:agentsdk/model.py#function:Usage.__add__" [label="defines"];
+  "file:agentsdk/model.py" -> "symbol:agentsdk/model.py#function:Usage.__post_init__" [label="defines"];
   "file:agentsdk/outcomes.py" -> "symbol:agentsdk/outcomes.py#class:ApprovalRequired" [label="defines"];
   "file:agentsdk/outcomes.py" -> "symbol:agentsdk/outcomes.py#class:Cancelled" [label="defines"];
   "file:agentsdk/outcomes.py" -> "symbol:agentsdk/outcomes.py#class:Completed" [label="defines"];
@@ -766,7 +786,6 @@ digraph genesis {
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:ToolResult.__post_init__" [label="defines"];
   "file:agentsdk/providers/openai_compatible.py" -> "symbol:agentsdk/providers/openai_compatible.py#class:OpenAICompatibleModelClient" [label="defines"];
   "file:agentsdk/providers/openai_compatible.py" -> "symbol:agentsdk/providers/openai_compatible.py#class:RetryPolicy" [label="defines"];
-  "file:agentsdk/providers/openai_compatible.py" -> "symbol:agentsdk/providers/openai_compatible.py#function:_as_int" [label="defines"];
   "file:agentsdk/providers/openai_compatible.py" -> "symbol:agentsdk/providers/openai_compatible.py#function:_decode_arguments" [label="defines"];
   "file:agentsdk/providers/openai_compatible.py" -> "symbol:agentsdk/providers/openai_compatible.py#function:OpenAICompatibleModelClient.__aenter__" [label="defines"];
   "file:agentsdk/providers/openai_compatible.py" -> "symbol:agentsdk/providers/openai_compatible.py#function:OpenAICompatibleModelClient.__aexit__" [label="defines"];
@@ -836,7 +855,9 @@ digraph genesis {
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_an_exception_that_cannot_be_rendered_is_still_contained.Exploding" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_an_exception_that_cannot_be_rendered_is_still_contained.ExplodingStr" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_cancellation_is_not_swallowed_by_the_total_boundary.Cancelling" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_no_unforeseen_exception_type_escapes_the_runner.Exploding" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:config" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:echo_tool" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:ExplodingHook.__init__" [label="defines"];
@@ -916,6 +937,9 @@ digraph genesis {
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_max_turns_exceeded_is_a_terminal_status_not_a_raise" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_max_turns_of_one_still_allows_a_single_answer" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_max_turns_run_emits_run_failed_with_a_reason" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_misreported_usage_cannot_break_the_boundary_error_path" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode.__init__" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_misreported_usage_cannot_break_the_boundary_error_path.ToolThenExplode.send" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_model_override_beats_the_spec_preference" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_no_module_imports_a_vendor_agent_sdk" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_no_unforeseen_exception_type_escapes_the_runner" [label="defines"];
@@ -924,6 +948,9 @@ digraph genesis {
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_phase2_identifier_slots_exist_but_stay_empty_in_phase0" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_principal_context_is_recorded_but_never_read" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_provenance_travels_as_metadata_not_as_model_readable_text" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_reconstructed_usage_still_reports_what_was_actually_spent" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode.__init__" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_reconstructed_usage_still_reports_what_was_actually_spent.ToolThenExplode.send" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_returned_history_cannot_mutate_the_store" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_run_id_is_returned_and_unique_per_run" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_runs_are_isolated_from_each_other" [label="defines"];
@@ -942,6 +969,8 @@ digraph genesis {
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#class:_HostileMeta" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#class:_HostileName" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#class:_NonStringStr" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#class:_RaisingBaseInt" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#class:_RaisingInt" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#class:test_hostile_exception_message_is_still_redacted._LeakyStr" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:_BadArg.__repr__" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:_BadArg.__str__" [label="defines"];
@@ -950,9 +979,12 @@ digraph genesis {
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:_ExplodingStr.__str__" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:_HostileMeta.__name__" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:_NonStringStr.__str__" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:_RaisingBaseInt.__int__" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:_RaisingInt.__int__" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:build" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:completion" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:simple" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_a_coerced_usage_still_adds" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_a_flagged_tool_call_is_rejected_before_the_tool_runs" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_absent_arguments_are_not_flagged_as_malformed" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_adapter_satisfies_the_model_client_protocol" [label="defines"];
@@ -960,6 +992,7 @@ digraph genesis {
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_anthropic_style_tool_ids_parse_identically" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_assistant_tool_calls_are_serialised_with_json_arguments" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_assistant_tool_calls_are_serialised_with_json_arguments.handler" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_base_exception_from_a_hostile_int_still_propagates" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_client_error_surfaces_as_model_error_not_a_raw_provider_exception" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_client_repr_never_contains_the_api_key" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_control_flow_exceptions_are_never_swallowed" [label="defines"];
@@ -1021,8 +1054,10 @@ digraph genesis {
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_stream_error_is_wrapped_even_though_it_is_not_an_http_error" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_stream_error_is_wrapped_even_though_it_is_not_an_http_error.handler" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_text_response_maps_to_end_turn_with_usage" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_the_adapter_no_longer_coerces_token_counts_itself" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_timeout_is_retried" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_timeout_is_retried.handler" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_token_count_is_total" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_tool_call_response_is_parsed_into_canonical_tool_calls" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_tool_message_fans_out_to_one_wire_message_per_result" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_tool_message_fans_out_to_one_wire_message_per_result.handler" [label="defines"];
@@ -1030,6 +1065,7 @@ digraph genesis {
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_tool_schemas_are_forwarded.handler" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_unhashable_or_odd_finish_reason_maps_to_other" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_unrenderable_exception_still_yields_a_usable_message_and_cause" [label="defines"];
+  "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_usage_cannot_hold_a_value_that_is_not_an_int" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_wrapped_failure_keeps_the_original_cause_for_debugging" [label="defines"];
   "file:tests/test_model_client.py" -> "symbol:tests/test_model_client.py#function:test_wrapped_failure_message_is_redacted" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#class:ScriptedModel" [label="defines"];
@@ -1316,6 +1352,7 @@ digraph genesis {
   "file:tests/test_persistence.py" -> "file:agentsdk/primitives.py" [label="imports"];
   "file:tests/test_persistence.py" -> "file:agentsdk/registry.py" [label="imports"];
   "file:tests/test_persistence.py" -> "file:agentsdk/tools.py" [label="imports"];
+  "file:tests/test_persistence.py" -> "file:agentsdk/version.py" [label="imports"];
   "file:tests/test_persistence.py" -> "package:pypi:dotenv" [label="imports"];
   "file:tests/test_persistence.py" -> "package:pypi:psycopg" [label="imports"];
   "file:tests/test_persistence.py" -> "package:pypi:pytest" [label="imports"];

@@ -22,7 +22,14 @@ from agentsdk.errors import (
     ToolValidationError,
 )
 from agentsdk.executor import ToolExecutor
-from agentsdk.model import ModelClient, ModelRequest, ModelResponse, StopReason, Usage
+from agentsdk.model import (
+    ModelClient,
+    ModelRequest,
+    ModelResponse,
+    StopReason,
+    Usage,
+    token_count,
+)
 from agentsdk.outcomes import Failed
 from agentsdk.permissions import AllowlistPermissionChecker
 from agentsdk.tools import Tool, ToolRegistry, ToolSpec
@@ -1083,3 +1090,91 @@ def test_default_registry_holds_both_golden_eval_models():
 )
 def test_provider_is_derived_from_the_gateway_namespace(model_id, provider):
     assert provider_of(model_id) == provider
+
+
+# --- Usage coerces, so no call site has to remember (M5 round 2) -------------
+#
+# Three rejections across three milestones were one defect at three call sites:
+# M3 round 3 found int(float('inf')) raising OverflowError in the adapter, and
+# M5 round 2 found the same shape in usage reconstruction -- on the total
+# boundary's ERROR path, which must not be able to raise. Fixing each site as
+# it was found guaranteed a fourth site would be a fresh defect, so the
+# coercion moved onto Usage itself. These tests pin the type, not the callers.
+
+
+class _RaisingInt:
+    def __int__(self):
+        raise RuntimeError("hostile __int__")
+
+
+class _RaisingBaseInt:
+    def __int__(self):
+        raise KeyboardInterrupt("control flow, not a value")
+
+
+HOSTILE_COUNTS = [
+    (float("nan"), 0),
+    (float("inf"), 0),
+    (float("-inf"), 0),
+    ("abc", 0),
+    (None, 0),
+    ([1, 2], 0),
+    ({}, 0),
+    (_RaisingInt(), 0),
+    (True, 0),          # bool is an int in Python; a flag is not a token count
+    ("12", 12),         # a provider sending a numeric string still means 12
+    (10.9, 10),
+    (7, 7),
+]
+
+
+@pytest.mark.parametrize(
+    "value,expected", HOSTILE_COUNTS, ids=lambda v: repr(v)[:22]
+)
+def test_token_count_is_total(value, expected):
+    assert token_count(value) == expected
+
+
+@pytest.mark.parametrize("value,expected", HOSTILE_COUNTS, ids=lambda v: repr(v)[:22])
+def test_usage_cannot_hold_a_value_that_is_not_an_int(value, expected):
+    usage = Usage(value, value, value)
+    assert (usage.prompt_tokens, usage.completion_tokens, usage.total_tokens) == (
+        expected,
+        expected,
+        expected,
+    )
+    assert all(
+        type(getattr(usage, name)) is int
+        for name in ("prompt_tokens", "completion_tokens", "total_tokens")
+    )
+
+
+def test_a_coerced_usage_still_adds():
+    """__add__ builds a new Usage, so coercion must not break accumulation."""
+    assert Usage(float("inf"), "5", None) + Usage(3, 2, 1) == Usage(3, 7, 1)
+
+
+def test_base_exception_from_a_hostile_int_still_propagates():
+    """Total means total over Exception, not over BaseException: a
+    KeyboardInterrupt is control flow and must not be recorded as 0 tokens."""
+    with pytest.raises(KeyboardInterrupt):
+        Usage(_RaisingBaseInt(), 0, 0)
+
+
+async def test_the_adapter_no_longer_coerces_token_counts_itself():
+    """The adapter passes the provider's raw values straight to Usage. If a
+    future adapter forgets a guard, the type still holds the line."""
+    body = (
+        '{"choices":[{"message":{"content":"hi"},"finish_reason":"stop"}],'
+        '"usage":{"prompt_tokens": Infinity, "completion_tokens": "9",'
+        ' "total_tokens": null}}'
+    )
+    client = build(
+        lambda r: httpx.Response(
+            200, content=body.encode(), headers={"content-type": "application/json"}
+        )
+    )
+    response = await client.send(
+        ModelRequest(messages=(Message(role=Role.USER, content="go"),))
+    )
+    assert response.usage == Usage(0, 9, 0)

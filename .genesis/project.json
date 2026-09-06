@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-06T14:30:14.652Z"
+    "updated_at": "2026-09-06T15:14:17.149Z"
   },
   "policy": {
     "ponytail": "full",
@@ -211,6 +211,12 @@
       "text": "Runner.run() is a total boundary: it always returns a RunResult with a terminal status and never lets an exception reach application code. ToolExecutor.execute() is likewise total and always returns an outcome. Configuration errors (unknown model client, invalid RunConfig) are the deliberate exception and raise at the call site, because a caller bug must surface loudly rather than hide in a RunResult nobody inspects. BaseException passes through as control flow.",
       "source": "M4 review defect 2, 2026-09-06",
       "recorded_at": "2026-09-06T12:41:01.347Z"
+    },
+    {
+      "id": "INVARIANT-3c123c38",
+      "text": "Any number that arrives from a model provider, a persisted event payload or a replayed run reaches a typed field only through a total coercion that cannot raise on Exception. Concretely: never call int(), float() or similar directly on such a value; construct the dataclass and let it coerce. Violations have been rejected three times.",
+      "source": "human-confirmed",
+      "recorded_at": "2026-09-06T15:13:21.028Z"
     }
   ],
   "decisions": [
@@ -285,6 +291,14 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-06T14:29:35.919Z"
+    },
+    {
+      "id": "DECISION-a2c8f342",
+      "title": "Provider-supplied numbers are coerced by the type, not by call sites",
+      "text": "Usage coerces every field in __post_init__ through one total helper, agentsdk.model.token_count. The adapter's _as_int is deleted rather than duplicated, so there is one implementation. Rationale: the same defect was rejected three times in three milestones at three call sites -- M3 round 3 (int(float('inf')) -> OverflowError in the adapter), and M5 round 2 (the same shape in _usage_from_events, on the total boundary's ERROR path where raising is worst). Each was fixed where found, which guaranteed the next unguarded int() would be a fresh defect rather than a caught regression. token_count is total over Exception but NOT over BaseException, so KeyboardInterrupt remains control flow. A nonsense count degrades to 0: token accounting is never worth failing a run over. Generalises the M3 total-boundary lesson from exception handling to value coercion -- enumerate nothing, make the bad state unrepresentable at the type.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-06T15:13:20.833Z"
     }
   ],
   "knowledge": [
@@ -600,9 +614,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "c0fdc6aa8c438fc331169f90e967528f7168224b079a21af2b83690c9f814fa6",
-            "hash": "5bb35158e3c0a03d0b88d3d9f32e61c81c3ffc1edd9ec6fe43f334cd5ef909e5",
-            "observed_at": "2026-09-06T14:29:00.277Z"
+            "source_hash": "040100a8b40a0874aa85aa9496ff1056a28a6f5bd1bc4161ce4158901645dd68",
+            "hash": "0454158f2a2d68c5c88cf85a8220bb9ccf127243622d0d17472ae6b606185b53",
+            "observed_at": "2026-09-06T15:13:33.538Z"
           }
         },
         {
@@ -622,7 +636,7 @@
         "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-06T14:29:00.474Z"
+      "updated_at": "2026-09-06T15:13:33.674Z"
     },
     {
       "id": "M6-golden-eval",
@@ -798,15 +812,33 @@
       "human": "Opus 5 (implementer)",
       "reason": "Round-1 defect fixed structurally: run row and execution manifest now commit in one transaction (manifest is an argument to start_run, not a follow-up call), so a run row cannot exist without its manifest. Three ORDER BY gate gaps and five content gaps closed; 12/12 mutations killed.",
       "revision": null
+    },
+    {
+      "id": "aaafe19e-12c1-4434-9d73-325f9daf0e4f",
+      "at": "2026-09-06T14:58:54.729Z",
+      "action": "reject",
+      "task": "M5-postgres",
+      "human": "Claude Fable 5.1 - fresh independent L4 reviewer, M5 round 2",
+      "reason": "Fresh independent L4 review, M5 round 2 (never reviewed M5 before). VERIFIED SOUND: gate 38 passed, full suite 267 passed; genesis gate re-run passes with source_hash identical to the submission. Round-1 defect structurally closed: start_run requires manifest (no default), RunRecorder exposes only start_run/finish_run, both rows commit in one psycopg transaction. Injected OperationalError in _insert_manifest (direct and via Runner) leaves 0 runs rows; os._exit in a child process both before and after the manifest INSERT leaves 0 rows; _insert_manifest on a broken transaction raises InFailedSqlTransaction with nothing persisted; duplicate manifest in one txn rolls back both; FK/PK misuse refused. 56 mutations over postgres.py/api.py/manifest.py/schema.sql, restored in a finally with SHA-256 verified: 44 killed, 12 survived, all 12 are gate blind spots where probes show the code correct (arguments_error, instruction_authority and origin fidelity on read; Runner-path manifest content sdk_version/instructions/agent_spec_id/tool_spec_hashes and principal_context unpinned; tool_spec_hashes ordering; event timestamp; schema status CHECK and run_events FK). Provenance fidelity: 66 messages covering every Origin x InstructionAuthority x TrustZone, all TaintFlags, is_error, source_uri, tool-call arguments and arguments_error round-trip equal. Ordering tests genuinely write rows out of order for history, trace messages and trace events; ORDER BY removal killed in all three. Concurrency: 3 runs of 12 barrier writers gave 9-10 contiguous unique rows, 2-3 UniqueViolation, 0 lost. AC-10 scan of all 5 tables (1743 runs, 2062 messages, 1156 events, 764 manifests): 0 rows contain MODEL_API_KEY, its 12-char tail, or the DB password. Live gateway run through Runner on openai.gpt-4o-mini: completed, two real echo calls, trace reconstructs 4 messages and 6 events in order, manifest fully populated (0.1.0.dev0, 2024-07-18, openai-compatible/1, 1 tool hash), no key anywhere. Vacuous-pass guard exempts exactly one test by node name. REJECTED FOR ONE DEFECT (narrow, low severity, one-line fix): api.py _usage_from_events runs inside the except block of Runner.run() and calls int() on ModelCalled usage values unguarded, so the error path itself can raise, violating INVARIANT-af776957 (Runner.run() is a total boundary) and INVARIANT-b4c91070 (a boundary error path must not raise) in approved M4 code that M5 modified. Repro with the default in-memory Runner (no persistence): a ModelClient returns a tool-call turn with Usage(nan,nan,nan) then raises RuntimeError on turn 2 -> Runner.run() raises ValueError: cannot convert float NaN to integer; Usage(inf,0,inf) -> OverflowError; a number-like usage whose __int__ raises escapes with persistence on as well. Reachable through the ModelClient seam that NFR-1 and the second-wire-format risk make a first-class extension point; only the shipped adapter's _as_int prevents it today. Fix: coerce with the adapter's _as_int pattern or guard _usage_from_events so it returns Usage() on any exception. NON-BLOCKING CAVEATS: (1) RunCompleted emit and finish_run are two connections: process death between them leaves status running with a RunCompleted event, and a DB error in finish_run on the success path turns a completed run into FAILED with output None and both RunCompleted and RunFailed persisted (Phase 6 territory, consistent with the M4 boundary decision); (2) NUL (U+0000) in a task or tool argument fails the run under Postgres (TEXT/JSONB reject it) while the in-memory store completes; (3) psycopg error text persisted in RunFailed payloads includes DETAIL and portal parameter values, i.e. copies of the row data being written (run data, not credentials); (4) model_registry has no tenancy columns, matching LLD 2.5 but not the literal wording of NFR-2; (5) run_events.tool_call_id column stays NULL on ToolCalled events, only the payload carries it; (6) importing agentsdk now hard-requires psycopg; (7) Persistence.postgres() applies the schema on every construction; (8) with persistence on, usage is reported as 0 when the ModelCalled emit itself fails (event never reaches the buffer).",
+      "revision": null
+    },
+    {
+      "id": "58d1c84c-e36b-4bd3-8cb7-116d055775de",
+      "at": "2026-09-06T15:14:02.650Z",
+      "action": "retry",
+      "task": "M5-postgres",
+      "human": "Opus 5 (implementer)",
+      "reason": "Round-2 defect fixed at the type: Usage coerces every field through one total helper (token_count), the adapter's duplicate _as_int is deleted, and the boundary error path can no longer raise. Recorded as a decision and an invariant, as the reviewer asked. Manifest-content blind spot closed: the e2e test now asserts what the manifest contains, killing all four surviving mutations. 301 tests, 12/12 mutations killed.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-06T14:30:14.581Z",
+    "at": "2026-09-06T15:14:17.086Z",
     "revision": {
-      "commit": "313abeb458c5c3d644e989df8b6c0544464d82d0",
+      "commit": "4f312c922b43b695f75ddae5b6fec41b945f031f",
       "dirty": true,
-      "source_hash": "c0fdc6aa8c438fc331169f90e967528f7168224b079a21af2b83690c9f814fa6"
+      "source_hash": "ca9cf2ba59ae8b928ef207f3fe5c56619fe5f337b10c2b02714cb5339a0c9210"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."

@@ -2,7 +2,7 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
-## Round 2 -- what round 1 rejected, and what changed
+## Rounds 1-2 -- what was rejected, and what changed
 
 A previous reviewer rejected this milestone and was right to. Their finding, and the response:
 
@@ -12,11 +12,21 @@ A previous reviewer rejected this milestone and was right to. Their finding, and
 
 **Six surviving mutations, all gate gaps, now closed** -- plus two more the author found by extending the reviewer's own reasoning: the round-1 reviewer flagged `history()`'s unpinned `ORDER BY`, and the same hole existed in `PostgresTrace.reconstruct` for both messages and events, which is AC-7's own claim. Tests now write rows *out of order* before asserting a read is ordered.
 
-**Attack these first.** They are where the last defect was, and where a fix is most likely to have introduced a new one:
-- Is the transaction genuinely atomic, or does `psycopg`'s `with conn.transaction()` inside `with psycopg.connect()` leave a window? Try killing the process mid-write.
-- Does anything else in the Runner's start path still write across two connections?
-- The new `_insert_manifest` is a `@staticmethod` taking a caller's connection. Can it be called with a connection whose transaction is already broken?
-- 267 tests now, up from 259. Did any new test weaken an old one -- the `started` fixture now writes a manifest, which changed what two AC-6 tests are asserting against.
+Round 2 confirmed that fix held under `os._exit` mid-transaction and injected failures, and rejected on a different defect:
+
+**Round 2's defect.** `_usage_from_events` did an unguarded `int()` and runs inside `Runner.run()`'s `except` block, so a ModelClient reporting `NaN` or `Infinity` took down the total boundary *on its error path* -- violating two invariants by name and regressing a property M4's approval had verified.
+
+**The reviewer's diagnosis mattered more than the defect.** This was the third rejection for one bug class: M3 round 3 found `int(float('inf'))` raising `OverflowError` in the adapter, that fix added `OverflowError` to that one call site, and the pattern reappeared in a new function. So the coercion moved onto the type: `Usage.__post_init__` routes every field through `agentsdk.model.token_count`, and the adapter's `_as_int` is **deleted** rather than duplicated. A `Usage` cannot hold a non-int whoever built it. Recorded as `DECISION-a2c8f342` and `INVARIANT-3c123c38`.
+
+**Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
+- `token_count` catches bare `Exception` and returns 0. Find a value it mishandles, or a place a provider number still reaches `int()` directly. `grep` for `int(` across the package.
+- Is `Usage.__post_init__` reachable on every construction path -- including `__add__`, `dataclasses.replace`, and unpickling?
+- Coercing to 0 is silent. Is there a case where silently zeroing a token count is worse than failing? Judge whether the trade is right, not just whether it is implemented.
+- **Does `BaseException` still pass through?** `token_count` must not swallow `KeyboardInterrupt`.
+- Is the transaction genuinely atomic, or does `psycopg`'s `with conn.transaction()` inside `with psycopg.connect()` leave a window?
+- 301 tests now, up from 259. Did any new test weaken an old one -- the `started` fixture now writes a manifest, which changed what two AC-6 tests assert against, and the e2e test now asserts manifest *contents*.
+
+**Two round-2 caveats were also addressed.** The manifest-content blind spot (four mutations to what the Runner puts in the manifest all survived because the e2e test only asserted `is not None`) is closed -- all four now die. The 979 manifest-less `runs` rows were confirmed to be pre-fix development data plus rows my own mutation runs created deliberately: three clean suite runs produced 69 runs and **0** orphans. They are left in place pending the owner's decision; deleting their data to tidy a metric is not mine to make.
 
 ## Repository
 
@@ -70,10 +80,10 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
 2. Re-run the gate:
    ```bash
    .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 38
-   .venv\Scripts\python.exe -m pytest -q                             # expect 267
+   .venv\Scripts\python.exe -m pytest -q                             # expect 301
    ```
    A different number is itself a finding.
-3. **Mutation-test.** Round 1 ran 21 mutations with six survivors; round 2 ran 13 targeted at those gaps and the new atomicity code, killing 13/13. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
+3. **Mutation-test.** Round 1: 21 mutations, six survivors. Round 2's reviewer ran 56 and found 12 blind spots. Round 3: 12 targeted mutations, 12 killed -- including re-introducing the M3 defect verbatim, which the new type-level tests now catch. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
    ```
    sequence_no constant not computed   append without scope allowed
    bound store accepts any run         history ignores ordering
@@ -84,6 +94,9 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
    manifest hash ignores tool profile  model version left null
    manifest write not atomic with run  trace ordering removed
    is_error dropped on write           principal_context not persisted
+   Usage coercion removed              token_count re-narrowed to (TypeError, ValueError)
+   token_count swallows BaseException  manifest tool hashes emptied
+   manifest instructions replaced      manifest sdk_version faked
    messages tenant nullable            run_events tenant nullable
    messages sequence not unique        manifest primary key relaxed
    tenancy index removed               run never marked finished
