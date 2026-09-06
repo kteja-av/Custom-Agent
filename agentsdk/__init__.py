@@ -5,6 +5,7 @@ collaborators (AgentLoop, ToolExecutor, ...) are deliberately not re-exported:
 the public surface is AgentSpec / RunConfig / Runner / RunResult (NFR-5).
 """
 
+from .api import AgentSpec, RunConfig, Runner, RunResult, RunStatus
 from .errors import (
     AgentSDKError,
     BudgetExceeded,
@@ -42,6 +43,13 @@ from .primitives import (
 __version__ = "0.1.0.dev0"
 
 __all__ = [
+    # The public API surface (NFR-5). Everything below it is exported for
+    # authoring tools and specs, not for driving a run.
+    "AgentSpec",
+    "RunConfig",
+    "Runner",
+    "RunResult",
+    "RunStatus",
     "ContentProvenance",
     "InstructionAuthority",
     "Message",

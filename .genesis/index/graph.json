@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "agent-sdk",
-  "revision": null,
-  "sourceHash": "505d19d79b0291f72ffaa8a7f4d8206fb407cd8960abab8c4c27ead415ce6184",
+  "revision": "bdb1760ed5b0bf66d161648fafca7dfa72328771",
+  "sourceHash": "58da17173a16d3d3a990ae269a12925d2ee62373602d91705059e4f15b8d3edc",
   "provenance": {
     "tool": "genesis-graphizer",
     "method": "static-analysis",
@@ -20,7 +20,20 @@
         "extractor": "filesystem",
         "source": "agentsdk/__init__.py"
       },
-      "contentHash": "67516a38eabc6c501f143f95248c6106da57da82c29b782a04cd20a1b51a0913"
+      "contentHash": "f563b1c0a55c5da80ce54f571a10924781ab644536b3989e9866f6326eb20dde"
+    },
+    {
+      "id": "file:agentsdk/api.py",
+      "type": "file",
+      "label": "agentsdk/api.py",
+      "path": "agentsdk/api.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "96be3a471bacf70b744c5757488c73622175fbdcd0500a85379d499c0ddc8b69"
     },
     {
       "id": "file:agentsdk/config.py",
@@ -36,6 +49,19 @@
       "contentHash": "d048d14a97116bd624619ba61b03971fd07c8989ae6a1430b527dd75ce5f065f"
     },
     {
+      "id": "file:agentsdk/context.py",
+      "type": "file",
+      "label": "agentsdk/context.py",
+      "path": "agentsdk/context.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "11381991a0fc36ee4d108c4154886b4e5eec135df119b2d257ceb2c5c73fd749"
+    },
+    {
       "id": "file:agentsdk/errors.py",
       "type": "file",
       "label": "agentsdk/errors.py",
@@ -47,6 +73,19 @@
         "source": "agentsdk/errors.py"
       },
       "contentHash": "d2234ac91885e94c396100c4b8277873df4c118f4333a2476474dd7e1b6fe1cf"
+    },
+    {
+      "id": "file:agentsdk/events.py",
+      "type": "file",
+      "label": "agentsdk/events.py",
+      "path": "agentsdk/events.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "f8cbbd6070b228d75ade6261f6d2a6e10023b6f2ee69dcb39f4779c00d7d1ad0"
     },
     {
       "id": "file:agentsdk/executor.py",
@@ -86,6 +125,19 @@
         "source": "agentsdk/identity.py"
       },
       "contentHash": "d2ba0a6ddc989500239c079fb9ea96cb52a932bb24fe2de7072ec5cec1f24182"
+    },
+    {
+      "id": "file:agentsdk/loop.py",
+      "type": "file",
+      "label": "agentsdk/loop.py",
+      "path": "agentsdk/loop.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "c84eb5a7540f28f46250e17f0f64f8f105cfee7e06a7f0802d589da4274b8397"
     },
     {
       "id": "file:agentsdk/model.py",
@@ -179,6 +231,19 @@
       "contentHash": "b79eb804f5ed97403aaad61c2a56a022079f1ba0606d49d1a0808c772aaa211f"
     },
     {
+      "id": "file:agentsdk/session.py",
+      "type": "file",
+      "label": "agentsdk/session.py",
+      "path": "agentsdk/session.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "62ca8c6ca9f6bf131f746b5e85ec036f846dc56b8d3112934cd97b2ac0f976ab"
+    },
+    {
       "id": "file:agentsdk/tools.py",
       "type": "file",
       "label": "agentsdk/tools.py",
@@ -203,6 +268,19 @@
         "source": "conftest.py"
       },
       "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "file:tests/test_agent_loop.py",
+      "type": "file",
+      "label": "tests/test_agent_loop.py",
+      "path": "tests/test_agent_loop.py",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "filesystem",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "3e436ed7bfb07e171b9430a8a24db0dea45ac1b7604ede218d641fc070a5a1e3"
     },
     {
       "id": "file:tests/test_model_client.py",
@@ -302,6 +380,18 @@
         "source": "agentsdk/tools.py"
       },
       "contentHash": "72d67008c021530c3206aad5d8f2e0c138920d256ada03ce5ff156d790d85c74"
+    },
+    {
+      "id": "runtime:python:ast",
+      "type": "runtime",
+      "label": "ast",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "standard-library",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "9ad350dbb4e632504b3abdafb0ff632b5584937a98d0f2c99c21d09e342bf22e"
     },
     {
       "id": "runtime:python:asyncio",
@@ -424,6 +514,18 @@
       "contentHash": "3806d26c0342f905b28f23c7de3c2705833ec1628f03e04e4b658f3914ba2b4c"
     },
     {
+      "id": "runtime:python:pathlib",
+      "type": "runtime",
+      "label": "pathlib",
+      "language": "python",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "standard-library",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "f80e30cf02d84c10bc9ec466758fee39c984c5b41f4d5ab280e2be46cd1c3c2a"
+    },
+    {
       "id": "runtime:python:pickle",
       "type": "runtime",
       "label": "pickle",
@@ -482,6 +584,198 @@
         "source": "agentsdk/outcomes.py"
       },
       "contentHash": "6669c9e7a67c8b11dbd583e6bafa963dd54a301236cadf75f7c404980ee01683"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#class:AgentSpec",
+      "type": "symbol",
+      "name": "AgentSpec",
+      "qualifiedName": "AgentSpec",
+      "kind": "class",
+      "line": 35,
+      "label": "AgentSpec",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "151431514a5ac5a079967f4ad6c7972d1f991aa0ab09b77e284bcd0f7c356145"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#class:RunConfig",
+      "type": "symbol",
+      "name": "RunConfig",
+      "qualifiedName": "RunConfig",
+      "kind": "class",
+      "line": 62,
+      "label": "RunConfig",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "101f0701029f82304114a26839933c89cae43349589944fcecaf52981925ca98"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#class:Runner",
+      "type": "symbol",
+      "name": "Runner",
+      "qualifiedName": "Runner",
+      "kind": "class",
+      "line": 92,
+      "label": "Runner",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "15f02c6597cf7288ebb276f608261cfe3ea4eb3f92af3bcdf87f9e52a000c48d"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#class:RunResult",
+      "type": "symbol",
+      "name": "RunResult",
+      "qualifiedName": "RunResult",
+      "kind": "class",
+      "line": 77,
+      "label": "RunResult",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "bf303fb2ff77d70250c6fc82b45f1e8ebda5dd14ad12e98267cab726b943887d"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#class:RunStatus",
+      "type": "symbol",
+      "name": "RunStatus",
+      "qualifiedName": "RunStatus",
+      "kind": "class",
+      "line": 28,
+      "label": "RunStatus",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "d44a4ff5822bd72ecc0e8f81c16e4927ae6a902ab1102ebd51a26c9922b321d3"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#function:AgentSpec.__post_init__",
+      "type": "symbol",
+      "name": "__post_init__",
+      "qualifiedName": "AgentSpec.__post_init__",
+      "kind": "function",
+      "line": 46,
+      "label": "AgentSpec.__post_init__",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "949b48b71149b539a210cd7092a66a577fa9d8fb8010e67371712b29bc381653"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#function:AgentSpec.checker",
+      "type": "symbol",
+      "name": "checker",
+      "qualifiedName": "AgentSpec.checker",
+      "kind": "function",
+      "line": 49,
+      "label": "AgentSpec.checker",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "f7d8184b258f6eb7ceb870d9a201cff2bb0b83eb2fcba1761cf6220c44c93681"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#function:RunConfig.__post_init__",
+      "type": "symbol",
+      "name": "__post_init__",
+      "qualifiedName": "RunConfig.__post_init__",
+      "kind": "function",
+      "line": 69,
+      "label": "RunConfig.__post_init__",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "c737167bdd3c40ba01f5a33ec3e9728c51928ce0c24ffa1db678c2e30ae1fa27"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#function:Runner.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "Runner.__init__",
+      "kind": "function",
+      "line": 93,
+      "label": "Runner.__init__",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "079f2cd7808dbb00c7c5a4236b0777096db616492f4d40dc941dc4ef8a86b0d3"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#function:Runner._resolve_model",
+      "type": "symbol",
+      "name": "_resolve_model",
+      "qualifiedName": "Runner._resolve_model",
+      "kind": "function",
+      "line": 177,
+      "label": "Runner._resolve_model",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "4df8396cf260d52ec368c05028d526b758d2f5d5d4668c62d3ce1139f6e9b7cb"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#function:Runner.run",
+      "type": "symbol",
+      "name": "run",
+      "qualifiedName": "Runner.run",
+      "kind": "function",
+      "line": 113,
+      "label": "Runner.run",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "53c5f9a947b95cda948cca247163d795cbb7213088f927bb4674332f25d8e1f8"
+    },
+    {
+      "id": "symbol:agentsdk/api.py#function:RunResult.succeeded",
+      "type": "symbol",
+      "name": "succeeded",
+      "qualifiedName": "RunResult.succeeded",
+      "kind": "function",
+      "line": 88,
+      "label": "RunResult.succeeded",
+      "path": "agentsdk/api.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "fe33862d8ba7512ca3e2cf5a80d0bc8befe1ea598332c1f1eece7c4b8f5d1a19"
     },
     {
       "id": "symbol:agentsdk/config.py#class:Secret",
@@ -770,6 +1064,54 @@
         "source": "agentsdk/config.py"
       },
       "contentHash": "a13cae7e43c7f4794d7d040003b80a9898abeea0f2157c6bb9cb83856f027d25"
+    },
+    {
+      "id": "symbol:agentsdk/context.py#class:ContextAssembler",
+      "type": "symbol",
+      "name": "ContextAssembler",
+      "qualifiedName": "ContextAssembler",
+      "kind": "class",
+      "line": 26,
+      "label": "ContextAssembler",
+      "path": "agentsdk/context.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "481b83c8b571f2a76cabe620bdf427fb110135fdf7482b84892f1216316331b2"
+    },
+    {
+      "id": "symbol:agentsdk/context.py#function:ContextAssembler._provenance_manifest",
+      "type": "symbol",
+      "name": "_provenance_manifest",
+      "qualifiedName": "ContextAssembler._provenance_manifest",
+      "kind": "function",
+      "line": 51,
+      "label": "ContextAssembler._provenance_manifest",
+      "path": "agentsdk/context.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "d7d662e3c42ab97ea437d847d391a3e63bb1396edd114cd88b24a4daa6404ba0"
+    },
+    {
+      "id": "symbol:agentsdk/context.py#function:ContextAssembler.build",
+      "type": "symbol",
+      "name": "build",
+      "qualifiedName": "ContextAssembler.build",
+      "kind": "function",
+      "line": 27,
+      "label": "ContextAssembler.build",
+      "path": "agentsdk/context.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "32136896499b5eeb66e2c09a5ea4f839a2a73e3c60e99731b2fb67d65b90af27"
     },
     {
       "id": "symbol:agentsdk/errors.py#class:AgentSDKError",
@@ -1092,6 +1434,150 @@
       "contentHash": "18df208ca092c8f1862897625209b8b16340b68c834c302e18534b2abceb96a0"
     },
     {
+      "id": "symbol:agentsdk/events.py#class:EventSink",
+      "type": "symbol",
+      "name": "EventSink",
+      "qualifiedName": "EventSink",
+      "kind": "class",
+      "line": 54,
+      "label": "EventSink",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "7022f5cc46389605431382f5f1206d6cc2861d80514d7e81c3aa5ae720e47f67"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#class:EventType",
+      "type": "symbol",
+      "name": "EventType",
+      "qualifiedName": "EventType",
+      "kind": "class",
+      "line": 23,
+      "label": "EventType",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "1a25a2f0a8a58bfd2ef081519c3444e2ec200ec6bcc8fa1007d314cecd6caf14"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#class:InMemoryEventSink",
+      "type": "symbol",
+      "name": "InMemoryEventSink",
+      "qualifiedName": "InMemoryEventSink",
+      "kind": "class",
+      "line": 62,
+      "label": "InMemoryEventSink",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "f3e2c30cd519efa4e85cdf9f8f4379c12a95e4becbbaf80cc1d9e35091b137a7"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#class:RunEvent",
+      "type": "symbol",
+      "name": "RunEvent",
+      "qualifiedName": "RunEvent",
+      "kind": "class",
+      "line": 34,
+      "label": "RunEvent",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "6bcabadbafe542249f929a9314ed8265b8e6ac8ca49951b9c09c8cbe698e31fc"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#function:EventSink.emit",
+      "type": "symbol",
+      "name": "emit",
+      "qualifiedName": "EventSink.emit",
+      "kind": "function",
+      "line": 55,
+      "label": "EventSink.emit",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "b3736a339ac70b88e9d7e650b59e6d12d40cd547efc7ce2aecb0c67174aa6830"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#function:EventSink.events",
+      "type": "symbol",
+      "name": "events",
+      "qualifiedName": "EventSink.events",
+      "kind": "function",
+      "line": 59,
+      "label": "EventSink.events",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "8f2cc4c0987adc110c13d07d25130d31846131be00e4523bbd9bfcfa2895c7b0"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#function:InMemoryEventSink.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "InMemoryEventSink.__init__",
+      "kind": "function",
+      "line": 69,
+      "label": "InMemoryEventSink.__init__",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "c142209a5bbfee50a0ad5678f070cac11707f8571f3ca165bd57e96fdcf7ab1d"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#function:InMemoryEventSink.emit",
+      "type": "symbol",
+      "name": "emit",
+      "qualifiedName": "InMemoryEventSink.emit",
+      "kind": "function",
+      "line": 75,
+      "label": "InMemoryEventSink.emit",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "c089e7f0d9f8d56ae307f427d6e21191506d8d0b0325b773777a9a754cd4e9f1"
+    },
+    {
+      "id": "symbol:agentsdk/events.py#function:InMemoryEventSink.events",
+      "type": "symbol",
+      "name": "events",
+      "qualifiedName": "InMemoryEventSink.events",
+      "kind": "function",
+      "line": 90,
+      "label": "InMemoryEventSink.events",
+      "path": "agentsdk/events.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "51f8b4ba3bb83637f434cd26578abc63150bf1b34cf90f0cfa94395ffc256fd4"
+    },
+    {
       "id": "symbol:agentsdk/executor.py#class:ToolExecutor",
       "type": "symbol",
       "name": "ToolExecutor",
@@ -1362,6 +1848,86 @@
         "source": "agentsdk/identity.py"
       },
       "contentHash": "c6d629cb0a4d07b441f78e6b9d428cf44f8253df80f01ef53aaf15c017536744"
+    },
+    {
+      "id": "symbol:agentsdk/loop.py#class:AgentLoop",
+      "type": "symbol",
+      "name": "AgentLoop",
+      "qualifiedName": "AgentLoop",
+      "kind": "class",
+      "line": 43,
+      "label": "AgentLoop",
+      "path": "agentsdk/loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "cec7923e4ed541901c1bfc1ff57adf7af0e1bd1284ef608418cf2e370b697341"
+    },
+    {
+      "id": "symbol:agentsdk/loop.py#class:LoopOutcome",
+      "type": "symbol",
+      "name": "LoopOutcome",
+      "qualifiedName": "LoopOutcome",
+      "kind": "class",
+      "line": 33,
+      "label": "LoopOutcome",
+      "path": "agentsdk/loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "581742e3d149744b99f104eea7d2b86cdeaa30d71d579ddf87646894bc864928"
+    },
+    {
+      "id": "symbol:agentsdk/loop.py#function:AgentLoop.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "AgentLoop.__init__",
+      "kind": "function",
+      "line": 44,
+      "label": "AgentLoop.__init__",
+      "path": "agentsdk/loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "8ee7f801782324fd06abfec30ea672e684c885fec5be253a99ad740ff5faac61"
+    },
+    {
+      "id": "symbol:agentsdk/loop.py#function:AgentLoop._send_with_retry",
+      "type": "symbol",
+      "name": "_send_with_retry",
+      "qualifiedName": "AgentLoop._send_with_retry",
+      "kind": "function",
+      "line": 144,
+      "label": "AgentLoop._send_with_retry",
+      "path": "agentsdk/loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "4a8d32767ba1081cce2af742f72fc2d886b85d8de0fab6009b4eeef677bb097e"
+    },
+    {
+      "id": "symbol:agentsdk/loop.py#function:AgentLoop.run",
+      "type": "symbol",
+      "name": "run",
+      "qualifiedName": "AgentLoop.run",
+      "kind": "function",
+      "line": 67,
+      "label": "AgentLoop.run",
+      "path": "agentsdk/loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "1a64d368f8681ac319d9202fa25c1198ec8e6165e63ff16f484205287b829b2c"
     },
     {
       "id": "symbol:agentsdk/model.py#class:ModelClient",
@@ -2580,6 +3146,118 @@
       "contentHash": "f424fa92d22b0debb1e3e423ce78f4a344bb2608f674cb48db5fae4c5a9c9dbe"
     },
     {
+      "id": "symbol:agentsdk/session.py#class:InMemorySessionStore",
+      "type": "symbol",
+      "name": "InMemorySessionStore",
+      "qualifiedName": "InMemorySessionStore",
+      "kind": "class",
+      "line": 23,
+      "label": "InMemorySessionStore",
+      "path": "agentsdk/session.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "6a4e5d4305d837fbbb322e262b63b602bd5abfe758e19db334302b3f7dab1e66"
+    },
+    {
+      "id": "symbol:agentsdk/session.py#class:SessionStore",
+      "type": "symbol",
+      "name": "SessionStore",
+      "qualifiedName": "SessionStore",
+      "kind": "class",
+      "line": 17,
+      "label": "SessionStore",
+      "path": "agentsdk/session.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "db9fa850aec586e84f3a797bb6c0a3a2e5c938c583ee9a12ce3d65c6fe59b0f5"
+    },
+    {
+      "id": "symbol:agentsdk/session.py#function:InMemorySessionStore.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "InMemorySessionStore.__init__",
+      "kind": "function",
+      "line": 24,
+      "label": "InMemorySessionStore.__init__",
+      "path": "agentsdk/session.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "c3c86be02bbfbcf6ad3babbde3deedd494c9b92517a949dde74ca04682b5f970"
+    },
+    {
+      "id": "symbol:agentsdk/session.py#function:InMemorySessionStore.append",
+      "type": "symbol",
+      "name": "append",
+      "qualifiedName": "InMemorySessionStore.append",
+      "kind": "function",
+      "line": 27,
+      "label": "InMemorySessionStore.append",
+      "path": "agentsdk/session.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "ef6c277b7cdd55c35601afd21bd5b40bceaa32b042ce06fcca852ba60d61cc12"
+    },
+    {
+      "id": "symbol:agentsdk/session.py#function:InMemorySessionStore.history",
+      "type": "symbol",
+      "name": "history",
+      "qualifiedName": "InMemorySessionStore.history",
+      "kind": "function",
+      "line": 30,
+      "label": "InMemorySessionStore.history",
+      "path": "agentsdk/session.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "b6eb67056e0652e8a6aa6b9b767700ae932ae6101aa5b29014ee47cfa185a0f4"
+    },
+    {
+      "id": "symbol:agentsdk/session.py#function:SessionStore.append",
+      "type": "symbol",
+      "name": "append",
+      "qualifiedName": "SessionStore.append",
+      "kind": "function",
+      "line": 18,
+      "label": "SessionStore.append",
+      "path": "agentsdk/session.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "1bd492b46678549ed04e43785580c751ce5fd690d380e52a146d6776ff3ddd61"
+    },
+    {
+      "id": "symbol:agentsdk/session.py#function:SessionStore.history",
+      "type": "symbol",
+      "name": "history",
+      "qualifiedName": "SessionStore.history",
+      "kind": "function",
+      "line": 20,
+      "label": "SessionStore.history",
+      "path": "agentsdk/session.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "821f6d9671b9a99b29c16f379892ff307ddbdb5322163393a0a98e335610889b"
+    },
+    {
       "id": "symbol:agentsdk/tools.py#class:ApprovalPolicy",
       "type": "symbol",
       "name": "ApprovalPolicy",
@@ -2818,6 +3496,806 @@
         "source": "agentsdk/tools.py"
       },
       "contentHash": "4d34c31bea3da0f36a19d5deeae1213dfe0ce7c2669d70f3f8864cb01bfe9665"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#class:ScriptedModel",
+      "type": "symbol",
+      "name": "ScriptedModel",
+      "qualifiedName": "ScriptedModel",
+      "kind": "class",
+      "line": 42,
+      "label": "ScriptedModel",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d93bb8059d64ce68a27e9e352823c314cb7067bd40f923e57472caa82de3da39"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:config",
+      "type": "symbol",
+      "name": "config",
+      "qualifiedName": "config",
+      "kind": "function",
+      "line": 103,
+      "label": "config",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "2522d70c9ae44f3cc3618f57fb25295f1acbc1bc1a8a5beeb47d9c8779942ecd"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:echo_tool",
+      "type": "symbol",
+      "name": "echo_tool",
+      "qualifiedName": "echo_tool",
+      "kind": "function",
+      "line": 81,
+      "label": "echo_tool",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "b67eee18f1a0435caa5cd25abb16b89b2148c43d6ee8430ea180268caf7e1772"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:make_runner",
+      "type": "symbol",
+      "name": "make_runner",
+      "qualifiedName": "make_runner",
+      "kind": "function",
+      "line": 88,
+      "label": "make_runner",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "e35409dafd2e6f6ebfbf5198484d210660db8af21d3d7289e5c529b8d0ab189d"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:ScriptedModel.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "ScriptedModel.__init__",
+      "kind": "function",
+      "line": 45,
+      "label": "ScriptedModel.__init__",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "f5c07d16fcabe208662dfe08c00e6ed940ca3142735d63f6aa51b8f17d43df51"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:ScriptedModel.send",
+      "type": "symbol",
+      "name": "send",
+      "qualifiedName": "ScriptedModel.send",
+      "kind": "function",
+      "line": 50,
+      "label": "ScriptedModel.send",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "923acfa16119a71676a2eebc00bde03ce48b226dc548116480ebf9d1168b6165"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:spec",
+      "type": "symbol",
+      "name": "spec",
+      "qualifiedName": "spec",
+      "kind": "function",
+      "line": 92,
+      "label": "spec",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a4d8557a4d1cb8c25b0e973c45729abe54e9cddfbd3f1ca92d231da4531c3c06"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_bare_model_id_works_when_only_one_client_is_registered",
+      "type": "symbol",
+      "name": "test_a_bare_model_id_works_when_only_one_client_is_registered",
+      "qualifiedName": "test_a_bare_model_id_works_when_only_one_client_is_registered",
+      "kind": "function",
+      "line": 439,
+      "label": "test_a_bare_model_id_works_when_only_one_client_is_registered",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a7e880740cfc0ed653ec61109b21049914c7bedf570bc2b9d0c7cc6a2f7b98d9"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_denied_tool_does_not_fail_the_run",
+      "type": "symbol",
+      "name": "test_a_denied_tool_does_not_fail_the_run",
+      "qualifiedName": "test_a_denied_tool_does_not_fail_the_run",
+      "kind": "function",
+      "line": 190,
+      "label": "test_a_denied_tool_does_not_fail_the_run",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "911ffed02b3912e5ed24cf7c34367150ac9d3b99634125283695fec5926fd438"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_failed_run_emits_run_failed_not_run_completed",
+      "type": "symbol",
+      "name": "test_a_failed_run_emits_run_failed_not_run_completed",
+      "qualifiedName": "test_a_failed_run_emits_run_failed_not_run_completed",
+      "kind": "function",
+      "line": 342,
+      "label": "test_a_failed_run_emits_run_failed_not_run_completed",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "5bf4ecded81649fbb439dafa0998d0cdf20809a5334d4bc3e7ce84317467c71b"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_raising_tool_does_not_fail_the_run",
+      "type": "symbol",
+      "name": "test_a_raising_tool_does_not_fail_the_run",
+      "qualifiedName": "test_a_raising_tool_does_not_fail_the_run",
+      "kind": "function",
+      "line": 213,
+      "label": "test_a_raising_tool_does_not_fail_the_run",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "1686db279680a3f4f15556503ed472f8f600aef8add72525139c16006818f527"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_raising_tool_does_not_fail_the_run.boom",
+      "type": "symbol",
+      "name": "boom",
+      "qualifiedName": "test_a_raising_tool_does_not_fail_the_run.boom",
+      "kind": "function",
+      "line": 214,
+      "label": "test_a_raising_tool_does_not_fail_the_run.boom",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "e7403caa587a0f02a97ae6543ca6f4870fa159eec46c17a1482fc1b4b76218fa"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_runner_with_no_model_clients_is_rejected",
+      "type": "symbol",
+      "name": "test_a_runner_with_no_model_clients_is_rejected",
+      "qualifiedName": "test_a_runner_with_no_model_clients_is_rejected",
+      "kind": "function",
+      "line": 445,
+      "label": "test_a_runner_with_no_model_clients_is_rejected",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "cace1d124c2f1adf506e4d740abe3e238d3f813f3a75166d6fae711799f0ef67"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_spec_with_no_profile_cannot_run_any_tool",
+      "type": "symbol",
+      "name": "test_a_spec_with_no_profile_cannot_run_any_tool",
+      "qualifiedName": "test_a_spec_with_no_profile_cannot_run_any_tool",
+      "kind": "function",
+      "line": 409,
+      "label": "test_a_spec_with_no_profile_cannot_run_any_tool",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "f2a58a9db5b9d2e308357e00dab38016d3ed6fc17ce84f496f12ad1da12f319a"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_text_only_answer_completes_immediately",
+      "type": "symbol",
+      "name": "test_a_text_only_answer_completes_immediately",
+      "qualifiedName": "test_a_text_only_answer_completes_immediately",
+      "kind": "function",
+      "line": 112,
+      "label": "test_a_text_only_answer_completes_immediately",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "18e3772feb64d4cac5b5273869cdeb2ad7ef2d12821f724e2566af8820c4ec4d"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_tool_using_task_runs_the_tool_then_completes",
+      "type": "symbol",
+      "name": "test_a_tool_using_task_runs_the_tool_then_completes",
+      "qualifiedName": "test_a_tool_using_task_runs_the_tool_then_completes",
+      "kind": "function",
+      "line": 123,
+      "label": "test_a_tool_using_task_runs_the_tool_then_completes",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c17abb8d41d749df5aa485a4b3ddb75ccd47f7060a50dcbc986f77090226ce67"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_whole_run_needs_only_the_public_names",
+      "type": "symbol",
+      "name": "test_a_whole_run_needs_only_the_public_names",
+      "qualifiedName": "test_a_whole_run_needs_only_the_public_names",
+      "kind": "function",
+      "line": 498,
+      "label": "test_a_whole_run_needs_only_the_public_names",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c7a2de39f0d4e28a123a7e84eb85a4800cbf3beafcc4df645d1a8de6a9bc8d8e"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_an_empty_tool_profile_denies_everything",
+      "type": "symbol",
+      "name": "test_an_empty_tool_profile_denies_everything",
+      "qualifiedName": "test_an_empty_tool_profile_denies_everything",
+      "kind": "function",
+      "line": 384,
+      "label": "test_an_empty_tool_profile_denies_everything",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "cd69d7abceb128dee2330b1f1c1f91ff830926336230c78ac5fcc058fb7f95f2"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_an_explicit_policy_overrides_the_profile_default",
+      "type": "symbol",
+      "name": "test_an_explicit_policy_overrides_the_profile_default",
+      "qualifiedName": "test_an_explicit_policy_overrides_the_profile_default",
+      "kind": "function",
+      "line": 401,
+      "label": "test_an_explicit_policy_overrides_the_profile_default",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "2747ce1a87b31302e5ef7b27f5a27edac42ad349962523aafc37946eb80ade8e"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_an_unknown_client_prefix_is_rejected",
+      "type": "symbol",
+      "name": "test_an_unknown_client_prefix_is_rejected",
+      "qualifiedName": "test_an_unknown_client_prefix_is_rejected",
+      "kind": "function",
+      "line": 432,
+      "label": "test_an_unknown_client_prefix_is_rejected",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c6a110841874f86925898f025e24431c4e82857e7c615c7398638eac82cd36ea"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_an_unknown_tool_name_does_not_fail_the_run",
+      "type": "symbol",
+      "name": "test_an_unknown_tool_name_does_not_fail_the_run",
+      "qualifiedName": "test_an_unknown_tool_name_does_not_fail_the_run",
+      "kind": "function",
+      "line": 226,
+      "label": "test_an_unknown_tool_name_does_not_fail_the_run",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c14cf1279b143c1d653c394903d402ecee976fe4790984c6956e22320a366744"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
+      "type": "symbol",
+      "name": "test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
+      "qualifiedName": "test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
+      "kind": "function",
+      "line": 310,
+      "label": "test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "1339e7574a4ea6674f9908d5e91c854c455206c50b4211bc2a9a1302b6691f4b"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_assembler_passes_history_through_and_forwards_schemas",
+      "type": "symbol",
+      "name": "test_assembler_passes_history_through_and_forwards_schemas",
+      "qualifiedName": "test_assembler_passes_history_through_and_forwards_schemas",
+      "kind": "function",
+      "line": 269,
+      "label": "test_assembler_passes_history_through_and_forwards_schemas",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "572e0cfde006bdf0591638498316d87166eb704e8c54c548dac0c685bbc97b8b"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_events_are_ordered_tenant_scoped_and_cover_the_run",
+      "type": "symbol",
+      "name": "test_events_are_ordered_tenant_scoped_and_cover_the_run",
+      "qualifiedName": "test_events_are_ordered_tenant_scoped_and_cover_the_run",
+      "kind": "function",
+      "line": 324,
+      "label": "test_events_are_ordered_tenant_scoped_and_cover_the_run",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "92d9757be9fa08565c1151a293b758cdf2df0fc0b6a946c9b18f081aa578ced5"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_exhausted_model_retries_fail_the_run_without_raising",
+      "type": "symbol",
+      "name": "test_exhausted_model_retries_fail_the_run_without_raising",
+      "qualifiedName": "test_exhausted_model_retries_fail_the_run_without_raising",
+      "kind": "function",
+      "line": 235,
+      "label": "test_exhausted_model_retries_fail_the_run_without_raising",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c3e89c0b68b5cd2048c9e9befb7a46824287f5d9298ec7a44690012ed6127f12"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_history_is_append_only_and_ordered",
+      "type": "symbol",
+      "name": "test_history_is_append_only_and_ordered",
+      "qualifiedName": "test_history_is_append_only_and_ordered",
+      "kind": "function",
+      "line": 453,
+      "label": "test_history_is_append_only_and_ordered",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d5628dfc05acc98f0ced275a6d7f91e2543321350a0fe887a487cb8a6164285d"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_instructions_from_the_spec_reach_the_request",
+      "type": "symbol",
+      "name": "test_instructions_from_the_spec_reach_the_request",
+      "qualifiedName": "test_instructions_from_the_spec_reach_the_request",
+      "kind": "function",
+      "line": 315,
+      "label": "test_instructions_from_the_spec_reach_the_request",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "17e0fcee4a36c59ded8a978edea05cde8ccad4b1f1e50b8a2cdf55d458142ed9"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_internal_collaborators_are_not_exported_from_the_root",
+      "type": "symbol",
+      "name": "test_internal_collaborators_are_not_exported_from_the_root",
+      "qualifiedName": "test_internal_collaborators_are_not_exported_from_the_root",
+      "kind": "function",
+      "line": 490,
+      "label": "test_internal_collaborators_are_not_exported_from_the_root",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "f92e7f7793887ad67f9ef5f8ca87bfbe2a1301400c82f9be4dbcc8a15db5adfc"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_max_turns_below_one_is_rejected_at_construction",
+      "type": "symbol",
+      "name": "test_max_turns_below_one_is_rejected_at_construction",
+      "qualifiedName": "test_max_turns_below_one_is_rejected_at_construction",
+      "kind": "function",
+      "line": 182,
+      "label": "test_max_turns_below_one_is_rejected_at_construction",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "e2e4cba969133affc94e45e00194b75d5bb50ecd20e5dfd90f0cbe66271690a4"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_max_turns_exceeded_is_a_terminal_status_not_a_raise",
+      "type": "symbol",
+      "name": "test_max_turns_exceeded_is_a_terminal_status_not_a_raise",
+      "qualifiedName": "test_max_turns_exceeded_is_a_terminal_status_not_a_raise",
+      "kind": "function",
+      "line": 164,
+      "label": "test_max_turns_exceeded_is_a_terminal_status_not_a_raise",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "61ee08ee2d878926388e8b0eaa4b358d4f6aa743a6691d40fd9420532112b663"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_max_turns_of_one_still_allows_a_single_answer",
+      "type": "symbol",
+      "name": "test_max_turns_of_one_still_allows_a_single_answer",
+      "qualifiedName": "test_max_turns_of_one_still_allows_a_single_answer",
+      "kind": "function",
+      "line": 174,
+      "label": "test_max_turns_of_one_still_allows_a_single_answer",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a959fe2a33c33fe011d3b0a09df91633af6dca2e46faf557bdd17ab4dbc57966"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_max_turns_run_emits_run_failed_with_a_reason",
+      "type": "symbol",
+      "name": "test_max_turns_run_emits_run_failed_with_a_reason",
+      "qualifiedName": "test_max_turns_run_emits_run_failed_with_a_reason",
+      "kind": "function",
+      "line": 349,
+      "label": "test_max_turns_run_emits_run_failed_with_a_reason",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a23858eba9d6f6feee6cb1feb838bd2a70a0a84f8666b60f2118095e34a6552f"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_model_override_beats_the_spec_preference",
+      "type": "symbol",
+      "name": "test_model_override_beats_the_spec_preference",
+      "qualifiedName": "test_model_override_beats_the_spec_preference",
+      "kind": "function",
+      "line": 424,
+      "label": "test_model_override_beats_the_spec_preference",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d22f2f1da9f074c065d0474be09dbed9a103907f9d4b2ba4fe18d0a9ebc6daf9"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_no_module_imports_a_vendor_agent_sdk",
+      "type": "symbol",
+      "name": "test_no_module_imports_a_vendor_agent_sdk",
+      "qualifiedName": "test_no_module_imports_a_vendor_agent_sdk",
+      "kind": "function",
+      "line": 518,
+      "label": "test_no_module_imports_a_vendor_agent_sdk",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "39f8a9bc11b21cce91b533a7e7af44317a907ed7caff7b7a37549f5d8c61c273"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_non_transient_model_errors_are_not_retried",
+      "type": "symbol",
+      "name": "test_non_transient_model_errors_are_not_retried",
+      "qualifiedName": "test_non_transient_model_errors_are_not_retried",
+      "kind": "function",
+      "line": 258,
+      "label": "test_non_transient_model_errors_are_not_retried",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "8b04613df750e965ef93c59e70358e16d920b00f895b9e34be0c02b9168df691"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
+      "type": "symbol",
+      "name": "test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
+      "qualifiedName": "test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
+      "kind": "function",
+      "line": 356,
+      "label": "test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "b884a0984715e6bf5f2bfbb7c5bc9797354c22dc2b96deb9bdc83eee63ee9143"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_principal_context_is_recorded_but_never_read",
+      "type": "symbol",
+      "name": "test_principal_context_is_recorded_but_never_read",
+      "qualifiedName": "test_principal_context_is_recorded_but_never_read",
+      "kind": "function",
+      "line": 370,
+      "label": "test_principal_context_is_recorded_but_never_read",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "5af1a2cbea2081faf4cc47f9b06dac073a564354af9fa7b6b67307da75183a10"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_provenance_travels_as_metadata_not_as_model_readable_text",
+      "type": "symbol",
+      "name": "test_provenance_travels_as_metadata_not_as_model_readable_text",
+      "qualifiedName": "test_provenance_travels_as_metadata_not_as_model_readable_text",
+      "kind": "function",
+      "line": 280,
+      "label": "test_provenance_travels_as_metadata_not_as_model_readable_text",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "55105afbce22515fcd168b94b72ea131f6493b3f5c523b8379d27e96f703626f"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_returned_history_cannot_mutate_the_store",
+      "type": "symbol",
+      "name": "test_returned_history_cannot_mutate_the_store",
+      "qualifiedName": "test_returned_history_cannot_mutate_the_store",
+      "kind": "function",
+      "line": 464,
+      "label": "test_returned_history_cannot_mutate_the_store",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "15815a63a7ec60688a5dd51e4c3837f6c9b0b7269ecb58c2e6201cbd350c1ccb"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_run_id_is_returned_and_unique_per_run",
+      "type": "symbol",
+      "name": "test_run_id_is_returned_and_unique_per_run",
+      "qualifiedName": "test_run_id_is_returned_and_unique_per_run",
+      "kind": "function",
+      "line": 153,
+      "label": "test_run_id_is_returned_and_unique_per_run",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "2c28d1de0e1e86d973662798c058f3ba39882aa597c0978a617c2a7f214170b8"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_runs_are_isolated_from_each_other",
+      "type": "symbol",
+      "name": "test_runs_are_isolated_from_each_other",
+      "qualifiedName": "test_runs_are_isolated_from_each_other",
+      "kind": "function",
+      "line": 471,
+      "label": "test_runs_are_isolated_from_each_other",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "96fced64663c2f57f5b90bee7b6e82335c0c3e152dc163247cd9a1a63e3ab3cf"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_tenant_and_project_are_mandatory",
+      "type": "symbol",
+      "name": "test_tenant_and_project_are_mandatory",
+      "qualifiedName": "test_tenant_and_project_are_mandatory",
+      "kind": "function",
+      "line": 365,
+      "label": "test_tenant_and_project_are_mandatory",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "ef420dc10edbf0405a5a0cf2d64d36be38782fdcf08731cb9e6cce9b5b43cc8e"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_the_public_surface_is_importable_from_the_package_root",
+      "type": "symbol",
+      "name": "test_the_public_surface_is_importable_from_the_package_root",
+      "qualifiedName": "test_the_public_surface_is_importable_from_the_package_root",
+      "kind": "function",
+      "line": 482,
+      "label": "test_the_public_surface_is_importable_from_the_package_root",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a44a9ecd0024f7d4caabfb967a330df166532490c7c5f56450ed01455fe8f049"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_the_tool_profile_is_exactly_the_allowlist",
+      "type": "symbol",
+      "name": "test_the_tool_profile_is_exactly_the_allowlist",
+      "qualifiedName": "test_the_tool_profile_is_exactly_the_allowlist",
+      "kind": "function",
+      "line": 395,
+      "label": "test_the_tool_profile_is_exactly_the_allowlist",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "5c1a90b21a754aee6e26a5262fe228088023c0092b3c34c52786fd886612329a"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_the_tool_result_is_fed_back_to_the_model",
+      "type": "symbol",
+      "name": "test_the_tool_result_is_fed_back_to_the_model",
+      "qualifiedName": "test_the_tool_result_is_fed_back_to_the_model",
+      "kind": "function",
+      "line": 143,
+      "label": "test_the_tool_result_is_fed_back_to_the_model",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "3174e6db579ec6dbef063ce05ebe5b509546dc49240b7739e16315eccbd51d70"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_transient_model_errors_are_retried_then_succeed",
+      "type": "symbol",
+      "name": "test_transient_model_errors_are_retried_then_succeed",
+      "qualifiedName": "test_transient_model_errors_are_retried_then_succeed",
+      "kind": "function",
+      "line": 244,
+      "label": "test_transient_model_errors_are_retried_then_succeed",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "457aaa2c69e52d5c958d270178bfe8ec2c61aecdfeaecbcad5fb83f57fedb3a7"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_transient_model_errors_are_retried_then_succeed.no_sleep",
+      "type": "symbol",
+      "name": "no_sleep",
+      "qualifiedName": "test_transient_model_errors_are_retried_then_succeed.no_sleep",
+      "kind": "function",
+      "line": 247,
+      "label": "test_transient_model_errors_are_retried_then_succeed.no_sleep",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "014fabafb01cc97f1f6a9541169aa0b5f8807660cba15b24f7a30385cab8a642"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_usage_accumulates_across_every_turn",
+      "type": "symbol",
+      "name": "test_usage_accumulates_across_every_turn",
+      "qualifiedName": "test_usage_accumulates_across_every_turn",
+      "kind": "function",
+      "line": 134,
+      "label": "test_usage_accumulates_across_every_turn",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "0d9e1057a0670b5d8f0e7944b3615f52ff8f5c91fad332982510b457d55b7d86"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:text_response",
+      "type": "symbol",
+      "name": "text_response",
+      "qualifiedName": "text_response",
+      "kind": "function",
+      "line": 61,
+      "label": "text_response",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "2a16f9eb4099d546fb8fa5d36a1d9e4fa4673279844c838521a23c6aebde4840"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:tool_response",
+      "type": "symbol",
+      "name": "tool_response",
+      "qualifiedName": "tool_response",
+      "kind": "function",
+      "line": 69,
+      "label": "tool_response",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d4015acb83f551f9ef7eac6528de22a93ca95e636b4af3f43848a112285ee12c"
     },
     {
       "id": "symbol:tests/test_model_client.py#class:_BadArg",
@@ -5094,6 +6572,174 @@
   ],
   "edges": [
     {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#class:AgentSpec:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#class:AgentSpec",
+      "line": 35,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "590e69faf52d7589a2ae82c11d92c1ec88fc07449a4f8213cf3260a3b37f7aa4"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#class:RunConfig:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#class:RunConfig",
+      "line": 62,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "7fc1a9520b2e5f3983d9c27cdcb8ad0a0be6f54a9bcdcda3deccb81f8e375e6b"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#class:Runner:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#class:Runner",
+      "line": 92,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "f26004cff343b0ff42eb1801bf6430cda58eac20635bd7236604eaac66a79f9a"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#class:RunResult:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#class:RunResult",
+      "line": 77,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "4a74d54ae5ec54e408fe2f76c5c42c908aa7830294b020eabe5b0c8bb8b2d20d"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#class:RunStatus:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#class:RunStatus",
+      "line": 28,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "d28c5ffd5163250efc16186ec007fe20ea6c32a6792b18201bd7298454858df0"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:AgentSpec.__post_init__:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:AgentSpec.__post_init__",
+      "line": 46,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "7ddf82ee8b25d7f421e913c0c074c52afe626f99f17cd2d44b085e695a4e9282"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:AgentSpec.checker:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:AgentSpec.checker",
+      "line": 49,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "bfac43646bc5db0891c57193f21d35cb5e6aab139b3b915e53f704f4f3689b82"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:RunConfig.__post_init__:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:RunConfig.__post_init__",
+      "line": 69,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "a5f74a40aee704067d6e6c6c9405fd78589db6d082d14ec0cc16594f9d85083f"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:Runner.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:Runner.__init__",
+      "line": 93,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "06b6902152fec79bbda05d8d3a02a4d355ab089c16d60cf1e6369a75d89460b5"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:Runner._resolve_model:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:Runner._resolve_model",
+      "line": 177,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "30cdf669658bf86cffdc266ee0d485cd0ce5353033aec8f4d152fdb5a8691e97"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:Runner.run:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:Runner.run",
+      "line": 113,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "ad7c9b7322fdfc5789b7383e493c1606577374c3e4a84186e24c11ec7f0fe2cc"
+    },
+    {
+      "id": "defines:file:agentsdk/api.py->symbol:agentsdk/api.py#function:RunResult.succeeded:",
+      "type": "defines",
+      "source": "file:agentsdk/api.py",
+      "target": "symbol:agentsdk/api.py#function:RunResult.succeeded",
+      "line": 88,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "85de20bf8184356e30bdfccb0685bbf3f6cb62ec3782f7243fe4934594bfbe74"
+    },
+    {
       "id": "defines:file:agentsdk/config.py->symbol:agentsdk/config.py#class:Secret:",
       "type": "defines",
       "source": "file:agentsdk/config.py",
@@ -5344,6 +6990,48 @@
         "source": "agentsdk/config.py"
       },
       "contentHash": "acf63cd7f89f7e87e70f6465b8fc659aa1465a979794ae1e8e7743977decaf7a"
+    },
+    {
+      "id": "defines:file:agentsdk/context.py->symbol:agentsdk/context.py#class:ContextAssembler:",
+      "type": "defines",
+      "source": "file:agentsdk/context.py",
+      "target": "symbol:agentsdk/context.py#class:ContextAssembler",
+      "line": 26,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "f83d96df6d38f8cc5b3a069331e8d610c00695d2d6e143fa3f1a534e71ea8fe8"
+    },
+    {
+      "id": "defines:file:agentsdk/context.py->symbol:agentsdk/context.py#function:ContextAssembler._provenance_manifest:",
+      "type": "defines",
+      "source": "file:agentsdk/context.py",
+      "target": "symbol:agentsdk/context.py#function:ContextAssembler._provenance_manifest",
+      "line": 51,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "46b1a625dcc70e3cfb5020e067b829a91922074aca51089d093a17cda6e0ad40"
+    },
+    {
+      "id": "defines:file:agentsdk/context.py->symbol:agentsdk/context.py#function:ContextAssembler.build:",
+      "type": "defines",
+      "source": "file:agentsdk/context.py",
+      "target": "symbol:agentsdk/context.py#function:ContextAssembler.build",
+      "line": 27,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "5983a0094e8cb0504eb3990e16c66cafadc15d8d9116c514f1e47e4bf8f1e359"
     },
     {
       "id": "defines:file:agentsdk/errors.py->symbol:agentsdk/errors.py#class:AgentSDKError:",
@@ -5626,6 +7314,132 @@
       "contentHash": "a487b4acb519fe8d559fcde6d81ef554ee96a5686a718fbfdb8d93779c0f49c8"
     },
     {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#class:EventSink:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#class:EventSink",
+      "line": 54,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "0eb243d1859f77591b39a1734939e54f3e8fb45428e19dd63d01444c70ad994f"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#class:EventType:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#class:EventType",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "fa79736cdb9728771d39df67f35e881a98a291205f8cbd6badc2765a45fc3aa3"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#class:InMemoryEventSink:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#class:InMemoryEventSink",
+      "line": 62,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "9f38f9b9b372217c198299d091aad0cdaedc239e5599eb170e78f46341bb22d9"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#class:RunEvent:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#class:RunEvent",
+      "line": 34,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "c660cb3b065f08a42b389292b0a9f940e4b9d41540e4ff3341cd543a03637c8c"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#function:EventSink.emit:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#function:EventSink.emit",
+      "line": 55,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "daf37f8385bdc11e552d43e7d478b84538edef7512334d13b4285b11d3cffe12"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#function:EventSink.events:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#function:EventSink.events",
+      "line": 59,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "70e82327c66e1249cdf5d944ed324ebba38f71ce556f302fcccdf7189d6006f8"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#function:InMemoryEventSink.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#function:InMemoryEventSink.__init__",
+      "line": 69,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "e6bd5c2ec0a00d718f25f3a7dd0f7eb602b0a8ec11e02eff8c92fd9a3c34c96d"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#function:InMemoryEventSink.emit:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#function:InMemoryEventSink.emit",
+      "line": 75,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "b38d928a86f466caee303c419f7ad88f2306f7adf269d640d913ee4c23a43163"
+    },
+    {
+      "id": "defines:file:agentsdk/events.py->symbol:agentsdk/events.py#function:InMemoryEventSink.events:",
+      "type": "defines",
+      "source": "file:agentsdk/events.py",
+      "target": "symbol:agentsdk/events.py#function:InMemoryEventSink.events",
+      "line": 90,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "97158f67346ff106180c62c911e994a065d8010bd4f792e0d1901c5ea1e8f0fc"
+    },
+    {
       "id": "defines:file:agentsdk/executor.py->symbol:agentsdk/executor.py#class:ToolExecutor:",
       "type": "defines",
       "source": "file:agentsdk/executor.py",
@@ -5862,6 +7676,76 @@
         "source": "agentsdk/identity.py"
       },
       "contentHash": "7d54c348518a1d5ea4b724350b21ed5bda22647cbb1ada338ecc2b90bf6a2bd6"
+    },
+    {
+      "id": "defines:file:agentsdk/loop.py->symbol:agentsdk/loop.py#class:AgentLoop:",
+      "type": "defines",
+      "source": "file:agentsdk/loop.py",
+      "target": "symbol:agentsdk/loop.py#class:AgentLoop",
+      "line": 43,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "75f69b6a3ba7b614f49edf24e2c98bed02932bacf98053697b829336dc141629"
+    },
+    {
+      "id": "defines:file:agentsdk/loop.py->symbol:agentsdk/loop.py#class:LoopOutcome:",
+      "type": "defines",
+      "source": "file:agentsdk/loop.py",
+      "target": "symbol:agentsdk/loop.py#class:LoopOutcome",
+      "line": 33,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "bc64d99334e2bef3fc9a47760d97ffbbae7a7ab56f7769be574619cadb3518b2"
+    },
+    {
+      "id": "defines:file:agentsdk/loop.py->symbol:agentsdk/loop.py#function:AgentLoop.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/loop.py",
+      "target": "symbol:agentsdk/loop.py#function:AgentLoop.__init__",
+      "line": 44,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "735bbd8e9427224f0776198e55249509ef1f52e6a9724c4408c3a3ad3f8fbc97"
+    },
+    {
+      "id": "defines:file:agentsdk/loop.py->symbol:agentsdk/loop.py#function:AgentLoop._send_with_retry:",
+      "type": "defines",
+      "source": "file:agentsdk/loop.py",
+      "target": "symbol:agentsdk/loop.py#function:AgentLoop._send_with_retry",
+      "line": 144,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "eab18ed578d5314bc52c0a7d2a4fd2d6a7b459a4abd50d03f61e440db64a8886"
+    },
+    {
+      "id": "defines:file:agentsdk/loop.py->symbol:agentsdk/loop.py#function:AgentLoop.run:",
+      "type": "defines",
+      "source": "file:agentsdk/loop.py",
+      "target": "symbol:agentsdk/loop.py#function:AgentLoop.run",
+      "line": 67,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "324b63db6a5d495b7e950100469f34ec4806ecc6638afbf35c2e20867a6f5919"
     },
     {
       "id": "defines:file:agentsdk/model.py->symbol:agentsdk/model.py#class:ModelClient:",
@@ -6928,6 +8812,104 @@
       "contentHash": "5f066671fa73d5266ce5f5b98521625b78fbd8e1b2bb056020c8ee1dc6efcd26"
     },
     {
+      "id": "defines:file:agentsdk/session.py->symbol:agentsdk/session.py#class:InMemorySessionStore:",
+      "type": "defines",
+      "source": "file:agentsdk/session.py",
+      "target": "symbol:agentsdk/session.py#class:InMemorySessionStore",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "e8f598907cf13d562aff5d2eb35b07386528a058b816f554633af9958bcdbe13"
+    },
+    {
+      "id": "defines:file:agentsdk/session.py->symbol:agentsdk/session.py#class:SessionStore:",
+      "type": "defines",
+      "source": "file:agentsdk/session.py",
+      "target": "symbol:agentsdk/session.py#class:SessionStore",
+      "line": 17,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "21b4600da631ddd239f84f4edc212e1cfbd384d97be17d85c0ce10f8776f43ff"
+    },
+    {
+      "id": "defines:file:agentsdk/session.py->symbol:agentsdk/session.py#function:InMemorySessionStore.__init__:",
+      "type": "defines",
+      "source": "file:agentsdk/session.py",
+      "target": "symbol:agentsdk/session.py#function:InMemorySessionStore.__init__",
+      "line": 24,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "46703633dfbe0aaa1e0df8839b558d27998197dc2eeffb60ddcb7ce6ceb2ff00"
+    },
+    {
+      "id": "defines:file:agentsdk/session.py->symbol:agentsdk/session.py#function:InMemorySessionStore.append:",
+      "type": "defines",
+      "source": "file:agentsdk/session.py",
+      "target": "symbol:agentsdk/session.py#function:InMemorySessionStore.append",
+      "line": 27,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "6f7e439d03ef8cee0db9ec95e91294b47f7b33b4fe3d7f5ca210593684b5caba"
+    },
+    {
+      "id": "defines:file:agentsdk/session.py->symbol:agentsdk/session.py#function:InMemorySessionStore.history:",
+      "type": "defines",
+      "source": "file:agentsdk/session.py",
+      "target": "symbol:agentsdk/session.py#function:InMemorySessionStore.history",
+      "line": 30,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "d7a54f382670abb3e1498373351c351ff91f0bee2fe8d137d02127bd4d627bd3"
+    },
+    {
+      "id": "defines:file:agentsdk/session.py->symbol:agentsdk/session.py#function:SessionStore.append:",
+      "type": "defines",
+      "source": "file:agentsdk/session.py",
+      "target": "symbol:agentsdk/session.py#function:SessionStore.append",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "d1d91de3e12465768c4642edeb9a5983f0c87abd6f492c8e537f65dcf8af77f9"
+    },
+    {
+      "id": "defines:file:agentsdk/session.py->symbol:agentsdk/session.py#function:SessionStore.history:",
+      "type": "defines",
+      "source": "file:agentsdk/session.py",
+      "target": "symbol:agentsdk/session.py#function:SessionStore.history",
+      "line": 20,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "e0de5561137cfe0c5346a5e42d7b9d213f49d68aac8485071e84cb6696a98678"
+    },
+    {
       "id": "defines:file:agentsdk/tools.py->symbol:agentsdk/tools.py#class:ApprovalPolicy:",
       "type": "defines",
       "source": "file:agentsdk/tools.py",
@@ -7136,6 +9118,706 @@
         "source": "agentsdk/tools.py"
       },
       "contentHash": "720bbf2d0cd949b40bede7e9bdd3e33e2f1a7456409989b8fb92c0cecce08fb0"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#class:ScriptedModel:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#class:ScriptedModel",
+      "line": 42,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "559ce9c4b974b60420a60e86641037c8e4fcb7b0c88311654e02bb0713d28817"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:config:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:config",
+      "line": 103,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "fb068b2910d9f09ba40c1b269742b6d844b7a94185a8fc8cb820f0cf54bcd841"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:echo_tool:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:echo_tool",
+      "line": 81,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "cec3e9c535e642e80319f834c468b3634699ee0f2867379c26929a1735edf191"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:make_runner:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:make_runner",
+      "line": 88,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "140076e1c01941cfdb29f067b74d2414c31bb41b011752262457607dcae8e2a9"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:ScriptedModel.__init__:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:ScriptedModel.__init__",
+      "line": 45,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "425cdf8f75b68e0bdd303febba474da19d393b0e100cf790e111cddb2bc0bbe2"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:ScriptedModel.send:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:ScriptedModel.send",
+      "line": 50,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "4524f285f061263568a4e63343a55cc87a333b322295f6cffef1692e3c9ba044"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:spec:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:spec",
+      "line": 92,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "8a6461e25cefb81fef6598e6af4f66bd1cca86b629132e8be727b1db44389397"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_bare_model_id_works_when_only_one_client_is_registered:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_bare_model_id_works_when_only_one_client_is_registered",
+      "line": 439,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "62562249f6606828ddd7a9ea9960e731756abe7c161a1fac78a54c06f152afde"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_denied_tool_does_not_fail_the_run:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_denied_tool_does_not_fail_the_run",
+      "line": 190,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "598604cf1151b9d74cac1240db73f41898a013795fb42119b35cddc27944e5dc"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_failed_run_emits_run_failed_not_run_completed:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_failed_run_emits_run_failed_not_run_completed",
+      "line": 342,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "240260c229a2347514a9df23fd635b1ada8fcba782147fcb930656e8463ce75b"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_raising_tool_does_not_fail_the_run:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_raising_tool_does_not_fail_the_run",
+      "line": 213,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "794533558d3aa14b60dbe5b0662c47b7dd6004b06b3618341a7b86dd3a287fc3"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_raising_tool_does_not_fail_the_run.boom:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_raising_tool_does_not_fail_the_run.boom",
+      "line": 214,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "08911fc7e02f32a6cf38296032c0ded30c17247179cd20afa796a461457f7ec8"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_runner_with_no_model_clients_is_rejected:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_runner_with_no_model_clients_is_rejected",
+      "line": 445,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "529505b2d5f45c9058ef1750a00e6c3615eee54c80e08321fccff792e1c247be"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_spec_with_no_profile_cannot_run_any_tool:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_spec_with_no_profile_cannot_run_any_tool",
+      "line": 409,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "3986cd02331af6cd7b436f36bbc402045e70c4c625b8630b6fba6df3603c74c7"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_text_only_answer_completes_immediately:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_text_only_answer_completes_immediately",
+      "line": 112,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "07f9092c552fe36e580b49d03174f3d62fea2a81f71b5f7e93400aa7555d9908"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_tool_using_task_runs_the_tool_then_completes:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_tool_using_task_runs_the_tool_then_completes",
+      "line": 123,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "781c177796958bef9c4a4952097a9009601e9662b49ef2e2ebf00848e249228b"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_whole_run_needs_only_the_public_names:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_whole_run_needs_only_the_public_names",
+      "line": 498,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "84103ea98b28c9d41581a03cac7a23d08e3a2c1bf356b1829f0c6108e64610ee"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_an_empty_tool_profile_denies_everything:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_an_empty_tool_profile_denies_everything",
+      "line": 384,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "511b45aa0bd70f3d1bc8b88f327a9dcf9a6247cc3cb45772e7a7e09a1e4ca36e"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_an_explicit_policy_overrides_the_profile_default:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_an_explicit_policy_overrides_the_profile_default",
+      "line": 401,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a87f6591be872aee25ac591f76fdbd75456691fb3e81104cb24c5798a549a55a"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_an_unknown_client_prefix_is_rejected:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_an_unknown_client_prefix_is_rejected",
+      "line": 432,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "cf9317fc57dd7677318b9220cb61ee954db835da8ceaac87b859c4b6c5f37b75"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_an_unknown_tool_name_does_not_fail_the_run:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_an_unknown_tool_name_does_not_fail_the_run",
+      "line": 226,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "9e44b900eab580b40147f83f1d80495b161fd92b7a4f9dbb2c5be85b37a04033"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_assembler_emits_no_provenance_key_when_there_are_no_tool_results:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
+      "line": 310,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "6888e885acb73b774dcabefc37c3fe823384c0ab637562beea13f13e27672a8e"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_assembler_passes_history_through_and_forwards_schemas:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_assembler_passes_history_through_and_forwards_schemas",
+      "line": 269,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "9ad54306396e73e79f0d230bef7bd66fc504448cccdd15cf3e72254e1f2807f2"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_events_are_ordered_tenant_scoped_and_cover_the_run:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_events_are_ordered_tenant_scoped_and_cover_the_run",
+      "line": 324,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "cbf3e021c17b2f6d840861d30360f650032e3c111474af6b1e37c64706c3879a"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_exhausted_model_retries_fail_the_run_without_raising:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_exhausted_model_retries_fail_the_run_without_raising",
+      "line": 235,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "e62a9a0ac6aed579585fd2a1d24de2288797a1609e76ad095cae4c1dc383fa58"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_history_is_append_only_and_ordered:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_history_is_append_only_and_ordered",
+      "line": 453,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "b0e51a184749fe183509e75d37fded84797727ccbec4af66b5112d3ef61d1bfe"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_instructions_from_the_spec_reach_the_request:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_instructions_from_the_spec_reach_the_request",
+      "line": 315,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "fd0adac4135f02773387d4103f6916240710015fd3c965c1afcd0bae64a72cbc"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_internal_collaborators_are_not_exported_from_the_root:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_internal_collaborators_are_not_exported_from_the_root",
+      "line": 490,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "3640b294eb184de7eef20f330a2e228b287803a7895728b28993cf2c4de4a2fb"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_max_turns_below_one_is_rejected_at_construction:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_max_turns_below_one_is_rejected_at_construction",
+      "line": 182,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "2236132185aa4928f92a2139a9e1ea6fd34edec2e645fab2cf7f46a0688b50f0"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_max_turns_exceeded_is_a_terminal_status_not_a_raise:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_max_turns_exceeded_is_a_terminal_status_not_a_raise",
+      "line": 164,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "4f5bde0215b5d9bf02e227b8d25d8dfbd20e19a841d88ed98156087f37b4b89b"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_max_turns_of_one_still_allows_a_single_answer:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_max_turns_of_one_still_allows_a_single_answer",
+      "line": 174,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "9358348bde025a44beb1c9aa065d692a867654726a33d442ca4527d1bde7fe77"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_max_turns_run_emits_run_failed_with_a_reason:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_max_turns_run_emits_run_failed_with_a_reason",
+      "line": 349,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "291e7fa62492077759cedc59d72c375965f831c395a54f11fecd9376abebe64e"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_model_override_beats_the_spec_preference:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_model_override_beats_the_spec_preference",
+      "line": 424,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "816c67163da332bad7642f07d44e79fff1b0fe9ca07837a18bca1febe951afe3"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_no_module_imports_a_vendor_agent_sdk:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_no_module_imports_a_vendor_agent_sdk",
+      "line": 518,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "6a05f10632bb8a02b4467aee1355473fc61afd2bbe39bd13f4ab9d1e4fdc573c"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_non_transient_model_errors_are_not_retried:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_non_transient_model_errors_are_not_retried",
+      "line": 258,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "33fa7daa833e680285c2d5b1824e96a630c6dd8e83523e7b64b069501c620717"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_phase2_identifier_slots_exist_but_stay_empty_in_phase0:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
+      "line": 356,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "90ca09e67d8b790bf37800cdf0fa4ae7bdca8592e5ebf68f2552f5f406aaebf4"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_principal_context_is_recorded_but_never_read:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_principal_context_is_recorded_but_never_read",
+      "line": 370,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a0ea9d27e36461b0f4cad25dcbe249b53e07e64ddbf5c506f4af94c839c488e7"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_provenance_travels_as_metadata_not_as_model_readable_text:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_provenance_travels_as_metadata_not_as_model_readable_text",
+      "line": 280,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "93c20df38914879ed639b7364d7cbb80fefba0353cec248e47a26892da05411e"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_returned_history_cannot_mutate_the_store:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_returned_history_cannot_mutate_the_store",
+      "line": 464,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "fab7a064682054fe613145203ac13722d172c033691a7ec48c1e471c842c748b"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_run_id_is_returned_and_unique_per_run:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_run_id_is_returned_and_unique_per_run",
+      "line": 153,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "fbeb6f61b206fc51ff84e870f8298cbda49b7c6ed6967c8fecd2187e8e3fc43d"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_runs_are_isolated_from_each_other:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_runs_are_isolated_from_each_other",
+      "line": 471,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d05f53eab1e9385cf1160ae4efcd8b1a2b70eda56c59a1d278a6c7237e19bfa0"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_tenant_and_project_are_mandatory:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_tenant_and_project_are_mandatory",
+      "line": 365,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d071bdee7164f44fbf62c7ef47d1d53c2993187dbdc70355f3b5826156148e55"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_the_public_surface_is_importable_from_the_package_root:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_the_public_surface_is_importable_from_the_package_root",
+      "line": 482,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "0e864088edb0eea67c26f8b8acc833b62213ca8b8f35c2e769c70d766c3f770d"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_the_tool_profile_is_exactly_the_allowlist:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_the_tool_profile_is_exactly_the_allowlist",
+      "line": 395,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "8a3950ef1f3bd8da1b8793a085fa93114abfc1beb46c25728168c8508d26fbd0"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_the_tool_result_is_fed_back_to_the_model:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_the_tool_result_is_fed_back_to_the_model",
+      "line": 143,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a189961af3e898091f79e5afd4b73d0ce3ba4635574427d79745ffc98d327b9b"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_transient_model_errors_are_retried_then_succeed:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_transient_model_errors_are_retried_then_succeed",
+      "line": 244,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "834f485340e43b7a448f2233b0b70e611ecd02cd94eaba76d762a90eed38ec3a"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_transient_model_errors_are_retried_then_succeed.no_sleep:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_transient_model_errors_are_retried_then_succeed.no_sleep",
+      "line": 247,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "65bff91ae3ab6956179d0ccc541ef19273aadbe0adb6cad31e7c571050fc88fd"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_usage_accumulates_across_every_turn:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_usage_accumulates_across_every_turn",
+      "line": 134,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "e05780c5ea30b2aaa961d7e78b2056be93b2fd00b3ae3281650c24d215f34c6a"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:text_response:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:text_response",
+      "line": 61,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "4b30e1086ea294498820b552b41542327eec6206f69aad43ee6ba01fcfbe51a7"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:tool_response:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:tool_response",
+      "line": 69,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "7a4a4d0389f68b0fa5eb9201895c901a28ad691ef0852c17d827100d010cc4ea"
     },
     {
       "id": "defines:file:tests/test_model_client.py->symbol:tests/test_model_client.py#class:_BadArg:",
@@ -9126,12 +11808,27 @@
       "contentHash": "4a8be25b65cee65c9dc0140e7895315aeb295542034987a2d17bf1a8d3916390"
     },
     {
+      "id": "imports:file:agentsdk/__init__.py->file:agentsdk/api.py:.api",
+      "type": "imports",
+      "source": "file:agentsdk/__init__.py",
+      "target": "file:agentsdk/api.py",
+      "specifier": ".api",
+      "line": 8,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/__init__.py"
+      },
+      "contentHash": "f3081c98f02d7c2ec6d14e43c2627bef819a60708b640f18368b03516daf79fa"
+    },
+    {
       "id": "imports:file:agentsdk/__init__.py->file:agentsdk/errors.py:.errors",
       "type": "imports",
       "source": "file:agentsdk/__init__.py",
       "target": "file:agentsdk/errors.py",
       "specifier": ".errors",
-      "line": 8,
+      "line": 9,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -9146,7 +11843,7 @@
       "source": "file:agentsdk/__init__.py",
       "target": "file:agentsdk/primitives.py",
       "specifier": ".primitives",
-      "line": 30,
+      "line": 31,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -9154,6 +11851,216 @@
         "source": "agentsdk/__init__.py"
       },
       "contentHash": "f6272051532fb6aeed70424af5f136cd8c81e9de976f7a00b514f9bc4f3349e6"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/context.py:.context",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/context.py",
+      "specifier": ".context",
+      "line": 16,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "60c58a6c84222383cd85655b3dd4ee587f67466cc86bc56e678da5a7826ea604"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/events.py:.events",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/events.py",
+      "specifier": ".events",
+      "line": 17,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "3d1a003a36a66e602dbc29a2555cad9850b31db51196467ae3f8d5945e793ba8"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/executor.py:.executor",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/executor.py",
+      "specifier": ".executor",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "0a409f3f4abf141c803878bd0d7e8c591fd8009cd97f5c768cba52b9d8fe2b93"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/hooks.py:.hooks",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/hooks.py",
+      "specifier": ".hooks",
+      "line": 19,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "d0968ea806eadc5c5aed674219602aa666f738317114943def241818ab42f77d"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/identity.py:.identity",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/identity.py",
+      "specifier": ".identity",
+      "line": 20,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "eb1a8a0dc815abde3bdd1cdc223eab149ab435c0b046ed8fd69812955a5bba9f"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/loop.py:.loop",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/loop.py",
+      "specifier": ".loop",
+      "line": 21,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "a544de34244bf53eeea3e79543e950a420f2b6f6d409791e81dfabe53a8bf2f8"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/model.py:.model",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/model.py",
+      "specifier": ".model",
+      "line": 22,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "e0483174ca5f0d570d02199d2e42a44b100b27288bbf4f61df46bb1bc84b1eb6"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/permissions.py:.permissions",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/permissions.py",
+      "specifier": ".permissions",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "802a0e58c0d24139ac0985946c0c6f42b13e77c4dc6752c766916ab2b9eaa21c"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/session.py:.session",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/session.py",
+      "specifier": ".session",
+      "line": 24,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "fa7227751a39930134ba7623546ee879fd0f767c96e4048da870542d72572cc0"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->file:agentsdk/tools.py:.tools",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "file:agentsdk/tools.py",
+      "specifier": ".tools",
+      "line": 25,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "b57a796535b0b419fe138b53bd62600ac58591560475ab0eab0f114371fd8be4"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 10,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "e128453e6bd0e7273d0b8553c497230569f0cf6c59ca6f9203b9a5e7b9586bfe"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->runtime:python:dataclasses:dataclasses",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "runtime:python:dataclasses",
+      "specifier": "dataclasses",
+      "line": 13,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "8afba36ba765caf3b54356f38e5227423443f45f66ff6d0bc9753db0c6fd550b"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->runtime:python:enum:enum",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "runtime:python:enum",
+      "specifier": "enum",
+      "line": 14,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "07de6b410b2324d9281af6bf31e2c60b9f86257b3eac3451fd8b361bf0cbcf00"
+    },
+    {
+      "id": "imports:file:agentsdk/api.py->runtime:python:uuid:uuid",
+      "type": "imports",
+      "source": "file:agentsdk/api.py",
+      "target": "runtime:python:uuid",
+      "specifier": "uuid",
+      "line": 12,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/api.py"
+      },
+      "contentHash": "1df4d95ea93e2d105c4352892af0c93b38712ecf890898589e1d391a157d73b9"
     },
     {
       "id": "imports:file:agentsdk/config.py->package:pypi:dotenv:dotenv",
@@ -9231,6 +12138,66 @@
       "contentHash": "7c6bac075d574ee57c69682b0d7a7ea3714e46ac072ecd1acc05a78833c8741e"
     },
     {
+      "id": "imports:file:agentsdk/context.py->file:agentsdk/model.py:.model",
+      "type": "imports",
+      "source": "file:agentsdk/context.py",
+      "target": "file:agentsdk/model.py",
+      "specifier": ".model",
+      "line": 22,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "a744fdf924b21f76cd41739faeb76f95c0a9bedbb409878f7f9c20d136158d3c"
+    },
+    {
+      "id": "imports:file:agentsdk/context.py->file:agentsdk/primitives.py:.primitives",
+      "type": "imports",
+      "source": "file:agentsdk/context.py",
+      "target": "file:agentsdk/primitives.py",
+      "specifier": ".primitives",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "ef7d1d6de512f2ae887593143c111c1e2f8cdb6f7a616c4ad6a0598ad98d80a3"
+    },
+    {
+      "id": "imports:file:agentsdk/context.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/context.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "327da9d43386f8a089e0f2f3f99da5f4fedc2041a99b2f2837df077eb2c7b5a3"
+    },
+    {
+      "id": "imports:file:agentsdk/context.py->runtime:python:typing:typing",
+      "type": "imports",
+      "source": "file:agentsdk/context.py",
+      "target": "runtime:python:typing",
+      "specifier": "typing",
+      "line": 20,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/context.py"
+      },
+      "contentHash": "f72432d38f1fe47b9564656331dbc922573cd3f1f09e36a2477e8245b374b8a1"
+    },
+    {
       "id": "imports:file:agentsdk/errors.py->runtime:python:__future__:__future__",
       "type": "imports",
       "source": "file:agentsdk/errors.py",
@@ -9244,6 +12211,96 @@
         "source": "agentsdk/errors.py"
       },
       "contentHash": "754bcb8be10ff59aeabf10c66064ca20123961e734c420d295af6be7af23f995"
+    },
+    {
+      "id": "imports:file:agentsdk/events.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/events.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 12,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "e2af0e68ebc93f74f05f2175098b246b24f5fc97c30f6df9b224b4113ad2a397"
+    },
+    {
+      "id": "imports:file:agentsdk/events.py->runtime:python:dataclasses:dataclasses",
+      "type": "imports",
+      "source": "file:agentsdk/events.py",
+      "target": "runtime:python:dataclasses",
+      "specifier": "dataclasses",
+      "line": 15,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "51d3e037743b6be2b2d9ee5e660a6226d7ffa85d3ca44bc51e596c31489b820c"
+    },
+    {
+      "id": "imports:file:agentsdk/events.py->runtime:python:datetime:datetime",
+      "type": "imports",
+      "source": "file:agentsdk/events.py",
+      "target": "runtime:python:datetime",
+      "specifier": "datetime",
+      "line": 16,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "3a2d894d5bfbb8515c056291cf7ff68a5574d39f5b94ab99f844d83ba316959c"
+    },
+    {
+      "id": "imports:file:agentsdk/events.py->runtime:python:enum:enum",
+      "type": "imports",
+      "source": "file:agentsdk/events.py",
+      "target": "runtime:python:enum",
+      "specifier": "enum",
+      "line": 17,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "de2b7277fad8c3625727437adf3820579cec29e4b944e672cfa684ad4d7396ba"
+    },
+    {
+      "id": "imports:file:agentsdk/events.py->runtime:python:typing:typing",
+      "type": "imports",
+      "source": "file:agentsdk/events.py",
+      "target": "runtime:python:typing",
+      "specifier": "typing",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "8a83b978386122d2f9edb6612d0497d4b3e7f7fd04e4604d27058ffa81aaa31e"
+    },
+    {
+      "id": "imports:file:agentsdk/events.py->runtime:python:uuid:uuid",
+      "type": "imports",
+      "source": "file:agentsdk/events.py",
+      "target": "runtime:python:uuid",
+      "specifier": "uuid",
+      "line": 14,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/events.py"
+      },
+      "contentHash": "bac9c4a184bcc27f34b09aa4e6111fae1b73fe7b907243c388d78d85a278a775"
     },
     {
       "id": "imports:file:agentsdk/executor.py->file:agentsdk/errors.py:.errors",
@@ -9529,6 +12586,216 @@
         "source": "agentsdk/identity.py"
       },
       "contentHash": "6f039377b7ea842f0c494d8761ceed4a798e997c638f3a11ce32757d13e0c58b"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/context.py:.context",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/context.py",
+      "specifier": ".context",
+      "line": 20,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "53f5ab5f45f070f4f6714a1f12ed0f8f8817f4e8fd6829d86b1572b2275dd7fe"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/errors.py:.errors",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/errors.py",
+      "specifier": ".errors",
+      "line": 21,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "d67db89911a5150c515b2e8686688e81842da1ba7a085f69c65b0d68bb603be8"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/events.py:.events",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/events.py",
+      "specifier": ".events",
+      "line": 22,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "f5aa4a8dac02122472e58ee19d8a38dcac96a95d7ee417505aaf0d2d898868d5"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/executor.py:.executor",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/executor.py",
+      "specifier": ".executor",
+      "line": 23,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "c16838215e51aa2c5ecbb45b03ecd7f353108427e3257da9d0324e4fd4d3b20b"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/hooks.py:.hooks",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/hooks.py",
+      "specifier": ".hooks",
+      "line": 24,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "599747c54a220c7663a80498a120da727156a2a57645a2f9a5bffe5ed112f910"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/identity.py:.identity",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/identity.py",
+      "specifier": ".identity",
+      "line": 25,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "59b5a3cfbdf17c27431e4885deb913ef902a49b1ac753cc96d7115b31d2cb107"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/model.py:.model",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/model.py",
+      "specifier": ".model",
+      "line": 26,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "554a5f7e1f5deab79e1ef98599f5daae64baf2e2174c571c8d5a8dfc78d7fe7d"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/outcomes.py:.outcomes",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/outcomes.py",
+      "specifier": ".outcomes",
+      "line": 27,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "68dd1bef15808139bebbbfc0bef0780e765d6e166dee08014af92c7e8d3a3249"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/primitives.py:.primitives",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/primitives.py",
+      "specifier": ".primitives",
+      "line": 28,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "2334c240bb4b6408f9cbcd2513fdb2899f535e94c22e636c21d2d4e82d3a1c92"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->file:agentsdk/tools.py:.tools",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "file:agentsdk/tools.py",
+      "specifier": ".tools",
+      "line": 29,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "5093ed9d44f912aed429bb5593b5888b79627a2f881ae656d173a0edb846b595"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 14,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "fcbbba0ea58f69b0562d25435211d1cfe362b1b3bacc31b95915f3e4544ed1b3"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->runtime:python:asyncio:asyncio",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "runtime:python:asyncio",
+      "specifier": "asyncio",
+      "line": 16,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "9571e01036c7f14b1e3e39caf15a2462b35386a6f3228a18f41a8620a0b3e365"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->runtime:python:dataclasses:dataclasses",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "runtime:python:dataclasses",
+      "specifier": "dataclasses",
+      "line": 17,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "11247ef805c380db16bfbea548854fdd81238ae7aa58f7bcbaa0bc4a49b7aeeb"
+    },
+    {
+      "id": "imports:file:agentsdk/loop.py->runtime:python:typing:typing",
+      "type": "imports",
+      "source": "file:agentsdk/loop.py",
+      "target": "runtime:python:typing",
+      "specifier": "typing",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/loop.py"
+      },
+      "contentHash": "b59017efe799e020a57d31fa2c277a1d4ee89c027fc33ba18d8439a56acd9294"
     },
     {
       "id": "imports:file:agentsdk/model.py->file:agentsdk/primitives.py:.primitives",
@@ -10101,6 +13368,51 @@
       "contentHash": "526c30d533f0a95262a47a4dc2611fd12ef1ec77ce059ffb3666b911b23115e0"
     },
     {
+      "id": "imports:file:agentsdk/session.py->file:agentsdk/primitives.py:.primitives",
+      "type": "imports",
+      "source": "file:agentsdk/session.py",
+      "target": "file:agentsdk/primitives.py",
+      "specifier": ".primitives",
+      "line": 13,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "4418bca15f33b6e4ae393daaa800b9fc4568db8bea0b1767666cbef0a932e774"
+    },
+    {
+      "id": "imports:file:agentsdk/session.py->runtime:python:__future__:__future__",
+      "type": "imports",
+      "source": "file:agentsdk/session.py",
+      "target": "runtime:python:__future__",
+      "specifier": "__future__",
+      "line": 9,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "4f9f73d0258412e051c4b1065f5f3cea252694fef23165bc572f002c9f33524b"
+    },
+    {
+      "id": "imports:file:agentsdk/session.py->runtime:python:typing:typing",
+      "type": "imports",
+      "source": "file:agentsdk/session.py",
+      "target": "runtime:python:typing",
+      "specifier": "typing",
+      "line": 11,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "agentsdk/session.py"
+      },
+      "contentHash": "8cd2da55ef0bbdbf762a281dd92725c37f009047d0f26af743483c91c927533b"
+    },
+    {
       "id": "imports:file:agentsdk/tools.py->file:agentsdk/errors.py:.errors",
       "type": "imports",
       "source": "file:agentsdk/tools.py",
@@ -10219,6 +13531,216 @@
         "source": "agentsdk/tools.py"
       },
       "contentHash": "e8774cf39ba7c733ce1728af4d3b6996d9781ffcb078b1df0bec7bbda8703904"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/__init__.py:agentsdk",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/__init__.py",
+      "specifier": "agentsdk",
+      "line": 500,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "f5c8201bf021d57e469d7e683a8a64d78ed43291734319e913ae073306ae43c8"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/context.py:agentsdk.context",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/context.py",
+      "specifier": "agentsdk.context",
+      "line": 15,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "5463c36d0925e86216c3681a2120d4871e18667b0e43d6fc21ac76b5bf252fa8"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/errors.py:agentsdk.errors",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/errors.py",
+      "specifier": "agentsdk.errors",
+      "line": 17,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "f3d59d284726198dbe6d0c7d86ecdffb2eaa29d8f607cc3a252e8c0519fbe77d"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/events.py:agentsdk.events",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/events.py",
+      "specifier": "agentsdk.events",
+      "line": 16,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "5c15c68fc9a905282c186be88786b7d93e7c1103443068c650cd5d6d6a75a421"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/identity.py:agentsdk.identity",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/identity.py",
+      "specifier": "agentsdk.identity",
+      "line": 18,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "081809d18261f29262d65f476b8e77bd9445474505112c058f2b1a23bfb0155d"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/loop.py:agentsdk.loop",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/loop.py",
+      "specifier": "agentsdk.loop",
+      "line": 245,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a097a4665d12d9f44f32a4e883f01c0d0b8918e39a02261d0de4a9478b11263f"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/model.py:agentsdk.model",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/model.py",
+      "specifier": "agentsdk.model",
+      "line": 19,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "62c44e9b0e9b6a512ec94fed704004524657d86be6a38c0caf185ce8925f56cb"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/permissions.py:agentsdk.permissions",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/permissions.py",
+      "specifier": "agentsdk.permissions",
+      "line": 20,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "cee1c476e17f50e9a78db45c16bf0c1e6bf1fe108871a7aaca09c77e928c5449"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/primitives.py:agentsdk.primitives",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/primitives.py",
+      "specifier": "agentsdk.primitives",
+      "line": 21,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "6d36b4c08696df259b483799ab321a9e9f7f6fa87e6ec3a72f0fdc4bd3e3b176"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/session.py:agentsdk.session",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/session.py",
+      "specifier": "agentsdk.session",
+      "line": 31,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "2292cd7959677e250fe3809b820d519eba07c81f06b60bf0544054ec9e2b9929"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->file:agentsdk/tools.py:agentsdk.tools",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "file:agentsdk/tools.py",
+      "specifier": "agentsdk.tools",
+      "line": 32,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "94a2b2940d4d82f7459b0b5728e3dc790c050496f9398b7d5dff3cc298e2f72a"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->package:pypi:pytest:pytest",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "package:pypi:pytest",
+      "specifier": "pytest",
+      "line": 12,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d8094eac914af913814db56a0366af4762d629a24c6134dcfbd3f6515baf9b76"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->runtime:python:ast:ast",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "runtime:python:ast",
+      "specifier": "ast",
+      "line": 9,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "7527854f3ae0f9784a298b97a672b07f8beef987db9929e12626b89d6e12ee0d"
+    },
+    {
+      "id": "imports:file:tests/test_agent_loop.py->runtime:python:pathlib:pathlib",
+      "type": "imports",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "runtime:python:pathlib",
+      "specifier": "pathlib",
+      "line": 10,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "450f17a5951f2b9a7d7d3ec7992e32e25983805d4110bace874c3fec43a0b1ae"
     },
     {
       "id": "imports:file:tests/test_model_client.py->file:agentsdk/config.py:agentsdk.config",

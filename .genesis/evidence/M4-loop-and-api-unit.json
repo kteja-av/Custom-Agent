@@ -1,0 +1,22 @@
+{
+  "task": "M4-loop-and-api",
+  "gate": "unit",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests/test_agent_loop.py -q",
+  "started_at": "2026-09-06T11:27:02.325Z",
+  "observed_at": "2026-09-06T11:27:04.780Z",
+  "exit_code": 0,
+  "signal": null,
+  "stdout": ".......................................                                  [100%]\r\n39 passed in 1.80s\r\n",
+  "stderr": "",
+  "revision": {
+    "commit": "bdb1760ed5b0bf66d161648fafca7dfa72328771",
+    "dirty": true
+  },
+  "source_hash": "0f538752bfe322d9567b26b087b000b9ab95652d021f8f2399dfd84c91aa11e9",
+  "environment": {
+    "node": "v20.10.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "hash": "3f9c399ef22cd4733b35d5d2d28617edfa1b14326557a550780d07e9a88e0d60"
+}

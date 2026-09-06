@@ -1,0 +1,200 @@
+"""The public API (FR-1, NFR-5, LLD 3.3).
+
+`Runner.run()` is the only method application code calls. Everything else in
+this package is an internal collaborator that Runner composes -- AgentLoop,
+ToolExecutor, ContextAssembler, ModelClient. That visibility boundary is the
+entire point of Runner: it is what lets Phase 2 replace the loop with an
+orchestrator without any caller noticing.
+"""
+
+from __future__ import annotations
+
+import uuid
+from dataclasses import dataclass, field
+from enum import Enum
+
+from .context import ContextAssembler
+from .events import EventSink, EventType, InMemoryEventSink, RunEvent
+from .executor import ToolExecutor
+from .hooks import RuntimeHook
+from .identity import PrincipalContext
+from .loop import AgentLoop
+from .model import ModelClient, Usage
+from .permissions import AllowlistPermissionChecker, PermissionChecker
+from .session import InMemorySessionStore, SessionStore
+from .tools import Tool, ToolRegistry
+
+
+class RunStatus(str, Enum):
+    COMPLETED = "completed"
+    FAILED = "failed"
+    MAX_TURNS_EXCEEDED = "max_turns_exceeded"
+
+
+@dataclass(frozen=True)
+class AgentSpec:
+    id: str
+    instructions: str
+    name: str = ""
+    role: str = ""
+    preferred_model: str | None = None
+    # Names selected from the Runner's registry. Empty means "every registered
+    # tool"; ad hoc per spawn, per ADR-14.
+    tool_profile: tuple[str, ...] = ()
+    permission_policy: PermissionChecker | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "tool_profile", tuple(self.tool_profile))
+
+    def checker(self) -> PermissionChecker:
+        """Default policy: allow exactly the declared tool profile.
+
+        A spec with no explicit policy and no profile therefore permits nothing,
+        which is the right default for a permission layer -- an empty allowlist
+        denies, it does not wave everything through.
+        """
+        if self.permission_policy is not None:
+            return self.permission_policy
+        return AllowlistPermissionChecker(set(self.tool_profile))
+
+
+@dataclass(frozen=True)
+class RunConfig:
+    tenant_id: str
+    project_id: str
+    max_turns: int = 10
+    model_override: str | None = None
+    principal_context: PrincipalContext | None = None
+
+    def __post_init__(self) -> None:
+        if self.max_turns < 1:
+            raise ValueError("max_turns must be at least 1")
+        if not self.tenant_id or not self.project_id:
+            raise ValueError("tenant_id and project_id are mandatory on every run (ADR-11)")
+
+
+@dataclass(frozen=True)
+class RunResult:
+    status: RunStatus
+    output: str | None
+    events: tuple[RunEvent, ...] = ()
+    usage: Usage = field(default_factory=Usage)
+    run_id: str = ""
+    # Not in the design's four-field sketch, but a failed run that cannot say
+    # why is not debuggable. None on success.
+    error: str | None = None
+
+    @property
+    def succeeded(self) -> bool:
+        return self.status is RunStatus.COMPLETED
+
+
+class Runner:
+    def __init__(
+        self,
+        model_clients: dict[str, ModelClient],
+        *,
+        session_store: SessionStore | None = None,
+        tools: list[Tool] | None = None,
+        tool_registry: ToolRegistry | None = None,
+        hook: RuntimeHook | None = None,
+        assembler: ContextAssembler | None = None,
+    ) -> None:
+        if not model_clients:
+            raise ValueError("Runner requires at least one model client")
+        self._clients = dict(model_clients)
+        self._sessions = session_store or InMemorySessionStore()
+        self._registry = tool_registry or ToolRegistry()
+        for tool in tools or ():
+            self._registry.register(tool)
+        self._hook = hook or RuntimeHook()
+        self._assembler = assembler or ContextAssembler()
+
+    async def run(self, spec: AgentSpec, task: str, config: RunConfig) -> RunResult:
+        run_id = str(uuid.uuid4())
+        events: EventSink = InMemoryEventSink(config.tenant_id, config.project_id, run_id)
+        client_key, model_id = self._resolve_model(spec, config)
+
+        events.emit(
+            EventType.RUN_STARTED,
+            {
+                "agent_spec_id": spec.id,
+                "model": model_id,
+                "provider": client_key,
+                "max_turns": config.max_turns,
+                # Recorded, never read in Phase 0 (ADR-27).
+                "principal_context": (
+                    config.principal_context.to_json() if config.principal_context else None
+                ),
+            },
+        )
+
+        executor = ToolExecutor(
+            registry=self._registry,
+            permission_checker=spec.checker(),
+            hook=self._hook,
+            emit=lambda event_type, payload: events.emit(EventType.TOOL_CALLED, payload),
+        )
+        loop = AgentLoop(
+            model_client=self._clients[client_key],
+            session_store=self._sessions,
+            tool_executor=executor,
+            tool_registry=self._registry,
+            event_sink=events,
+            assembler=self._assembler,
+            hook=self._hook,
+        )
+
+        outcome = await loop.run(
+            run_id,
+            task,
+            max_turns=config.max_turns,
+            instructions=spec.instructions,
+            model_settings={"model": model_id} if model_id else {},
+            principal_context=config.principal_context,
+        )
+
+        if outcome.exhausted_turns:
+            status, error = RunStatus.MAX_TURNS_EXCEEDED, "max_turns_exceeded"
+        elif outcome.error is not None:
+            status, error = RunStatus.FAILED, outcome.error
+        else:
+            status, error = RunStatus.COMPLETED, None
+
+        events.emit(
+            EventType.RUN_COMPLETED if status is RunStatus.COMPLETED else EventType.RUN_FAILED,
+            {"status": status.value, "turns": outcome.turns, "reason": error},
+        )
+        return RunResult(
+            status=status,
+            output=outcome.output,
+            events=events.events(),
+            usage=outcome.usage,
+            run_id=run_id,
+            error=error,
+        )
+
+    def _resolve_model(self, spec: AgentSpec, config: RunConfig) -> tuple[str, str | None]:
+        """`"<client_key>:<model_id>"`, or a bare model id when unambiguous."""
+        reference = config.model_override or spec.preferred_model
+        if not reference:
+            if len(self._clients) != 1:
+                raise ValueError(
+                    "no preferred_model or model_override given and multiple model "
+                    f"clients are registered: {sorted(self._clients)}"
+                )
+            return next(iter(self._clients)), None
+
+        key, separator, model_id = reference.partition(":")
+        if not separator:
+            if len(self._clients) != 1:
+                raise ValueError(
+                    f"model reference {reference!r} has no '<client>:' prefix and "
+                    f"multiple clients are registered: {sorted(self._clients)}"
+                )
+            return next(iter(self._clients)), reference
+        if key not in self._clients:
+            raise ValueError(
+                f"unknown model client {key!r}; registered: {sorted(self._clients)}"
+            )
+        return key, model_id
