@@ -862,3 +862,127 @@ async def test_usage_is_reported_even_when_the_boundary_catches(monkeypatch):
     )
     assert result.status is RunStatus.FAILED
     assert result.usage.total_tokens == 15, "tokens spent before the failure were dropped"
+
+
+# --- M5 round 3: the store must not change the outcome ----------------------
+
+
+def test_arguments_error_survives_the_round_trip(started):
+    """The reviewer's blind spot, and a live hazard from Phase 6 (replay).
+
+    A dropped arguments_error turns an undecodable tool call back into a valid
+    empty-arguments call, which ToolExecutor step 2 would wave straight through
+    -- exactly the defect M3 was rejected for and fixed. Nothing stopped
+    persistence from undoing it.
+    """
+    store = PostgresSessionStore(DSN).bind(started)
+    store.append(
+        started.run_id,
+        Message(
+            role=Role.ASSISTANT,
+            tool_calls=(
+                ToolCall(id="c1", name="echo", arguments={}, arguments_error="bad JSON"),
+            ),
+        ),
+    )
+    restored = store.history(started.run_id)[0].tool_calls[0]
+    assert restored.arguments_error == "bad JSON"
+    assert restored.arguments == {}
+
+
+def test_a_tool_call_the_store_cannot_hold_round_trips_as_an_error(started):
+    """End of the same thread: the flag is set by ToolCall itself, so it is
+    still set after the row comes back."""
+    store = PostgresSessionStore(DSN).bind(started)
+    store.append(
+        started.run_id,
+        Message(
+            role=Role.ASSISTANT,
+            tool_calls=(ToolCall(id="c1", name="echo", arguments={"n": float("inf")}),),
+        ),
+    )
+    restored = store.history(started.run_id)[0].tool_calls[0]
+    assert restored.arguments_error is not None
+    assert "cannot be stored" in restored.arguments_error
+    assert restored.arguments == {}
+
+
+def test_a_message_cannot_be_filed_under_another_tenant(started):
+    """messages.tenant_id is denormalised so isolation needs no join. That is
+    only worth having if the copy cannot disagree with the run it belongs to."""
+    impostor = RunScope(
+        run_id=started.run_id, tenant_id="t-someone-else", project_id="p-test"
+    )
+    with pytest.raises(ValueError, match="belongs to someone else"):
+        PostgresSessionStore(DSN).bind(impostor).append(
+            started.run_id, Message(role=Role.USER, content="not mine")
+        )
+    assert query(
+        "SELECT 1 FROM messages WHERE run_id=%s AND tenant_id=%s",
+        (started.run_id, "t-someone-else"),
+    ) == []
+
+
+def test_appending_to_a_run_that_does_not_exist_is_refused():
+    ghost = RunScope(run_id=str(uuid.uuid4()), tenant_id="t-test", project_id="p-test")
+    with pytest.raises(ValueError, match="does not exist"):
+        PostgresSessionStore(DSN).bind(ghost).append(
+            ghost.run_id, Message(role=Role.USER, content="orphan")
+        )
+
+
+def test_the_stored_tenancy_comes_from_the_run_not_the_caller(started):
+    store = PostgresSessionStore(DSN).bind(started)
+    store.append(started.run_id, Message(role=Role.USER, content="mine"))
+    rows = query(
+        "SELECT tenant_id, project_id FROM messages WHERE run_id=%s", (started.run_id,)
+    )
+    assert rows == [(started.tenant_id, started.project_id)]
+
+
+@pytest.mark.parametrize(
+    "content,arguments",
+    [
+        (None, {"text": "x", "n": float("inf")}),
+        (None, {"text": "a" + chr(0) + "b"}),
+    ],
+    ids=["inf-argument", "nul-argument"],
+)
+async def test_persistence_does_not_change_the_outcome(content, arguments):
+    """The defect itself, as a regression test.
+
+    `1e400` and a U+0000 escape are valid RFC-8259 that json.loads accepts and
+    JSONB refuses, so the same run used to complete in memory and fail against
+    Postgres -- breaking postgres.py's own promise that the loop cannot tell
+    which store it is talking to. A CUSTOM provider is used deliberately: the
+    fix has to hold for any ModelClient, not just the adapter it was found in.
+    """
+
+    class Provider:
+        async def send(self, request):
+            return ModelResponse(
+                message=Message(
+                    role=Role.ASSISTANT,
+                    content=content,
+                    tool_calls=(ToolCall(id="c1", name="echo", arguments=arguments),),
+                ),
+                stop_reason=StopReason.TOOL_CALLS,
+                usage=Usage(1, 1, 2),
+            )
+
+    async def run(persistence):
+        return await Runner(
+            {"gw": Provider()}, tools=[echo_tool()], persistence=persistence
+        ).run(
+            AgentSpec(id="s", instructions="i", preferred_model="gw:m",
+                      tool_profile=("echo",)),
+            "go",
+            RunConfig(tenant_id="t-store", project_id="p-store", max_turns=2),
+        )
+
+    in_memory = await run(None)
+    persisted = await run(Persistence.postgres(DSN))
+    assert in_memory.status is persisted.status, (
+        f"the store changed the outcome: {in_memory.status} vs {persisted.status} "
+        f"({persisted.error})"
+    )

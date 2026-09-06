@@ -316,3 +316,33 @@ def test_principal_context_serialises_without_secrets():
     assert payload["agent_principal"] == "research-analyst-v1"
     assert payload["scopes"] == ["read"]
     assert not any("key" in k or "token" in k for k in payload)
+
+
+async def test_a_tool_returning_something_no_store_can_hold_is_a_tool_error():
+    """M5 round 3: a tool's own output reaches the same JSONB column the
+    model's does, so it diverged the same way -- the run completed in memory
+    and failed against Postgres. It becomes an ordinary tool error instead, so
+    the run continues identically on both backends and the model is told."""
+    executor, spy = build(tool_fn=lambda text: "before" + chr(0) + "after")
+
+    outcome = await executor.execute(
+        ToolCall(id="c1", name="echo", arguments={"text": "hi"})
+    )
+
+    assert isinstance(outcome, Failed)
+    assert outcome.result.is_error is True
+    assert "cannot be stored" in outcome.result.content
+    assert "NUL" in outcome.result.content
+    # The tool DID run: this is a result the store cannot hold, not a rejected
+    # call, and the difference matters for anything reasoning about effects.
+    assert spy.calls == [{"text": "hi"}]
+
+
+async def test_a_tool_returning_ordinary_text_is_unaffected():
+    executor, _ = build(tool_fn=lambda text: text)
+    outcome = await executor.execute(
+        ToolCall(id="c1", name="echo", arguments={"text": "ordinary"})
+    )
+    assert isinstance(outcome, Completed)
+    assert outcome.result.content == "ordinary"
+    assert outcome.result.is_error is False

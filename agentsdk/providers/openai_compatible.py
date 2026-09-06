@@ -401,4 +401,9 @@ def _decode_arguments(raw: Any) -> tuple[dict[str, Any], str | None]:
         return {}, f"{type(exc).__name__}: {exc}"
     if not isinstance(decoded, dict):
         return {}, f"expected a JSON object, got {type(decoded).__name__}"
+    # Storability is NOT checked here. ToolCall routes arguments no store can
+    # hold onto arguments_error itself: 1e400 decodes to inf, and a JSON escape
+    # for U+0000 decodes to a NUL. Both are valid RFC-8259 that JSONB refuses,
+    # and doing it in the primitive means this adapter and every future one get
+    # the behaviour without having to remember it.
     return decoded, None

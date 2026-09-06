@@ -37,7 +37,7 @@ from .hooks import HookAction, RuntimeHook
 from .identity import PrincipalContext
 from .outcomes import Completed, Failed, ToolExecutionOutcome
 from .permissions import PermissionChecker
-from .primitives import ContentProvenance, ToolCall, ToolResult
+from .primitives import ContentProvenance, ToolCall, ToolResult, unstorable_reason
 from .tools import ToolRegistry
 
 
@@ -150,12 +150,28 @@ class ToolExecutor:
             return self._failed(tool_call, ToolExecutionError(str(exc)))
 
         # --- 7. assign provenance ----------------------------------------------
+        content = value if isinstance(value, str) else repr(value)
+        # A tool's own output reaches the same JSONB column the model's does, so
+        # it can diverge the same way: a tool returning a NUL completed in
+        # memory and failed the run against Postgres. It becomes an ordinary
+        # tool error instead -- the mechanism this executor already has for
+        # "the tool produced something unusable" -- so the run continues and
+        # the model is told, identically on both backends.
+        unstorable = unstorable_reason(content)
+        if unstorable is not None:
+            return self._failed(
+                tool_call,
+                ToolExecutionError(
+                    f"tool {tool_call.name!r} returned a result that cannot be stored: "
+                    f"{unstorable}"
+                ),
+            )
         provenance = ContentProvenance.internal_tool(
             source_uri_or_hash=tool.spec.schema_hash()
         )
         tool_result = ToolResult(
             tool_call_id=tool_call.id,
-            content=value if isinstance(value, str) else repr(value),
+            content=content,
             provenance=provenance,
         )
 

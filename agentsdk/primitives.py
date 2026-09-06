@@ -136,6 +136,28 @@ class ToolCall:
     # to a schema the adapter does not control.
     arguments_error: str | None = None
 
+    def __post_init__(self) -> None:
+        # Arguments that no durable store can hold travel on the SAME channel as
+        # undecodable ones, and the check is here rather than in an adapter
+        # because every adapter would otherwise have to remember it -- and
+        # NFR-1's whole claim is that a new provider is a configuration change.
+        # A ToolCall whose arguments cannot be stored therefore cannot exist
+        # without saying so.
+        if self.arguments_error is None:
+            reason = unstorable_reason(self.arguments)
+            if reason is not None:
+                object.__setattr__(
+                    self, "arguments_error", f"arguments cannot be stored: {reason}"
+                )
+                # Cleared, not merely flagged. Flagging alone still leaves the
+                # unstorable value in `arguments`, and the assistant message
+                # carrying this call is persisted whether or not the executor
+                # runs it -- so the write fails anyway and the divergence
+                # survives. This is the same shape undecodable JSON already
+                # takes: empty arguments plus the reason they are empty, which
+                # ToolExecutor step 2 rejects before anything can execute {}.
+                object.__setattr__(self, "arguments", {})
+
 
 @dataclass(frozen=True)
 class ToolResult:
@@ -169,3 +191,77 @@ class Message:
     def __post_init__(self) -> None:
         object.__setattr__(self, "tool_calls", tuple(self.tool_calls))
         object.__setattr__(self, "tool_results", tuple(self.tool_results))
+        # Unlike tool arguments, content has no error channel to travel on, so
+        # an unstorable one is refused outright. This raises where ToolCall
+        # merely flags because there is no honest alternative: dropping the byte
+        # would edit the record NFR-3 calls authoritative, and accepting it
+        # would make the run's outcome depend on which store was configured.
+        #
+        # Raising here is contained by design. Both surrounding boundaries are
+        # total, so this surfaces as a terminal RunResult rather than a crash,
+        # and ModelClient.send() converts it to a typed ModelError on the way
+        # out -- which is what lets a caller tell "the model emitted something
+        # unstorable" from "the database is down".
+        reason = unstorable_reason(self.content)
+        if reason is not None:
+            raise ValueError(f"Message.content cannot be stored: {reason}")
+
+
+# --- storability (M5 round 3) -----------------------------------------------
+
+_NUL = "\x00"
+_MAX_DEPTH = 60
+
+
+def unstorable_reason(value: Any, _depth: int = 0) -> str | None:
+    """Why `value` could not survive a round trip through a durable store.
+
+    Returns None when it can. Total by intent: it must never raise, because it
+    runs on paths that are themselves boundaries.
+
+    Postgres rejects two things the SDK's own decoding admits with no adversary
+    involved. `json.loads` is RFC-8259-correct and turns `1e400` into `inf` and
+    `\u0000` into a NUL character; JSONB has no representation for a non-finite
+    number, and neither TEXT nor JSONB accepts NUL. A model can emit either by
+    accident.
+
+    The check lives here, above every store, rather than in postgres.py. That
+    module promises "the loop cannot tell whether it is talking to memory or
+    Postgres", and deciding this at write time is what made the promise false:
+    the same run completed in memory and failed against the database. Rejecting
+    upstream restores it -- both backends now behave identically -- and keeps
+    the alternative fixes off the table, since silently dropping NULs or
+    nulling out an infinity would corrupt the record NFR-3 calls authoritative.
+    """
+    try:
+        if _depth > _MAX_DEPTH:
+            return "nested more deeply than the store can accept"
+        if isinstance(value, str):
+            return "text contains a NUL character" if _NUL in value else None
+        if isinstance(value, bool) or value is None or isinstance(value, int):
+            return None
+        if isinstance(value, float):
+            if value != value:
+                return "NaN cannot be stored: JSON has no representation for it"
+            if value in (float("inf"), float("-inf")):
+                return f"{value} cannot be stored: JSON has no representation for it"
+            return None
+        if isinstance(value, dict):
+            for key, item in value.items():
+                reason = unstorable_reason(key, _depth + 1)
+                if reason is None:
+                    reason = unstorable_reason(item, _depth + 1)
+                if reason is not None:
+                    return reason
+            return None
+        if isinstance(value, (list, tuple, set, frozenset)):
+            for item in value:
+                reason = unstorable_reason(item, _depth + 1)
+                if reason is not None:
+                    return reason
+            return None
+        # Anything else is not reachable from decoded JSON, which is the only
+        # way provider data enters these primitives.
+        return None
+    except Exception:  # noqa: BLE001 - total by intent, see the docstring
+        return "could not be checked for storability"

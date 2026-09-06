@@ -2,7 +2,7 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
-## Rounds 1-2 -- what was rejected, and what changed
+## Rounds 1-3 -- what was rejected, and what changed
 
 A previous reviewer rejected this milestone and was right to. Their finding, and the response:
 
@@ -18,15 +18,32 @@ Round 2 confirmed that fix held under `os._exit` mid-transaction and injected fa
 
 **The reviewer's diagnosis mattered more than the defect.** This was the third rejection for one bug class: M3 round 3 found `int(float('inf'))` raising `OverflowError` in the adapter, that fix added `OverflowError` to that one call site, and the pattern reappeared in a new function. So the coercion moved onto the type: `Usage.__post_init__` routes every field through `agentsdk.model.token_count`, and the adapter's `_as_int` is **deleted** rather than duplicated. A `Usage` cannot hold a non-int whoever built it. Recorded as `DECISION-a2c8f342` and `INVARIANT-3c123c38`.
 
+Round 3 confirmed both earlier fixes dead and rejected on a third defect, in a region no prior round examined.
+
+**Round 3's defect.** `json.loads` is RFC-8259-correct: `1e400` decodes to `inf` and a `U+0000` escape to a NUL. JSONB holds neither, so the same run **completed in memory and failed against Postgres** -- breaking the contract `postgres.py` states in its own header, that the loop cannot tell which store it is talking to.
+
+**The fix is upstream of the symptom, for the third round running.** Not in the persistence layer: silently nulling an infinity or stripping a NUL would trade a loud failure for a corrupted audit trail. The primitives now refuse what no store can hold, via one total helper (`primitives.unstorable_reason`):
+- unstorable tool **arguments** are cleared and routed onto `arguments_error` -- the channel undecodable JSON already uses. Flagging alone was not enough: the assistant message carrying the call is persisted whether or not the executor runs it, so the value had to go.
+- unstorable **content** raises, because content has no error channel. Both surrounding boundaries are total, and `send()` converts it to a typed `ModelError`, so a caller can tell "the model emitted something unstorable" from "the database is down".
+- an unstorable tool **result** becomes an ordinary tool error, so the run continues identically on both backends.
+
+**Scope was wider than the report.** The reviewer tested tool arguments; message content and tool results diverge the same way, and fixing it inside the OpenAI adapter would have left every other provider broken -- NFR-1's whole claim is that a new provider is a configuration change. Convergence is now verified through a **custom** `ModelClient`, not the adapter the defect was found in.
+
+**Both named blind spots are closed.** `arguments_error` now has a round-trip test (the Phase 6 replay hazard: a dropped flag turns an undecodable call back into a valid empty-args call that step 2 waves through). And message tenancy is taken from the **run row** inside the INSERT, with the caller's scope matched in the WHERE, so a mismatch errors instead of silently filing a message under the wrong tenant.
+
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
-- `token_count` catches bare `Exception` and returns 0. Find a value it mishandles, or a place a provider number still reaches `int()` directly. `grep` for `int(` across the package.
+- `unstorable_reason` decides what every primitive will accept. Find a value Postgres refuses that it passes, or a value it rejects that would have stored fine (a false positive is a defect too -- it fails runs that should work).
+- **Raising in `Message.__post_init__` is the riskiest thing here.** Find a path where that raise is not contained by a total boundary, or where it fires on an error path and takes down a handler.
+- `ToolCall.__post_init__` silently empties `arguments`. Is the reason always preserved, and can a caller be confused by arguments that vanish?
+- The message INSERT is now a `LEFT JOIN ... GROUP BY`. Re-measure concurrency: the author saw safety unchanged but availability *improved* (0-1 of 12 losers, previously 4 of 12). Confirm or refute.
+- `token_count` catches bare `Exception` and returns 0. Find a value it mishandles, or a place a provider number still reaches `int()` directly.
 - Is `Usage.__post_init__` reachable on every construction path -- including `__add__`, `dataclasses.replace`, and unpickling?
 - Coercing to 0 is silent. Is there a case where silently zeroing a token count is worse than failing? Judge whether the trade is right, not just whether it is implemented.
 - **Does `BaseException` still pass through?** `token_count` must not swallow `KeyboardInterrupt`.
 - Is the transaction genuinely atomic, or does `psycopg`'s `with conn.transaction()` inside `with psycopg.connect()` leave a window?
 - 301 tests now, up from 259. Did any new test weaken an old one -- the `started` fixture now writes a manifest, which changed what two AC-6 tests assert against, and the e2e test now asserts manifest *contents*.
 
-**Two round-2 caveats were also addressed.** The manifest-content blind spot (four mutations to what the Runner puts in the manifest all survived because the e2e test only asserted `is not None`) is closed -- all four now die. The 979 manifest-less `runs` rows were confirmed to be pre-fix development data plus rows my own mutation runs created deliberately: three clean suite runs produced 69 runs and **0** orphans. They are left in place pending the owner's decision; deleting their data to tidy a metric is not mine to make.
+**Two round-2 caveats were also addressed.** The manifest-content blind spot (four mutations to what the Runner puts in the manifest all survived because the e2e test only asserted `is not None`) is closed -- all four now die. The 979 manifest-less `runs` rows were confirmed to be pre-fix development data plus rows my own mutation runs created deliberately: three clean suite runs produced 69 runs and **0** orphans. They are left in place pending the owner's decision; deleting their data to tidy a metric is not mine to make. Round 3's reviewer independently confirmed the count is static at 979.
 
 ## Repository
 
@@ -79,11 +96,11 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
 1. Read the files, `SPEC.md`, and the decisions/invariants/knowledge in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 38
-   .venv\Scripts\python.exe -m pytest -q                             # expect 301
+   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 45
+   .venv\Scripts\python.exe -m pytest -q                             # expect 332
    ```
    A different number is itself a finding.
-3. **Mutation-test.** Round 1: 21 mutations, six survivors. Round 2's reviewer ran 56 and found 12 blind spots. Round 3: 12 targeted mutations, 12 killed -- including re-introducing the M3 defect verbatim, which the new type-level tests now catch. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
+3. **Mutation-test.** Round 1: 21 mutations, six survivors. Round 2's reviewer ran 56 and found 12 blind spots. Round 3: 12 targeted, 12 killed. Round 4: 12 targeted at the storability work, 12 killed -- one initially survived (removing the cycle-depth guard) because the outer catch absorbed the RecursionError, so the test now pins the *diagnosis* rather than mere survival. Every round's reviewer has found blind spots the author's own matrix did not; assume more exist. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
    ```
    sequence_no constant not computed   append without scope allowed
    bound store accepts any run         history ignores ordering
@@ -97,6 +114,10 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
    Usage coercion removed              token_count re-narrowed to (TypeError, ValueError)
    token_count swallows BaseException  manifest tool hashes emptied
    manifest instructions replaced      manifest sdk_version faked
+   NUL not counted as unstorable       non-finite not counted as unstorable
+   ToolCall flags but does not clear   Message accepts unstorable content
+   arguments_error dropped on write    arguments_error dropped on read
+   message tenancy from the caller     missing run no longer detected
    messages tenant nullable            run_events tenant nullable
    messages sequence not unique        manifest primary key relaxed
    tenancy index removed               run never marked finished

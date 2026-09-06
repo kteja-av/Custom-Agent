@@ -156,29 +156,46 @@ class PostgresSessionStore:
                 # produce a duplicate. The UNIQUE (run_id, sequence_no)
                 # constraint is what makes the race a visible error instead of
                 # a silently reordered history.
-                conn.execute(
+                #
+                # tenant_id and project_id are taken from the RUN ROW, not from
+                # the caller's scope. Trusting the scope let a caller file a
+                # message under a tenant the run does not belong to, which
+                # silently defeats the reason messages.tenant_id is
+                # denormalised: isolation without a join is only worth having
+                # if the denormalised copy cannot disagree with the original.
+                # The scope is still matched in the WHERE, so a caller that
+                # thinks it is writing for another tenant gets an error rather
+                # than a quietly corrected row.
+                cursor = conn.execute(
                     """
                     INSERT INTO messages (
                         message_id, run_id, tenant_id, project_id, sequence_no,
                         role, content, tool_calls, tool_results
                     )
-                    SELECT %s, %s, %s, %s,
-                           COALESCE(MAX(sequence_no), 0) + 1,
+                    SELECT %s, r.run_id, r.tenant_id, r.project_id,
+                           COALESCE(MAX(m.sequence_no), 0) + 1,
                            %s, %s, %s, %s
-                    FROM messages WHERE run_id = %s
+                    FROM runs r LEFT JOIN messages m ON m.run_id = r.run_id
+                    WHERE r.run_id = %s AND r.tenant_id = %s AND r.project_id = %s
+                    GROUP BY r.run_id, r.tenant_id, r.project_id
                     """,
                     (
                         uuid.uuid4(),
-                        run_id,
-                        scope.tenant_id,
-                        scope.project_id,
                         message.role.value,
                         message.content,
                         tool_calls,
                         tool_results,
                         run_id,
+                        scope.tenant_id,
+                        scope.project_id,
                     ),
                 )
+                if cursor.rowcount != 1:
+                    raise ValueError(
+                        f"no run {run_id!r} for tenant {scope.tenant_id!r} / project "
+                        f"{scope.project_id!r}: a message cannot be filed against a "
+                        "run that does not exist or belongs to someone else"
+                    )
 
     def history(self, run_id: str) -> list[Message]:
         with psycopg.connect(self._dsn) as conn:

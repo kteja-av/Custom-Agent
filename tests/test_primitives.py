@@ -21,6 +21,7 @@ from agentsdk import (
     TrustZone,
     WorkflowError,
 )
+from agentsdk.primitives import unstorable_reason
 from agentsdk.outcomes import (
     ApprovalRequired,
     Completed,
@@ -178,3 +179,97 @@ def test_run_interruption_type_exists_without_persistence():
     assert interruption.created_at.tzinfo is not None
     # Approval is one kind among several, not its own mechanism (ADR-29).
     assert InterruptionKind.CREDENTIAL_REQUIRED in set(InterruptionKind)
+
+
+# --- storability: a primitive no store can hold (M5 round 3) ----------------
+#
+# json.loads is RFC-8259-correct and turns `1e400` into inf and a U+0000 escape
+# into a NUL. JSONB holds neither, so before this the same run completed in
+# memory and failed against Postgres -- breaking postgres.py's own promise that
+# the loop cannot tell which store it is talking to. The check lives on the
+# primitives so every provider gets it, not just the adapter that was fixed.
+
+NUL = chr(0)
+UNSTORABLE = [
+    float("inf"),
+    float("-inf"),
+    float("nan"),
+    "text with a " + NUL + " in it",
+]
+
+
+@pytest.mark.parametrize("value", UNSTORABLE, ids=lambda v: repr(v)[:20])
+def test_unstorable_values_are_named(value):
+    assert unstorable_reason(value) is not None
+
+
+@pytest.mark.parametrize(
+    "value", [1, 1.5, "ordinary", None, True, [1, "a"], {"k": [1.5, "v"]}, ()],
+    ids=lambda v: repr(v)[:20],
+)
+def test_storable_values_pass(value):
+    assert unstorable_reason(value) is None
+
+
+def test_unstorable_values_are_found_however_deeply_nested():
+    assert unstorable_reason({"a": [{"b": ({"c": float("inf")},)}]}) is not None
+    assert unstorable_reason({"a" + NUL: 1}) is not None, "a KEY can be unstorable too"
+
+
+def test_unstorable_reason_is_total():
+    """It runs on boundary paths, so it must not raise -- including on a
+    self-referential structure, which a naive recursive walk never returns from."""
+    cyclic = {}
+    cyclic["self"] = cyclic
+
+    class Hostile:
+        def __eq__(self, other):
+            raise RuntimeError("hostile __eq__")
+
+        def __hash__(self):
+            return 0
+
+    # The depth guard must DIAGNOSE this, not merely survive it. Without the
+    # guard the walk recurses until it hits the interpreter limit and the outer
+    # catch absorbs the RecursionError -- still total, but the reason degrades
+    # to "could not be checked", and a run that blew the stack is not the same
+    # event as one that nested too deeply.
+    assert unstorable_reason(cyclic) == "nested more deeply than the store can accept"
+    assert unstorable_reason({"k": Hostile()}) is None
+    assert unstorable_reason([Hostile()]) is None
+
+
+@pytest.mark.parametrize("value", UNSTORABLE, ids=lambda v: repr(v)[:20])
+def test_a_tool_call_with_unstorable_arguments_flags_itself(value):
+    """The same channel undecodable JSON already uses: empty arguments plus the
+    reason they are empty, which ToolExecutor rejects before anything runs."""
+    call = ToolCall(id="c1", name="echo", arguments={"n": value})
+    assert call.arguments_error is not None
+    assert "cannot be stored" in call.arguments_error
+    # Cleared, not just flagged: the assistant message carrying this call is
+    # persisted whether or not the executor runs it.
+    assert call.arguments == {}
+
+
+def test_a_tool_call_keeps_an_existing_arguments_error():
+    call = ToolCall(id="c1", name="echo", arguments={}, arguments_error="bad JSON")
+    assert call.arguments_error == "bad JSON"
+
+
+def test_ordinary_tool_call_arguments_are_untouched():
+    call = ToolCall(id="c1", name="echo", arguments={"text": "hi", "n": 1.5})
+    assert call.arguments == {"text": "hi", "n": 1.5}
+    assert call.arguments_error is None
+
+
+def test_a_message_refuses_content_no_store_can_hold():
+    """Content has no error channel to travel on. Refusing it is what keeps the
+    outcome the same with and without persistence; dropping the byte would edit
+    the record NFR-3 calls authoritative."""
+    with pytest.raises(ValueError, match="cannot be stored"):
+        Message(role=Role.ASSISTANT, content="a" + NUL + "b")
+
+
+def test_ordinary_message_content_is_untouched():
+    assert Message(role=Role.ASSISTANT, content="ordinary").content == "ordinary"
+    assert Message(role=Role.ASSISTANT, content=None).content is None

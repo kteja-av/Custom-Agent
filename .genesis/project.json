@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-06T15:14:17.149Z"
+    "updated_at": "2026-09-06T16:54:51.397Z"
   },
   "policy": {
     "ponytail": "full",
@@ -299,6 +299,22 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-06T15:13:20.833Z"
+    },
+    {
+      "id": "DECISION-65528763",
+      "title": "Canonical primitives are storable by construction",
+      "text": "ToolCall, Message and the ToolExecutor reject values no durable store can hold, using one total helper (primitives.unstorable_reason). Unstorable tool arguments are cleared and routed onto arguments_error, the channel undecodable JSON already uses; unstorable Message.content raises, because content has no error channel and dropping the byte would edit the record NFR-3 calls authoritative; an unstorable tool RESULT becomes an ordinary tool error so the run continues. Rationale: json.loads is RFC-8259-correct and turns 1e400 into inf and a U+0000 escape into a NUL; JSONB holds neither, so the same run completed in memory and failed against Postgres, breaking postgres.py's stated contract that the loop cannot tell which store it is talking to. The check is in the primitives rather than in the OpenAI adapter because NFR-1 claims a new provider is a configuration change -- verified with a custom ModelClient, not just the adapter where it was found. Third consecutive round where the durable fix was upstream of where the symptom appeared.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-06T16:53:59.117Z"
+    },
+    {
+      "id": "DECISION-aed7e4d8",
+      "title": "Message tenancy is derived from the run row, never from the caller",
+      "text": "PostgresSessionStore.append takes tenant_id and project_id from the runs row in the INSERT ... SELECT itself, and matches the caller's RunScope in the WHERE so a mismatch errors rather than being quietly corrected. A rowcount of 0 means the run does not exist or belongs to another tenant, and raises. Rationale: messages.tenant_id is denormalised so isolation needs no join, which is only worth having if the copy cannot disagree with the original; previously a caller could file messages under a tenant the run did not belong to. Re-measured concurrency after the change: safety unchanged (0 duplicates, contiguous), availability improved (0-1 of 12 writers lose, previously 4 of 12) -- the Phase 2 availability item still stands.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-06T16:53:59.294Z"
     }
   ],
   "knowledge": [
@@ -381,6 +397,14 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-06T14:29:35.773Z"
+    },
+    {
+      "id": "KNOWLEDGE-5d09862c",
+      "title": "Concurrent append: safety fixed, availability varies",
+      "text": "Re-measured after tenancy derivation changed the insert to a LEFT JOIN with GROUP BY. Three 12-writer trials: 0 duplicates and contiguous sequence numbers every time (safety unchanged), with 1, 1 and 0 UniqueViolation losers respectively -- previously a steady 4 of 12. Availability is timing-dependent and the failure mode is still reachable, so the Phase 2 retry-or-advisory-lock item stands; the earlier '4 of 12' figure should not be quoted as a fixed property.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-06T16:53:59.425Z"
     }
   ],
   "tasks": [
@@ -614,9 +638,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "040100a8b40a0874aa85aa9496ff1056a28a6f5bd1bc4161ce4158901645dd68",
-            "hash": "0454158f2a2d68c5c88cf85a8220bb9ccf127243622d0d17472ae6b606185b53",
-            "observed_at": "2026-09-06T15:13:33.538Z"
+            "source_hash": "b6a175479974664ff53c772f4270ce24de48051b91dc0267ceaa9c8e12d2899d",
+            "hash": "71c18c1adf2ee9bd81f4e5601ffbb4799e0b0f4382d0c4dcc3499015393ebb78",
+            "observed_at": "2026-09-06T16:54:18.836Z"
           }
         },
         {
@@ -636,7 +660,7 @@
         "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-06T15:13:33.674Z"
+      "updated_at": "2026-09-06T16:54:18.965Z"
     },
     {
       "id": "M6-golden-eval",
@@ -830,15 +854,33 @@
       "human": "Opus 5 (implementer)",
       "reason": "Round-2 defect fixed at the type: Usage coerces every field through one total helper (token_count), the adapter's duplicate _as_int is deleted, and the boundary error path can no longer raise. Recorded as a decision and an invariant, as the reviewer asked. Manifest-content blind spot closed: the e2e test now asserts what the manifest contains, killing all four surviving mutations. 301 tests, 12/12 mutations killed.",
       "revision": null
+    },
+    {
+      "id": "f5751f69-49ca-4c94-8128-bde09af7eabb",
+      "at": "2026-09-06T15:35:21.258Z",
+      "action": "reject",
+      "task": "M5-postgres",
+      "human": "Independent L4 reviewer (fresh session, M5 round 3)",
+      "reason": "REJECT - one reachable defect in new M5 code: PostgresSessionStore.append() is not total over model-supplied content, so the Postgres SessionStore is not behaviour-equivalent to the InMemorySessionStore it claims to be a drop-in for (postgres.py: 'the loop cannot tell whether it is talking to memory or Postgres'). _message_to_columns/append hand model-generated values straight to psycopg with no sanitisation, so a raw driver error escapes append, propagates out of AgentLoop.run and turns a run that completes in memory into RunStatus.FAILED. Reproduced through the public API (Runner.run + Persistence.postgres), same spec/task/model, persistence the only variable: (A) assistant content containing U+0000 -> in-memory 'completed', Postgres 'failed', error 'DataError: PostgreSQL text fields cannot contain NUL (0x00) bytes'; (B) a tool-call argument holding a JSON number that overflows to inf - the adapter's own _decode_arguments turns the VALID RFC-8259 body {\"text\":\"big\",\"n\":1e400} into {'text':'big','n':inf} - -> in-memory 'completed', Postgres 'failed', error 'InvalidTextRepresentation: invalid input syntax for type json / Token \"Infinity\" is invalid'. Three further variants confirmed at the store: NaN in tool arguments, U+0000 inside a tool-argument string, U+0000 in ToolResult.content (all UntranslatableCharacter/InvalidTextRepresentation, all accepted by InMemorySessionStore). No hostile provider is required - the model writes the arguments JSON and the assistant text. This is the same SHAPE as the bug class rejected in M3 r3, M5 r1 and M5 r2 (INVARIANT-3c123c38, DECISION-a2c8f342): the type-level Usage coercion closed the numeric-int() half, but a provider/model value still reaches an unguarded serialiser - Jsonb(json.dumps) and a raw TEXT bind - at the persistence write boundary. Latent sibling in the same region: _json_safe, whose stated job is 'payloads carry things JSONB does not', is itself not total - it raises on a hostile __str__ (RuntimeError escapes emit), returns a non-serialisable .value for any object exposing .value/.name, passes NaN/+-Infinity straight through to a JSONB column that rejects them, and recurses without a cycle guard (RecursionError). Not currently reachable because Phase 0 payloads are SDK-built, but it is the natural place to fix the defect above. VERIFIED SOUND: gates re-run on the restored tree, tests/test_persistence.py 38 passed, full suite 301 passed; 44 mutations run (backed up, restored in a finally, SHA-256 verified) with 40 killed, incl. re-introducing the round-1 non-atomic manifest write, the round-2 Usage coercion removal, token_count re-narrowed to (TypeError,ValueError), token_count swallowing BaseException, all schema.sql tenancy/UNIQUE/PK/index mutations, both trace ORDER BY clauses, and all four manifest-content mutations; 4 survivors are gate blind spots where the code is correct (ToolCall.arguments_error not asserted across the round trip; _json_safe enum branch dead for str-enums; _json_safe datetime branch - the str() fallback still yields a string so the assertion cannot see the format change; runs.status CHECK constraint not asserted in the throwaway-namespace test). AC-6 atomicity holds - injected manifest failure leaves no runs row; run+manifest commit or roll back together; the DB shows 0 orphans from my clean runs. Ordering, tenancy, provenance fidelity (all five fields plus is_error and content), the vacuous-pass guard (DATABASE_URL blanked -> 1 failed, 37 skipped, exactly the guard), and ModelClient.send() totality after the _as_int deletion all verified independently. Concurrency independently measured: 12 barrier-synchronised writers -> 11 unique contiguous rows committed, 1 UniqueViolation, 0 duplicates - safety yes, availability no, correctly deferred since FR-9 only requires sequence_no assigned in the insert's transaction. No credential leak found: psycopg failure messages do not echo the DSN password, and the adapter redacts before truncating. No later-phase code present. Database left undamaged: the 979 pre-existing manifest-less runs are untouched, my 18 mutation-created orphans and all synthetic probe rows removed, no leftover throwaway schemas.",
+      "revision": null
+    },
+    {
+      "id": "5430cc08-29d0-4a34-9ed7-957d3802cd32",
+      "at": "2026-09-06T16:54:19.179Z",
+      "action": "retry",
+      "task": "M5-postgres",
+      "human": "Opus 5 (implementer)",
+      "reason": "Round-3 defect fixed upstream in the primitives, not the persistence layer: unstorable tool arguments route onto arguments_error (cleared, not just flagged), unstorable Message.content raises, an unstorable tool result becomes an ordinary tool error. Verified convergence through a CUSTOM ModelClient across all four channels the reviewer did not fully enumerate. Both named blind spots closed: arguments_error round trip pinned, and message tenancy now derived from the run row. 332 tests, 12/12 mutations killed.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-06T15:14:17.086Z",
+    "at": "2026-09-06T16:54:51.333Z",
     "revision": {
-      "commit": "4f312c922b43b695f75ddae5b6fec41b945f031f",
+      "commit": "f19a6a33814bb105a5f7ff049392f1bbbd7acf37",
       "dirty": true,
-      "source_hash": "ca9cf2ba59ae8b928ef207f3fe5c56619fe5f337b10c2b02714cb5339a0c9210"
+      "source_hash": "b6a175479974664ff53c772f4270ce24de48051b91dc0267ceaa9c8e12d2899d"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."
