@@ -28,7 +28,7 @@ from agentsdk.primitives import (
     ToolResult,
     TrustZone,
 )
-from agentsdk.hooks import RuntimeHook
+from agentsdk.hooks import HookAction, HookOutcome, RuntimeHook
 from agentsdk.session import InMemorySessionStore
 from agentsdk.tools import Tool, ToolRegistry, ToolSpec
 
@@ -553,6 +553,112 @@ def test_provenance_travels_as_metadata_not_as_model_readable_text():
     rendered = " ".join(m.content or "" for m in request.messages)
     assert "untrusted" not in rendered
     assert "prompt_injection_risk" not in rendered
+
+
+def test_assembler_sends_the_whole_history_in_order():
+    """Full-history assembly had nothing pinning it.
+
+    An assembler that forwarded only the last message survived the entire
+    suite: the model would silently lose its context and the run would degrade
+    in quality rather than fail, which is the worst way for this to break.
+    """
+    history = [
+        Message(role=Role.USER, content="first"),
+        Message(role=Role.ASSISTANT, content="second"),
+        Message(role=Role.USER, content="third"),
+    ]
+    request = ContextAssembler().build(history)
+
+    assert len(request.messages) == 3, "history was truncated"
+    assert [m.content for m in request.messages] == ["first", "second", "third"]
+
+
+async def test_the_loop_resends_the_growing_history_every_turn():
+    """Turn 2 must carry turn 1's exchange, not just the newest message."""
+    model = ScriptedModel(tool_response(arguments={"text": "abc"}), text_response("done"))
+    await make_runner(model).run(spec(), "the original task", config())
+
+    first, second = model.requests[0], model.requests[1]
+    assert len(first.messages) == 1
+    assert len(second.messages) == 3, "the loop dropped earlier turns"
+    assert [m.role for m in second.messages] == [Role.USER, Role.ASSISTANT, Role.TOOL]
+    assert second.messages[0].content == "the original task"
+
+
+# --- FR-8: hook outcomes beyond "continue" ----------------------------------
+
+
+class HaltingHook(RuntimeHook):
+    def __init__(self, where):
+        self.where = where
+
+    def before_model(self, request):
+        if self.where == "before_model":
+            return HookOutcome(action=HookAction.HALT, reason="halted before model")
+        return super().before_model(request)
+
+    def after_model(self, response):
+        if self.where == "after_model":
+            return HookOutcome(action=HookAction.HALT, reason="halted after model")
+        return super().after_model(response)
+
+
+@pytest.mark.parametrize("where", ["before_model", "after_model"])
+async def test_a_hook_can_halt_the_run(where):
+    model = ScriptedModel(text_response("should not be returned"))
+    result = await make_runner(model, hook=HaltingHook(where)).run(spec(), "go", config())
+
+    assert result.status is RunStatus.FAILED
+    assert f"halted {where.replace('_', ' ')}".split()[0] in result.error
+    assert result.output is None
+
+
+async def test_a_hook_can_modify_the_request_before_the_model_sees_it():
+    class Rewriting(RuntimeHook):
+        def before_model(self, request):
+            replacement = ContextAssembler().build(
+                [Message(role=Role.USER, content="rewritten by hook")]
+            )
+            return HookOutcome(action=HookAction.MODIFY, replacement=replacement)
+
+    model = ScriptedModel(text_response("ok"))
+    await make_runner(model, hook=Rewriting()).run(spec(), "original", config())
+    assert model.requests[0].messages[0].content == "rewritten by hook"
+
+
+async def test_a_hook_can_modify_the_response_after_the_model_returns():
+    class Rewriting(RuntimeHook):
+        def after_model(self, response):
+            return HookOutcome(
+                action=HookAction.MODIFY,
+                replacement=ModelResponse(
+                    message=Message(role=Role.ASSISTANT, content="replaced by hook"),
+                    stop_reason=StopReason.END_TURN,
+                    usage=Usage(),
+                ),
+            )
+
+    result = await make_runner(ScriptedModel(text_response("original")), hook=Rewriting()).run(
+        spec(), "go", config()
+    )
+    assert result.output == "replaced by hook"
+
+
+async def test_a_hook_can_rewrite_a_tool_call_before_execution():
+    seen = []
+
+    class Rewriting(RuntimeHook):
+        def before_tool(self, tool_call):
+            return HookOutcome(
+                action=HookAction.MODIFY,
+                replacement=ToolCall(id=tool_call.id, name="echo", arguments={"text": "rewritten"}),
+            )
+
+    model = ScriptedModel(tool_response(arguments={"text": "original"}), text_response("done"))
+    await make_runner(
+        model, tools=[echo_tool(lambda text: seen.append(text) or text)], hook=Rewriting()
+    ).run(spec(), "go", config())
+    assert seen == ["rewritten"]
 
 
 def test_assembler_emits_no_provenance_key_when_there_are_no_tool_results():

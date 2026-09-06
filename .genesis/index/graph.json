@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "agent-sdk",
-  "revision": "bb9ff7c8fd972fb791ebb999a505b581dcc6bbb5",
-  "sourceHash": "58c8ce00d044f9578d7cf2b806d017b6fcad8498b919936ddd1275e42d53d2ef",
+  "revision": "977ce2e62f579820ff54c8f2c0715a7b05a1086c",
+  "sourceHash": "34d4bb7eb3ee673e4a8daa9176135dd728114a67eaf3b9f46608f497fa35bba2",
   "provenance": {
     "tool": "genesis-graphizer",
     "method": "static-analysis",
@@ -33,7 +33,7 @@
         "extractor": "filesystem",
         "source": "agentsdk/api.py"
       },
-      "contentHash": "ad36ee5100fd5834991eab92ac3c278949a7d714069b6d23478293e641e638be"
+      "contentHash": "a4db5fef67bc9ab5694e8f10831e28ce0381a36116753128c6e61541247de23d"
     },
     {
       "id": "file:agentsdk/config.py",
@@ -280,7 +280,7 @@
         "extractor": "filesystem",
         "source": "tests/test_agent_loop.py"
       },
-      "contentHash": "51a738b221106d96fec7528dbd8ebb69f3fcb103785d730af7b109d3ed444846"
+      "contentHash": "4dbc68f41323dbc3212a9825c67d0c99724f8f8eb78b5acb27960d3de3386075"
     },
     {
       "id": "file:tests/test_model_client.py",
@@ -607,7 +607,7 @@
       "name": "RunConfig",
       "qualifiedName": "RunConfig",
       "kind": "class",
-      "line": 63,
+      "line": 71,
       "label": "RunConfig",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -623,7 +623,7 @@
       "name": "Runner",
       "qualifiedName": "Runner",
       "kind": "class",
-      "line": 93,
+      "line": 101,
       "label": "Runner",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -639,7 +639,7 @@
       "name": "RunResult",
       "qualifiedName": "RunResult",
       "kind": "class",
-      "line": 78,
+      "line": 86,
       "label": "RunResult",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -671,7 +671,7 @@
       "name": "__post_init__",
       "qualifiedName": "AgentSpec.__post_init__",
       "kind": "function",
-      "line": 47,
+      "line": 55,
       "label": "AgentSpec.__post_init__",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -687,7 +687,7 @@
       "name": "checker",
       "qualifiedName": "AgentSpec.checker",
       "kind": "function",
-      "line": 50,
+      "line": 58,
       "label": "AgentSpec.checker",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -703,7 +703,7 @@
       "name": "__post_init__",
       "qualifiedName": "RunConfig.__post_init__",
       "kind": "function",
-      "line": 70,
+      "line": 78,
       "label": "RunConfig.__post_init__",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -719,7 +719,7 @@
       "name": "__init__",
       "qualifiedName": "Runner.__init__",
       "kind": "function",
-      "line": 94,
+      "line": 102,
       "label": "Runner.__init__",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -735,7 +735,7 @@
       "name": "_resolve_model",
       "qualifiedName": "Runner._resolve_model",
       "kind": "function",
-      "line": 229,
+      "line": 237,
       "label": "Runner._resolve_model",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -751,7 +751,7 @@
       "name": "_run",
       "qualifiedName": "Runner._run",
       "kind": "function",
-      "line": 159,
+      "line": 167,
       "label": "Runner._run",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -767,7 +767,7 @@
       "name": "_safe_emit",
       "qualifiedName": "Runner._safe_emit",
       "kind": "function",
-      "line": 152,
+      "line": 160,
       "label": "Runner._safe_emit",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -783,7 +783,7 @@
       "name": "run",
       "qualifiedName": "Runner.run",
       "kind": "function",
-      "line": 117,
+      "line": 125,
       "label": "Runner.run",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -799,7 +799,7 @@
       "name": "succeeded",
       "qualifiedName": "RunResult.succeeded",
       "kind": "function",
-      "line": 89,
+      "line": 97,
       "label": "RunResult.succeeded",
       "path": "agentsdk/api.py",
       "confidence": 1,
@@ -3578,6 +3578,22 @@
       "contentHash": "716fb2efdef1c56485c6855c68ae09f9f1664870245fa87739d9fc76e1880d7b"
     },
     {
+      "id": "symbol:tests/test_agent_loop.py#class:HaltingHook",
+      "type": "symbol",
+      "name": "HaltingHook",
+      "qualifiedName": "HaltingHook",
+      "kind": "class",
+      "line": 591,
+      "label": "HaltingHook",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "76f4489df458ff1406f7349848dfea9f759cd4df1fd02aa7c8b53b17e16b611b"
+    },
+    {
       "id": "symbol:tests/test_agent_loop.py#class:ScriptedModel",
       "type": "symbol",
       "name": "ScriptedModel",
@@ -3631,7 +3647,7 @@
       "name": "FalsyAssembler",
       "qualifiedName": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyAssembler",
       "kind": "class",
-      "line": 727,
+      "line": 833,
       "label": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyAssembler",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -3647,7 +3663,7 @@
       "name": "FalsyHook",
       "qualifiedName": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyHook",
       "kind": "class",
-      "line": 723,
+      "line": 829,
       "label": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyHook",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -3663,7 +3679,7 @@
       "name": "CountingStore",
       "qualifiedName": "test_a_falsy_session_store_is_not_silently_replaced.CountingStore",
       "kind": "class",
-      "line": 712,
+      "line": 818,
       "label": "test_a_falsy_session_store_is_not_silently_replaced.CountingStore",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -3672,6 +3688,54 @@
         "source": "tests/test_agent_loop.py"
       },
       "contentHash": "9b8737c8b276ff21000597ab16934cbf1ba4c2b1960fe4c085755bf24c4cf537"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting",
+      "type": "symbol",
+      "name": "Rewriting",
+      "qualifiedName": "test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting",
+      "kind": "class",
+      "line": 617,
+      "label": "test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "b63d0788455325c9c9e8590048a7f0091db266e501dd15eed455b62f9855e2f9"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting",
+      "type": "symbol",
+      "name": "Rewriting",
+      "qualifiedName": "test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting",
+      "kind": "class",
+      "line": 630,
+      "label": "test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c73e52bdf93e77be1006b39a3a9c58bad992dd8780f26c76ed63026f2b19f11f"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#class:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting",
+      "type": "symbol",
+      "name": "Rewriting",
+      "qualifiedName": "test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting",
+      "kind": "class",
+      "line": 650,
+      "label": "test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "608b8530cc0fcd9678f1d9be28cec45f4d10a8800a6cb729b45baa97ececce88"
     },
     {
       "id": "symbol:tests/test_agent_loop.py#class:test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler",
@@ -3930,6 +3994,54 @@
       "contentHash": "85bbe513dba7b33b0c8b83d226b033bf0e7645086c1248122c6f050f8d9c0003"
     },
     {
+      "id": "symbol:tests/test_agent_loop.py#function:HaltingHook.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "HaltingHook.__init__",
+      "kind": "function",
+      "line": 592,
+      "label": "HaltingHook.__init__",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "0dfd3c7a0d61dcedd9c18998a71e8cf0897cdd921d41a0874e837d95a87402c0"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:HaltingHook.after_model",
+      "type": "symbol",
+      "name": "after_model",
+      "qualifiedName": "HaltingHook.after_model",
+      "kind": "function",
+      "line": 600,
+      "label": "HaltingHook.after_model",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "bdd3074055f35c3df9da66164c7db1891591afbd4a670f53368622a621448fcd"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:HaltingHook.before_model",
+      "type": "symbol",
+      "name": "before_model",
+      "qualifiedName": "HaltingHook.before_model",
+      "kind": "function",
+      "line": 595,
+      "label": "HaltingHook.before_model",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "f1ec7f9867bacdba79e97202fb8330271b93318c73ab2994532d699870375642"
+    },
+    {
       "id": "symbol:tests/test_agent_loop.py#function:make_runner",
       "type": "symbol",
       "name": "make_runner",
@@ -3999,7 +4111,7 @@
       "name": "test_a_bare_model_id_works_when_only_one_client_is_registered",
       "qualifiedName": "test_a_bare_model_id_works_when_only_one_client_is_registered",
       "kind": "function",
-      "line": 687,
+      "line": 793,
       "label": "test_a_bare_model_id_works_when_only_one_client_is_registered",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4079,7 +4191,7 @@
       "name": "test_a_failed_run_emits_run_failed_not_run_completed",
       "qualifiedName": "test_a_failed_run_emits_run_failed_not_run_completed",
       "kind": "function",
-      "line": 590,
+      "line": 696,
       "label": "test_a_failed_run_emits_run_failed_not_run_completed",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4127,7 +4239,7 @@
       "name": "test_a_falsy_hook_and_assembler_are_not_silently_replaced",
       "qualifiedName": "test_a_falsy_hook_and_assembler_are_not_silently_replaced",
       "kind": "function",
-      "line": 722,
+      "line": 828,
       "label": "test_a_falsy_hook_and_assembler_are_not_silently_replaced",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4143,7 +4255,7 @@
       "name": "__len__",
       "qualifiedName": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyAssembler.__len__",
       "kind": "function",
-      "line": 728,
+      "line": 834,
       "label": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyAssembler.__len__",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4159,7 +4271,7 @@
       "name": "__len__",
       "qualifiedName": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyHook.__len__",
       "kind": "function",
-      "line": 724,
+      "line": 830,
       "label": "test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyHook.__len__",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4175,7 +4287,7 @@
       "name": "test_a_falsy_session_store_is_not_silently_replaced",
       "qualifiedName": "test_a_falsy_session_store_is_not_silently_replaced",
       "kind": "function",
-      "line": 709,
+      "line": 815,
       "label": "test_a_falsy_session_store_is_not_silently_replaced",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4191,7 +4303,7 @@
       "name": "__len__",
       "qualifiedName": "test_a_falsy_session_store_is_not_silently_replaced.CountingStore.__len__",
       "kind": "function",
-      "line": 713,
+      "line": 819,
       "label": "test_a_falsy_session_store_is_not_silently_replaced.CountingStore.__len__",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4200,6 +4312,118 @@
         "source": "tests/test_agent_loop.py"
       },
       "contentHash": "6492458269af541df7371091ed25a1eec0c2713a90d06cb68404b40f67e70b09"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_halt_the_run",
+      "type": "symbol",
+      "name": "test_a_hook_can_halt_the_run",
+      "qualifiedName": "test_a_hook_can_halt_the_run",
+      "kind": "function",
+      "line": 607,
+      "label": "test_a_hook_can_halt_the_run",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "14bbbd065e2f22e2bbbb656183497acb0047a14c19a2207b7e2bca689a4aef79"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_request_before_the_model_sees_it",
+      "type": "symbol",
+      "name": "test_a_hook_can_modify_the_request_before_the_model_sees_it",
+      "qualifiedName": "test_a_hook_can_modify_the_request_before_the_model_sees_it",
+      "kind": "function",
+      "line": 616,
+      "label": "test_a_hook_can_modify_the_request_before_the_model_sees_it",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c6c2246f087774791fabd7f118043c0818e9cc5735f201de37f206db1c40e514"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting.before_model",
+      "type": "symbol",
+      "name": "before_model",
+      "qualifiedName": "test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting.before_model",
+      "kind": "function",
+      "line": 618,
+      "label": "test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting.before_model",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "8a5db7cbe452765947064402304cf801c5c6701a85a39ae5891e1f1f498f596d"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_response_after_the_model_returns",
+      "type": "symbol",
+      "name": "test_a_hook_can_modify_the_response_after_the_model_returns",
+      "qualifiedName": "test_a_hook_can_modify_the_response_after_the_model_returns",
+      "kind": "function",
+      "line": 629,
+      "label": "test_a_hook_can_modify_the_response_after_the_model_returns",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "59c4d362d22ca2fdcd9b09734581c2daf39a93711782aee43d3fc9b863b938c1"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting.after_model",
+      "type": "symbol",
+      "name": "after_model",
+      "qualifiedName": "test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting.after_model",
+      "kind": "function",
+      "line": 631,
+      "label": "test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting.after_model",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "cdfbfc3387a66cb2323b487213817b64f1d1606c72c171f244eb9b5bd0dd1079"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution",
+      "type": "symbol",
+      "name": "test_a_hook_can_rewrite_a_tool_call_before_execution",
+      "qualifiedName": "test_a_hook_can_rewrite_a_tool_call_before_execution",
+      "kind": "function",
+      "line": 647,
+      "label": "test_a_hook_can_rewrite_a_tool_call_before_execution",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "b2f818898cfa1cc395fb4c5f4183d3daf13a553bb516699eb890ea7a05035ec3"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool",
+      "type": "symbol",
+      "name": "before_tool",
+      "qualifiedName": "test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool",
+      "kind": "function",
+      "line": 651,
+      "label": "test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "de188124b740e939a66dc166d2e5c2f664c7fef406908a79017b126826f787bb"
     },
     {
       "id": "symbol:tests/test_agent_loop.py#function:test_a_malformed_tool_schema_does_not_crash_the_run",
@@ -4431,7 +4655,7 @@
       "name": "test_a_runner_with_no_model_clients_is_rejected",
       "qualifiedName": "test_a_runner_with_no_model_clients_is_rejected",
       "kind": "function",
-      "line": 737,
+      "line": 843,
       "label": "test_a_runner_with_no_model_clients_is_rejected",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4447,7 +4671,7 @@
       "name": "test_a_spec_with_no_profile_cannot_run_any_tool",
       "qualifiedName": "test_a_spec_with_no_profile_cannot_run_any_tool",
       "kind": "function",
-      "line": 657,
+      "line": 763,
       "label": "test_a_spec_with_no_profile_cannot_run_any_tool",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4543,7 +4767,7 @@
       "name": "test_a_whole_run_needs_only_the_public_names",
       "qualifiedName": "test_a_whole_run_needs_only_the_public_names",
       "kind": "function",
-      "line": 790,
+      "line": 896,
       "label": "test_a_whole_run_needs_only_the_public_names",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4559,7 +4783,7 @@
       "name": "test_an_empty_caller_supplied_registry_is_not_silently_replaced",
       "qualifiedName": "test_an_empty_caller_supplied_registry_is_not_silently_replaced",
       "kind": "function",
-      "line": 693,
+      "line": 799,
       "label": "test_an_empty_caller_supplied_registry_is_not_silently_replaced",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4575,7 +4799,7 @@
       "name": "test_an_empty_tool_profile_denies_everything",
       "qualifiedName": "test_an_empty_tool_profile_denies_everything",
       "kind": "function",
-      "line": 632,
+      "line": 738,
       "label": "test_an_empty_tool_profile_denies_everything",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4639,7 +4863,7 @@
       "name": "test_an_explicit_policy_overrides_the_profile_default",
       "qualifiedName": "test_an_explicit_policy_overrides_the_profile_default",
       "kind": "function",
-      "line": 649,
+      "line": 755,
       "label": "test_an_explicit_policy_overrides_the_profile_default",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4655,7 +4879,7 @@
       "name": "test_an_unknown_client_prefix_is_rejected",
       "qualifiedName": "test_an_unknown_client_prefix_is_rejected",
       "kind": "function",
-      "line": 680,
+      "line": 786,
       "label": "test_an_unknown_client_prefix_is_rejected",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4687,7 +4911,7 @@
       "name": "test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
       "qualifiedName": "test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
       "kind": "function",
-      "line": 558,
+      "line": 664,
       "label": "test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4712,6 +4936,22 @@
         "source": "tests/test_agent_loop.py"
       },
       "contentHash": "572e0cfde006bdf0591638498316d87166eb704e8c54c548dac0c685bbc97b8b"
+    },
+    {
+      "id": "symbol:tests/test_agent_loop.py#function:test_assembler_sends_the_whole_history_in_order",
+      "type": "symbol",
+      "name": "test_assembler_sends_the_whole_history_in_order",
+      "qualifiedName": "test_assembler_sends_the_whole_history_in_order",
+      "kind": "function",
+      "line": 558,
+      "label": "test_assembler_sends_the_whole_history_in_order",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "d152b2e9e0ec26735b0e069b9d92f48e8b82f30bd71ef88a00ab8f07e5ce4f94"
     },
     {
       "id": "symbol:tests/test_agent_loop.py#function:test_cancellation_is_not_swallowed_by_the_total_boundary",
@@ -4767,7 +5007,7 @@
       "name": "test_events_are_ordered_tenant_scoped_and_cover_the_run",
       "qualifiedName": "test_events_are_ordered_tenant_scoped_and_cover_the_run",
       "kind": "function",
-      "line": 572,
+      "line": 678,
       "label": "test_events_are_ordered_tenant_scoped_and_cover_the_run",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4799,7 +5039,7 @@
       "name": "test_history_is_append_only_and_ordered",
       "qualifiedName": "test_history_is_append_only_and_ordered",
       "kind": "function",
-      "line": 745,
+      "line": 851,
       "label": "test_history_is_append_only_and_ordered",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4815,7 +5055,7 @@
       "name": "test_instructions_from_the_spec_reach_the_request",
       "qualifiedName": "test_instructions_from_the_spec_reach_the_request",
       "kind": "function",
-      "line": 563,
+      "line": 669,
       "label": "test_instructions_from_the_spec_reach_the_request",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4831,7 +5071,7 @@
       "name": "test_internal_collaborators_are_not_exported_from_the_root",
       "qualifiedName": "test_internal_collaborators_are_not_exported_from_the_root",
       "kind": "function",
-      "line": 782,
+      "line": 888,
       "label": "test_internal_collaborators_are_not_exported_from_the_root",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4895,7 +5135,7 @@
       "name": "test_max_turns_run_emits_run_failed_with_a_reason",
       "qualifiedName": "test_max_turns_run_emits_run_failed_with_a_reason",
       "kind": "function",
-      "line": 597,
+      "line": 703,
       "label": "test_max_turns_run_emits_run_failed_with_a_reason",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4911,7 +5151,7 @@
       "name": "test_model_override_beats_the_spec_preference",
       "qualifiedName": "test_model_override_beats_the_spec_preference",
       "kind": "function",
-      "line": 672,
+      "line": 778,
       "label": "test_model_override_beats_the_spec_preference",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4927,7 +5167,7 @@
       "name": "test_no_module_imports_a_vendor_agent_sdk",
       "qualifiedName": "test_no_module_imports_a_vendor_agent_sdk",
       "kind": "function",
-      "line": 810,
+      "line": 916,
       "label": "test_no_module_imports_a_vendor_agent_sdk",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -4991,7 +5231,7 @@
       "name": "test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
       "qualifiedName": "test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
       "kind": "function",
-      "line": 604,
+      "line": 710,
       "label": "test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -5007,7 +5247,7 @@
       "name": "test_principal_context_is_recorded_but_never_read",
       "qualifiedName": "test_principal_context_is_recorded_but_never_read",
       "kind": "function",
-      "line": 618,
+      "line": 724,
       "label": "test_principal_context_is_recorded_but_never_read",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -5039,7 +5279,7 @@
       "name": "test_returned_history_cannot_mutate_the_store",
       "qualifiedName": "test_returned_history_cannot_mutate_the_store",
       "kind": "function",
-      "line": 756,
+      "line": 862,
       "label": "test_returned_history_cannot_mutate_the_store",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -5071,7 +5311,7 @@
       "name": "test_runs_are_isolated_from_each_other",
       "qualifiedName": "test_runs_are_isolated_from_each_other",
       "kind": "function",
-      "line": 763,
+      "line": 869,
       "label": "test_runs_are_isolated_from_each_other",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -5087,7 +5327,7 @@
       "name": "test_tenant_and_project_are_mandatory",
       "qualifiedName": "test_tenant_and_project_are_mandatory",
       "kind": "function",
-      "line": 613,
+      "line": 719,
       "label": "test_tenant_and_project_are_mandatory",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -5114,12 +5354,28 @@
       "contentHash": "5a509b1cb0c77a320b428337a2a2b4904912a8985497274a30e0b5f971c6a8bf"
     },
     {
+      "id": "symbol:tests/test_agent_loop.py#function:test_the_loop_resends_the_growing_history_every_turn",
+      "type": "symbol",
+      "name": "test_the_loop_resends_the_growing_history_every_turn",
+      "qualifiedName": "test_the_loop_resends_the_growing_history_every_turn",
+      "kind": "function",
+      "line": 576,
+      "label": "test_the_loop_resends_the_growing_history_every_turn",
+      "path": "tests/test_agent_loop.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "31a455a9277819a000898ceaf2f5f5bbaf36108e62ad3adf447ec8575c830fb1"
+    },
+    {
       "id": "symbol:tests/test_agent_loop.py#function:test_the_public_surface_is_importable_from_the_package_root",
       "type": "symbol",
       "name": "test_the_public_surface_is_importable_from_the_package_root",
       "qualifiedName": "test_the_public_surface_is_importable_from_the_package_root",
       "kind": "function",
-      "line": 774,
+      "line": 880,
       "label": "test_the_public_surface_is_importable_from_the_package_root",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -5135,7 +5391,7 @@
       "name": "test_the_tool_profile_is_exactly_the_allowlist",
       "qualifiedName": "test_the_tool_profile_is_exactly_the_allowlist",
       "kind": "function",
-      "line": 643,
+      "line": 749,
       "label": "test_the_tool_profile_is_exactly_the_allowlist",
       "path": "tests/test_agent_loop.py",
       "confidence": 1,
@@ -7502,7 +7758,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:RunConfig",
-      "line": 63,
+      "line": 71,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7516,7 +7772,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:Runner",
-      "line": 93,
+      "line": 101,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7530,7 +7786,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#class:RunResult",
-      "line": 78,
+      "line": 86,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7558,7 +7814,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:AgentSpec.__post_init__",
-      "line": 47,
+      "line": 55,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7572,7 +7828,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:AgentSpec.checker",
-      "line": 50,
+      "line": 58,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7586,7 +7842,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:RunConfig.__post_init__",
-      "line": 70,
+      "line": 78,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7600,7 +7856,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner.__init__",
-      "line": 94,
+      "line": 102,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7614,7 +7870,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner._resolve_model",
-      "line": 229,
+      "line": 237,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7628,7 +7884,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner._run",
-      "line": 159,
+      "line": 167,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7642,7 +7898,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner._safe_emit",
-      "line": 152,
+      "line": 160,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7656,7 +7912,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:Runner.run",
-      "line": 117,
+      "line": 125,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -7670,7 +7926,7 @@
       "type": "defines",
       "source": "file:agentsdk/api.py",
       "target": "symbol:agentsdk/api.py#function:RunResult.succeeded",
-      "line": 89,
+      "line": 97,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10102,6 +10358,20 @@
       "contentHash": "2145ab443a315e55b91f6fe6e7392a450b1d855a553f164c0b3d1531131effa4"
     },
     {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#class:HaltingHook:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#class:HaltingHook",
+      "line": 591,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "73e342c38d388ca1ba250ce92b0e59626a351b223bb0556e8b18de490b3465a9"
+    },
+    {
       "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#class:ScriptedModel:",
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
@@ -10148,7 +10418,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#class:test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyAssembler",
-      "line": 727,
+      "line": 833,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10162,7 +10432,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#class:test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyHook",
-      "line": 723,
+      "line": 829,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10176,7 +10446,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#class:test_a_falsy_session_store_is_not_silently_replaced.CountingStore",
-      "line": 712,
+      "line": 818,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10184,6 +10454,48 @@
         "source": "tests/test_agent_loop.py"
       },
       "contentHash": "e35320e863c134e53ea0d1b85c3ba8ff99291a82936c5733a44cbec4bf2d708e"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting",
+      "line": 617,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "37453746a91e1d8835f495f65f794ee69d5141cd09789c6a91b877b8c0c8b1d8"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting",
+      "line": 630,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a02e20ec2653257f9ead622883201e97d0ad088af420b230a3a4ea4689321890"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#class:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#class:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting",
+      "line": 650,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "8953c04270d635041d118363f66f2857bcffed0ff5d8dec78685dc169e55b3ed"
     },
     {
       "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#class:test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler:",
@@ -10410,6 +10722,48 @@
       "contentHash": "462f299d1931732732712fb0ccb1c811cd29bb5f94c81fa7921312acda702e50"
     },
     {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:HaltingHook.__init__:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:HaltingHook.__init__",
+      "line": 592,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "c5a738097f1890e8d25f89d151188af2ba13ee3350281a631e5b4da587a03fe2"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:HaltingHook.after_model:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:HaltingHook.after_model",
+      "line": 600,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "a993c7f9cce2a2df1bd311d8b0fd25ca979f7e90a4fe20cc5ff9cfc9a82e0c3d"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:HaltingHook.before_model:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:HaltingHook.before_model",
+      "line": 595,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "32b0c0b7d1998c1356f2cabf1bd631158345eb3fa85500874e71d4dff71155ae"
+    },
+    {
       "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:make_runner:",
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
@@ -10470,7 +10824,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_bare_model_id_works_when_only_one_client_is_registered",
-      "line": 687,
+      "line": 793,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10540,7 +10894,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_failed_run_emits_run_failed_not_run_completed",
-      "line": 590,
+      "line": 696,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10582,7 +10936,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_falsy_hook_and_assembler_are_not_silently_replaced",
-      "line": 722,
+      "line": 828,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10596,7 +10950,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyAssembler.__len__",
-      "line": 728,
+      "line": 834,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10610,7 +10964,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_falsy_hook_and_assembler_are_not_silently_replaced.FalsyHook.__len__",
-      "line": 724,
+      "line": 830,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10624,7 +10978,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_falsy_session_store_is_not_silently_replaced",
-      "line": 709,
+      "line": 815,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10638,7 +10992,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_falsy_session_store_is_not_silently_replaced.CountingStore.__len__",
-      "line": 713,
+      "line": 819,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10646,6 +11000,104 @@
         "source": "tests/test_agent_loop.py"
       },
       "contentHash": "212738c1ef2b7e893bd815f3f9a6e9c63142ab851281b48c0f21c2c08434f909"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_hook_can_halt_the_run:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_halt_the_run",
+      "line": 607,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "ea990fc751a151efed1a0122fb71ddf64ffe10e8470c24fbc2095db55f482ccf"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_request_before_the_model_sees_it:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_request_before_the_model_sees_it",
+      "line": 616,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "4a4726a4d7ddef550b21ca84fb2ff8552324b46fa34beb56bef0b8c2ad275bf4"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting.before_model:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting.before_model",
+      "line": 618,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "b9943c9598710b50e41ab8e577fe60d9f3b09892fc4e1d2a9992dad169dca476"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_response_after_the_model_returns:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_response_after_the_model_returns",
+      "line": 629,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "be06b3ed8f07e3f14037d0391ebfbc9687d15ab9cf716e1af30b582ecb8f0380"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting.after_model:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting.after_model",
+      "line": 631,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "b01b544b339cb16289b7d0237c133334a24d5ef5123b969ec7898dbc66ec44ea"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution",
+      "line": 647,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "21c0a3a7d3f1642b15636ecaa602aca9f4342a9dbc387dedd8d7134fe2f6d2b0"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool",
+      "line": 651,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "2a4eaffb3335989de65563c8b1503bd3b618d7c42753c4d63491df3d2509b72a"
     },
     {
       "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_a_malformed_tool_schema_does_not_crash_the_run:",
@@ -10848,7 +11300,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_runner_with_no_model_clients_is_rejected",
-      "line": 737,
+      "line": 843,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10862,7 +11314,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_spec_with_no_profile_cannot_run_any_tool",
-      "line": 657,
+      "line": 763,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10946,7 +11398,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_a_whole_run_needs_only_the_public_names",
-      "line": 790,
+      "line": 896,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10960,7 +11412,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_an_empty_caller_supplied_registry_is_not_silently_replaced",
-      "line": 693,
+      "line": 799,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -10974,7 +11426,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_an_empty_tool_profile_denies_everything",
-      "line": 632,
+      "line": 738,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11030,7 +11482,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_an_explicit_policy_overrides_the_profile_default",
-      "line": 649,
+      "line": 755,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11044,7 +11496,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_an_unknown_client_prefix_is_rejected",
-      "line": 680,
+      "line": 786,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11072,7 +11524,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_assembler_emits_no_provenance_key_when_there_are_no_tool_results",
-      "line": 558,
+      "line": 664,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11094,6 +11546,20 @@
         "source": "tests/test_agent_loop.py"
       },
       "contentHash": "9ad54306396e73e79f0d230bef7bd66fc504448cccdd15cf3e72254e1f2807f2"
+    },
+    {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_assembler_sends_the_whole_history_in_order:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_assembler_sends_the_whole_history_in_order",
+      "line": 558,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "5fa55b56dfb09e9f6b714bee4d3431a015d612d241b752ca05b9af9f19873a8b"
     },
     {
       "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_cancellation_is_not_swallowed_by_the_total_boundary:",
@@ -11142,7 +11608,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_events_are_ordered_tenant_scoped_and_cover_the_run",
-      "line": 572,
+      "line": 678,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11170,7 +11636,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_history_is_append_only_and_ordered",
-      "line": 745,
+      "line": 851,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11184,7 +11650,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_instructions_from_the_spec_reach_the_request",
-      "line": 563,
+      "line": 669,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11198,7 +11664,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_internal_collaborators_are_not_exported_from_the_root",
-      "line": 782,
+      "line": 888,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11254,7 +11720,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_max_turns_run_emits_run_failed_with_a_reason",
-      "line": 597,
+      "line": 703,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11268,7 +11734,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_model_override_beats_the_spec_preference",
-      "line": 672,
+      "line": 778,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11282,7 +11748,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_no_module_imports_a_vendor_agent_sdk",
-      "line": 810,
+      "line": 916,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11338,7 +11804,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_phase2_identifier_slots_exist_but_stay_empty_in_phase0",
-      "line": 604,
+      "line": 710,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11352,7 +11818,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_principal_context_is_recorded_but_never_read",
-      "line": 618,
+      "line": 724,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11380,7 +11846,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_returned_history_cannot_mutate_the_store",
-      "line": 756,
+      "line": 862,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11408,7 +11874,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_runs_are_isolated_from_each_other",
-      "line": 763,
+      "line": 869,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11422,7 +11888,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_tenant_and_project_are_mandatory",
-      "line": 613,
+      "line": 719,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11446,11 +11912,25 @@
       "contentHash": "35c7711c09e12de8283a2f5d2161627c643ef9018638604a034dad02c70d3482"
     },
     {
+      "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_the_loop_resends_the_growing_history_every_turn:",
+      "type": "defines",
+      "source": "file:tests/test_agent_loop.py",
+      "target": "symbol:tests/test_agent_loop.py#function:test_the_loop_resends_the_growing_history_every_turn",
+      "line": 576,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_agent_loop.py"
+      },
+      "contentHash": "04d15c71fdc00d628382d83894ef915179f55b3170f3eb4e149d9a32e6a98056"
+    },
+    {
       "id": "defines:file:tests/test_agent_loop.py->symbol:tests/test_agent_loop.py#function:test_the_public_surface_is_importable_from_the_package_root:",
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_the_public_surface_is_importable_from_the_package_root",
-      "line": 774,
+      "line": 880,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -11464,7 +11944,7 @@
       "type": "defines",
       "source": "file:tests/test_agent_loop.py",
       "target": "symbol:tests/test_agent_loop.py#function:test_the_tool_profile_is_exactly_the_allowlist",
-      "line": 643,
+      "line": 749,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -15248,7 +15728,7 @@
       "source": "file:tests/test_agent_loop.py",
       "target": "file:agentsdk/__init__.py",
       "specifier": "agentsdk",
-      "line": 792,
+      "line": 898,
       "resolved": true,
       "confidence": 1,
       "provenance": {

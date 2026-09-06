@@ -39,8 +39,16 @@ class AgentSpec:
     name: str = ""
     role: str = ""
     preferred_model: str | None = None
-    # Names selected from the Runner's registry. Empty means "every registered
-    # tool"; ad hoc per spawn, per ADR-14.
+    # Names selected from the Runner's registry, assigned ad hoc per spawn
+    # (ADR-14). An EMPTY profile permits nothing -- see checker(). It does not
+    # mean "everything"; an empty allowlist that opened the gates would fail
+    # silently open, which is the wrong direction for a permission default.
+    #
+    # Note the profile currently gates EXECUTION but not VISIBILITY: the model
+    # is still offered every registered tool's schema. That is deliberate for
+    # Phase 0 (it keeps AC-2's permission-denial path reachable) and belongs to
+    # ContextPolicy in Phase 2, which is the component that decides what an
+    # agent may see rather than what it may do.
     tool_profile: tuple[str, ...] = ()
     permission_policy: PermissionChecker | None = None
 

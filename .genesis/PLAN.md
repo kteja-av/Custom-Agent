@@ -34,15 +34,15 @@
 
 ### M4-loop-and-api — ContextAssembler, AgentLoop and the Runner/AgentSpec/RunConfig/RunResult public surface drive a full tool-using turn against an in-memory session store
 
-- state/risk: active / medium
+- state/risk: done / medium
 - requirements: FR-1, FR-7, FR-14, NFR-5, NFR-6, AC-8
 - scope: not bounded
-- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_agent_loop.py -q, independent-review: pending
+- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_agent_loop.py -q, independent-review: pass
 - next: Run the task pre-flight.
 
 ### M5-postgres — Postgres schema and stores persist runs, messages, run_events and exactly one execution manifest per run, every row tenant-scoped and the trace reconstructable in order
 
-- state/risk: queued / medium
+- state/risk: active / medium
 - requirements: FR-9, FR-10, FR-11, NFR-2, AC-5, AC-6, AC-7
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q, independent-review: pending

@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-06T12:41:01.697Z"
+    "updated_at": "2026-09-06T13:11:17.888Z"
   },
   "policy": {
     "ponytail": "full",
@@ -25,7 +25,7 @@
   "lifecycle": {
     "phase": "build",
     "status": "active",
-    "active_task": "M4-loop-and-api",
+    "active_task": "M5-postgres",
     "blocker": null,
     "next_action": "Run the task pre-flight."
   },
@@ -269,6 +269,14 @@
       "status": "accepted",
       "source": "M4 review defect 1, 2026-09-06",
       "recorded_at": "2026-09-06T12:41:01.080Z"
+    },
+    {
+      "id": "DECISION-ca1ad3e0",
+      "title": "tool_profile gates execution, not visibility, in Phase 0",
+      "text": "An L4 reviewer found AgentSpec.tool_profile self-contradictory: the comment said an empty profile meant every registered tool while the code denied all, and the model was offered every registered schema regardless of profile (profile ('echo',) still advertised rm_rf and send_email). Resolved: an empty profile permits NOTHING, because an allowlist that opens the gates when empty fails silently open. The comment is corrected to match. Visibility filtering is deliberately NOT added in Phase 0: deciding what an agent may SEE is ContextPolicy's job in Phase 2, and leaving every schema visible keeps AC-2's permission-denial path reachable in the golden eval. Revisit when ContextPolicy lands.",
+      "status": "accepted",
+      "source": "M4 review round 2, 2026-09-06",
+      "recorded_at": "2026-09-06T13:11:05.241Z"
     }
   ],
   "knowledge": [
@@ -327,6 +335,14 @@
       "source": "L4 review round 5, forward-looking finding, 2026-09-06",
       "tags": [],
       "recorded_at": "2026-09-06T11:17:18.330Z"
+    },
+    {
+      "id": "KNOWLEDGE-18154194",
+      "title": "Gate gaps hide as quality degradation, not failure",
+      "text": "The most valuable finding of M4's second review was not a defect but a gate gap: an assembler that forwarded only the last message survived all 222 tests. The existing tests checked that a tool message EXISTED in the request, and the assembler unit test used a single-message history, so nothing pinned full-history assembly. A run with truncated context does not fail -- it silently gets worse, which is the hardest failure mode to notice. Verified the gap by mutating the assembler (222 passed), added tests for full-history assembly and growing per-turn history, and re-verified the mutation is now caught (2 failures). Same treatment applied to RuntimeHook HALT and MODIFY at all four points, which were likewise unpinned. General lesson: when reviewing a gate, ask which mutations would degrade quality rather than break behaviour -- those are the ones tests forget.",
+      "source": "M4 review round 2, 2026-09-06",
+      "tags": [],
+      "recorded_at": "2026-09-06T13:11:16.562Z"
     }
   ],
   "tasks": [
@@ -488,7 +504,7 @@
     {
       "id": "M4-loop-and-api",
       "outcome": "ContextAssembler, AgentLoop and the Runner/AgentSpec/RunConfig/RunResult public surface drive a full tool-using turn against an in-memory session store",
-      "state": "active",
+      "state": "done",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -509,17 +525,22 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M4-loop-and-api-unit.json",
-            "source_hash": "25599265306419d0919c2d9db1d6a33c77c75e8e8c23491a8dc1b169dcd46a5e",
-            "hash": "67d783f5fa0b7eb7924c8a8582b51cdea1b75759a2032f4ee5396d0910cfe1c3",
-            "observed_at": "2026-09-06T12:41:00.853Z"
+            "source_hash": "f42e54ec6df53740e168636e6af6ea377bdf1ae304943d418a8ef5038a54231f",
+            "hash": "92eefc278230a84d8016e0c5cfb323334c298589e3f4ef9ccf72949794322e04",
+            "observed_at": "2026-09-06T13:11:17.637Z"
           }
         },
         {
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Claude Fable 5.1 - fresh independent L4 reviewer, M4 round 2",
+            "reason": "Fresh independent L4 review, M4 round 2. Gate re-run: 61 passed (tests/test_agent_loop.py), 222 passed (full suite). 56 mutations across loop/api/context/executor/session/events/permissions, each restored in a finally and SHA-256 verified: 47 killed by the M4 gate, 4 more killed only by the full suite (executor E6 undecodable-args, E8 timeout classification, E9 before_tool REJECT, E10 permission check moved after execute), 5 survivors of which 2 are Phase-0 equivalent (principal_context forwarding; broadened loop catch) and 3 are gate blind spots where the code is correct (hook HALT/MODIFY at before_model/after_model unpinned; ContextAssembler truncating history to the LAST message survives the entire suite). 40 exception-source probes through Runner.run (hooks returning None/garbage/HALT, raising or garbage permission checker, raising session store history/append, model client returning None/sync/garbage usage/stop_reason/tool_calls/message, tool with raising repr/non-callable fn/unserialisable schema/infinite recursion/builtin TimeoutError, raising registry, garbage principal_context, hostile __str__ and __name__): all terminal, none escaped. Retry counted through the public API with the real adapter and default policy: 429 forever = 3 HTTP attempts, timeout forever = 3, 503 = 1, 400 = 1, tool turn then timeouts = 4, 429 then ok = 2 (FR-15 satisfied, duplication gone). Wire JSON captured from a tool-using run: top-level keys model/messages/tools/max_tokens only; no provenance, trust_zone, taint, instruction_authority or metadata strings reach the wire. Live gateway via Runner only on openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5: three real echo calls then completed; max_turns=1 gives max_turns_exceeded without raising; a real out-of-allowlist request yields ToolPermissionDenied and the run still completes; credential absent from events/output/error; 0 of 308 gateway ids contain a colon so the bare-id split in _resolve_model is not reachable. executor.py repair regression-checked against M2/M3 tests, unchanged and passing. NON-BLOCKING CAVEATS: (1) on the Runner total-boundary failure path RunResult.usage is Usage() even after successful turns (ModelCalled events retain per-turn usage); (2) AgentSpec.tool_profile inline comment says empty means every registered tool, but checker() denies all, and the model is offered every registered schema regardless of profile; (3) tools requested on the final turn are executed though no turn remains to consume their results (matches LLD 3.10 literally); (4) stop_reason max_tokens/content_filter with no tool calls reports completed, possibly with output None; (5) Tool and ToolSpec are not root exports, so the M6 golden eval must import agentsdk.tools; (6) RunEvent.tool_call_id identifier stays None on ToolCalled events for M5 to populate. RunResult.error and the events.py envelope judged justified, not scope creep.",
+            "source_hash": "25599265306419d0919c2d9db1d6a33c77c75e8e8c23491a8dc1b169dcd46a5e",
+            "observed_at": "2026-09-06T13:05:46.494Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
@@ -528,12 +549,12 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T18:09:51.849Z",
-      "updated_at": "2026-09-06T12:41:00.935Z"
+      "updated_at": "2026-09-06T13:11:17.706Z"
     },
     {
       "id": "M5-postgres",
       "outcome": "Postgres schema and stores persist runs, messages, run_events and exactly one execution manifest per run, every row tenant-scoped and the trace reconstructable in order",
-      "state": "queued",
+      "state": "active",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -567,9 +588,12 @@
       "blocker": null,
       "notes": [],
       "failures": [],
-      "limitations": [],
+      "limitations": [
+        "Carried from M4 review: a tool on the FINAL turn executes with no turn left to consume its result, so a side-effecting tool can fire on a turn whose outcome is max_turns_exceeded. Matches LLD 3.10 literally and is harmless for Phase 0's echo tool, but must be revisited in Phase 2 when tools do more than echo.",
+        "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
+      ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-05T18:10:01.041Z"
+      "updated_at": "2026-09-06T13:11:05.380Z"
     },
     {
       "id": "M6-golden-eval",
@@ -716,17 +740,26 @@
       "human": "owner",
       "reason": "Both review defects repaired: retry consolidated to one layer, Runner.run made a total boundary",
       "revision": null
+    },
+    {
+      "id": "1d637a14-44b7-419d-981f-cd58256b51f9",
+      "at": "2026-09-06T13:05:46.494Z",
+      "action": "approve",
+      "task": "M4-loop-and-api",
+      "human": "Claude Fable 5.1 - fresh independent L4 reviewer, M4 round 2",
+      "reason": "Fresh independent L4 review, M4 round 2. Gate re-run: 61 passed (tests/test_agent_loop.py), 222 passed (full suite). 56 mutations across loop/api/context/executor/session/events/permissions, each restored in a finally and SHA-256 verified: 47 killed by the M4 gate, 4 more killed only by the full suite (executor E6 undecodable-args, E8 timeout classification, E9 before_tool REJECT, E10 permission check moved after execute), 5 survivors of which 2 are Phase-0 equivalent (principal_context forwarding; broadened loop catch) and 3 are gate blind spots where the code is correct (hook HALT/MODIFY at before_model/after_model unpinned; ContextAssembler truncating history to the LAST message survives the entire suite). 40 exception-source probes through Runner.run (hooks returning None/garbage/HALT, raising or garbage permission checker, raising session store history/append, model client returning None/sync/garbage usage/stop_reason/tool_calls/message, tool with raising repr/non-callable fn/unserialisable schema/infinite recursion/builtin TimeoutError, raising registry, garbage principal_context, hostile __str__ and __name__): all terminal, none escaped. Retry counted through the public API with the real adapter and default policy: 429 forever = 3 HTTP attempts, timeout forever = 3, 503 = 1, 400 = 1, tool turn then timeouts = 4, 429 then ok = 2 (FR-15 satisfied, duplication gone). Wire JSON captured from a tool-using run: top-level keys model/messages/tools/max_tokens only; no provenance, trust_zone, taint, instruction_authority or metadata strings reach the wire. Live gateway via Runner only on openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5: three real echo calls then completed; max_turns=1 gives max_turns_exceeded without raising; a real out-of-allowlist request yields ToolPermissionDenied and the run still completes; credential absent from events/output/error; 0 of 308 gateway ids contain a colon so the bare-id split in _resolve_model is not reachable. executor.py repair regression-checked against M2/M3 tests, unchanged and passing. NON-BLOCKING CAVEATS: (1) on the Runner total-boundary failure path RunResult.usage is Usage() even after successful turns (ModelCalled events retain per-turn usage); (2) AgentSpec.tool_profile inline comment says empty means every registered tool, but checker() denies all, and the model is offered every registered schema regardless of profile; (3) tools requested on the final turn are executed though no turn remains to consume their results (matches LLD 3.10 literally); (4) stop_reason max_tokens/content_filter with no tool calls reports completed, possibly with output None; (5) Tool and ToolSpec are not root exports, so the M6 golden eval must import agentsdk.tools; (6) RunEvent.tool_call_id identifier stays None on ToolCalled events for M5 to populate. RunResult.error and the events.py envelope judged justified, not scope creep.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-06T12:41:01.532Z",
+    "at": "2026-09-06T13:11:17.826Z",
     "revision": {
-      "commit": "bb9ff7c8fd972fb791ebb999a505b581dcc6bbb5",
+      "commit": "977ce2e62f579820ff54c8f2c0715a7b05a1086c",
       "dirty": true,
-      "source_hash": "25599265306419d0919c2d9db1d6a33c77c75e8e8c23491a8dc1b169dcd46a5e"
+      "source_hash": "f42e54ec6df53740e168636e6af6ea377bdf1ae304943d418a8ef5038a54231f"
     },
-    "active_task": "M4-loop-and-api",
+    "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."
   },
   "legacy": null
