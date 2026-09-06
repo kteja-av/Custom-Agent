@@ -16,6 +16,29 @@ class AgentSDKError(Exception):
     """Root of every error this SDK raises deliberately."""
 
 
+def describe_exception(exc: BaseException) -> str:
+    """Render any exception for an error message, unconditionally.
+
+    Shared by every total boundary in the SDK. `str(exc)` runs inside an except
+    block at each of those call sites, and a hostile `__str__` that raises (or
+    returns a non-string) would escape the very mechanism built to contain it.
+    A boundary whose error path can raise is not a boundary.
+    """
+    try:
+        try:
+            detail = str(exc)
+            if not isinstance(detail, str):
+                detail = ""
+        except Exception:  # noqa: BLE001
+            detail = "<unrenderable>"
+        # type(exc).__name__ can raise too (a metaclass may define it as a
+        # property); the outer guard below covers that without a dead inner one.
+        name = type(exc).__name__
+        return f"{name}: {detail}" if detail else name
+    except Exception:  # noqa: BLE001 - the last line of defence
+        return "unrenderable exception"
+
+
 # --- Model layer ------------------------------------------------------------
 
 

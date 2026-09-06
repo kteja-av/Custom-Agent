@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from .context import ContextAssembler
+from .errors import describe_exception
 from .events import EventSink, EventType, InMemoryEventSink, RunEvent
 from .executor import ToolExecutor
 from .hooks import RuntimeHook
@@ -103,17 +104,68 @@ class Runner:
         if not model_clients:
             raise ValueError("Runner requires at least one model client")
         self._clients = dict(model_clients)
-        self._sessions = session_store or InMemorySessionStore()
-        self._registry = tool_registry or ToolRegistry()
+        self._sessions = session_store if session_store is not None else InMemorySessionStore()
+        # `or` would be wrong here: ToolRegistry defines __len__, so an EMPTY
+        # caller-supplied registry is falsy and would be silently discarded and
+        # replaced with a fresh one. Identity, not truthiness.
+        self._registry = tool_registry if tool_registry is not None else ToolRegistry()
         for tool in tools or ():
             self._registry.register(tool)
-        self._hook = hook or RuntimeHook()
-        self._assembler = assembler or ContextAssembler()
+        self._hook = hook if hook is not None else RuntimeHook()
+        self._assembler = assembler if assembler is not None else ContextAssembler()
 
     async def run(self, spec: AgentSpec, task: str, config: RunConfig) -> RunResult:
+        """Drive one agent to a terminal status (FR-1).
+
+        TOTAL boundary. FR-1 promises a terminal status, and a promise honoured
+        only for the failures someone remembered to enumerate is not a promise:
+        that is the mistake the ModelClient boundary already made three times.
+        A hook that raises, a session store that loses its connection, a
+        malformed tool schema -- all become RunStatus.FAILED with a reason,
+        never an exception reaching application code.
+
+        Configuration errors are the deliberate exception. An unknown model
+        client or an invalid RunConfig is a caller bug that must surface loudly
+        at the call site, not be buried in a failed RunResult the caller might
+        not inspect. Those raise before the run is considered started.
+
+        BaseException passes through: cancellation is control flow, not failure.
+        """
         run_id = str(uuid.uuid4())
         events: EventSink = InMemoryEventSink(config.tenant_id, config.project_id, run_id)
+        # Deliberately OUTSIDE the guard below -- see the docstring.
         client_key, model_id = self._resolve_model(spec, config)
+        try:
+            return await self._run(spec, task, config, run_id, events, client_key, model_id)
+        except Exception as exc:  # noqa: BLE001
+            reason = describe_exception(exc)
+            self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason})
+            return RunResult(
+                status=RunStatus.FAILED,
+                output=None,
+                events=events.events(),
+                run_id=run_id,
+                error=reason,
+            )
+
+    @staticmethod
+    def _safe_emit(events: EventSink, event_type: EventType, payload: dict) -> None:
+        """Telemetry must not be able to fail the failure path."""
+        try:
+            events.emit(event_type, payload)
+        except Exception:  # noqa: BLE001
+            pass
+
+    async def _run(
+        self,
+        spec: AgentSpec,
+        task: str,
+        config: RunConfig,
+        run_id: str,
+        events: EventSink,
+        client_key: str,
+        model_id: str | None,
+    ) -> RunResult:
 
         events.emit(
             EventType.RUN_STARTED,

@@ -31,6 +31,7 @@ from .errors import (
     ToolPermissionDenied,
     ToolTimeout,
     ToolValidationError,
+    describe_exception,
 )
 from .hooks import HookAction, RuntimeHook
 from .identity import PrincipalContext
@@ -60,6 +61,25 @@ class ToolExecutor:
         tool_call: ToolCall,
         principal_context: PrincipalContext | None = None,
     ) -> ToolExecutionOutcome:
+        """Total boundary: a tool call always yields an outcome, never a raise.
+
+        The steps below guard the failures they can name, but naming them all is
+        the approach this project already abandoned once (see the ModelClient
+        boundary decision). Anything unforeseen -- a hook that raises, a
+        malformed input_schema, a registry that misbehaves -- becomes
+        Failed(ToolExecutionError) so the loop keeps its own promise of a
+        terminal status. BaseException passes through as control flow.
+        """
+        try:
+            return await self._execute(tool_call, principal_context)
+        except Exception as exc:  # noqa: BLE001
+            return self._failed(tool_call, ToolExecutionError(describe_exception(exc)))
+
+    async def _execute(
+        self,
+        tool_call: ToolCall,
+        principal_context: PrincipalContext | None = None,
+    ) -> ToolExecutionOutcome:
         # --- 1. resolve -----------------------------------------------------
         try:
             tool = self._registry.get(tool_call.name)
@@ -85,6 +105,18 @@ class ToolExecutor:
         except jsonschema.ValidationError as exc:
             return self._failed(
                 tool_call, ToolValidationError(exc.message), tool_reached=False
+            )
+        except jsonschema.SchemaError as exc:
+            # The TOOL's schema is invalid, not the model's arguments -- a typo
+            # in a ToolSpec, which is a developer error rather than a model one.
+            # It still must not crash the run: the model sees an error result
+            # and can try something else, and the operator sees the reason.
+            return self._failed(
+                tool_call,
+                ToolValidationError(
+                    f"tool {tool_call.name!r} has an invalid input_schema: {exc.message}"
+                ),
+                tool_reached=False,
             )
 
         # --- 3. permission check --------------------------------------------
@@ -133,11 +165,22 @@ class ToolExecutor:
             tool_result = after.replacement
 
         # --- 9. emit ------------------------------------------------------------
-        self._emit(
-            "ToolCalled",
-            {"tool_call_id": tool_call.id, "name": tool_call.name, "is_error": False},
+        self._safe_emit(
+            {"tool_call_id": tool_call.id, "name": tool_call.name, "is_error": False}
         )
         return Completed(result=tool_result)
+
+    def _safe_emit(self, payload: dict[str, Any]) -> None:
+        """Telemetry must never be able to fail the thing it observes.
+
+        `emit` is caller-supplied, and it is called from inside the failure path
+        below -- an exception there would escape the total boundary through the
+        one route the boundary cannot catch.
+        """
+        try:
+            self._emit("ToolCalled", payload)
+        except Exception:  # noqa: BLE001
+            pass
 
     async def _invoke(self, tool: Any, arguments: dict[str, Any]) -> Any:
         async def _run() -> Any:
@@ -162,17 +205,16 @@ class ToolExecutor:
         """Every failure still yields a ToolResult, so the model sees the error."""
         result = ToolResult(
             tool_call_id=tool_call.id,
-            content=f"{type(error).__name__}: {error}",
+            content=describe_exception(error),
             provenance=ContentProvenance.internal_tool(),
             is_error=True,
         )
-        self._emit(
-            "ToolCalled",
+        self._safe_emit(
             {
                 "tool_call_id": tool_call.id,
                 "name": tool_call.name,
                 "is_error": True,
                 "error_type": type(error).__name__,
-            },
+            }
         )
         return Failed(error=error, result=result)

@@ -28,8 +28,9 @@ from agentsdk.primitives import (
     ToolResult,
     TrustZone,
 )
+from agentsdk.hooks import RuntimeHook
 from agentsdk.session import InMemorySessionStore
-from agentsdk.tools import Tool, ToolSpec
+from agentsdk.tools import Tool, ToolRegistry, ToolSpec
 
 ECHO_SCHEMA = {
     "type": "object",
@@ -241,26 +242,273 @@ async def test_exhausted_model_retries_fail_the_run_without_raising():
     assert "ModelTimeout" in result.error
 
 
-async def test_transient_model_errors_are_retried_then_succeed(monkeypatch):
-    import agentsdk.loop as loop_module
+async def test_the_loop_does_not_retry_it_is_the_clients_job(monkeypatch):
+    """FR-15 belongs to the ModelClient, and to exactly one layer.
 
-    async def no_sleep(_seconds):
-        return None
-
-    monkeypatch.setattr(loop_module.asyncio, "sleep", no_sleep)
-    model = ScriptedModel(text_response("eventually"), raises=[ModelRateLimited("slow"), None])
+    The loop used to retry as a "backstop" while the adapter retried too, so a
+    single timeout became 3 x 3 = 9 HTTP calls where FR-15 permits 3. Retry
+    lives where ModelTimeout and ModelRateLimited are classified. A client that
+    declines to retry is making a policy decision the loop must not override.
+    """
+    model = ScriptedModel(raises=[ModelRateLimited("slow")])
     result = await make_runner(model).run(spec(), "go", config())
+
+    assert result.status is RunStatus.FAILED
+    assert len(model.requests) == 1, "the loop retried; retry must live in one layer only"
+
+
+async def test_a_client_that_retries_internally_is_respected():
+    """The client's own retry is invisible to the loop, and must stay that way."""
+
+    class RetryingClient:
+        """Retries inside send(), the way the real adapter does."""
+
+        def __init__(self):
+            self.attempts = 0
+            self.sends = 0
+
+        async def send(self, request):
+            self.sends += 1
+            for _ in range(3):
+                self.attempts += 1
+                if self.attempts < 3:
+                    continue  # stands in for a transient failure it absorbs
+                return text_response("eventually")
+            raise ModelTimeout("exhausted")
+
+    client = RetryingClient()
+    result = await Runner({"gw": client}, tools=[echo_tool()]).run(spec(), "go", config())
 
     assert result.status is RunStatus.COMPLETED
     assert result.output == "eventually"
+    assert client.sends == 1, "the loop called send once; the retrying is the client's own"
+    assert client.attempts == 3
 
 
-async def test_non_transient_model_errors_are_not_retried():
+async def test_non_transient_model_errors_fail_immediately():
     model = ScriptedModel(raises=[ModelProviderUnavailable("down")])
     result = await make_runner(model).run(spec(), "go", config())
 
     assert result.status is RunStatus.FAILED
-    assert len(model.requests) == 1, "a non-transient error must not be retried"
+    assert len(model.requests) == 1
+
+
+# --- FR-1 is a TOTAL promise, not an enumeration ----------------------------
+# An independent reviewer escaped Runner.run() three ways: a hook that raises, a
+# malformed tool input_schema, and a session store that raises. FR-1 promises a
+# terminal status; a promise kept only for remembered failures is not a promise.
+
+
+class ExplodingHook(RuntimeHook):
+    def __init__(self, where):
+        self.where = where
+
+    def before_model(self, request):
+        if self.where == "before_model":
+            raise RuntimeError("hook exploded")
+        return super().before_model(request)
+
+    def after_model(self, response):
+        if self.where == "after_model":
+            raise RuntimeError("hook exploded")
+        return super().after_model(response)
+
+    def before_tool(self, tool_call):
+        if self.where == "before_tool":
+            raise RuntimeError("hook exploded")
+        return super().before_tool(tool_call)
+
+    def after_tool(self, result):
+        if self.where == "after_tool":
+            raise RuntimeError("hook exploded")
+        return super().after_tool(result)
+
+
+@pytest.mark.parametrize(
+    "where", ["before_model", "after_model", "before_tool", "after_tool"]
+)
+async def test_a_raising_hook_never_escapes_the_runner(where):
+    """RuntimeHook is an advertised FR-8 extension point; a third-party hook
+    that raises must not crash a run."""
+    model = ScriptedModel(tool_response(), text_response("done"))
+    result = await make_runner(model, hook=ExplodingHook(where)).run(spec(), "go", config())
+
+    assert isinstance(result, RunResult)
+    assert result.status in (RunStatus.FAILED, RunStatus.COMPLETED)
+    if result.status is RunStatus.FAILED:
+        assert "hook exploded" in result.error
+
+
+async def test_a_malformed_tool_schema_does_not_crash_the_run():
+    """The most reachable of the three: a typo in a ToolSpec's input_schema
+    raises jsonschema.SchemaError, not ValidationError."""
+    broken = Tool(
+        spec=ToolSpec(
+            name="echo",
+            description="broken schema",
+            input_schema={"type": "not-a-real-type"},
+        ),
+        fn=lambda **kw: "never runs",
+    )
+    model = ScriptedModel(tool_response(), text_response("recovered"))
+    result = await make_runner(model, tools=[broken]).run(spec(), "go", config())
+
+    assert result.status is RunStatus.COMPLETED
+    tool_result = [m for m in model.requests[1].messages if m.role is Role.TOOL][0].tool_results[0]
+    assert tool_result.is_error is True
+    assert "invalid input_schema" in tool_result.content
+
+
+async def test_a_raising_session_store_fails_the_run_without_escaping():
+    class BrokenStore:
+        def append(self, run_id, message):
+            raise ConnectionError("db down")
+
+        def history(self, run_id):
+            return []
+
+    result = await Runner(
+        {"gw": ScriptedModel(text_response("hi"))},
+        tools=[echo_tool()],
+        session_store=BrokenStore(),
+    ).run(spec(), "go", config())
+
+    assert result.status is RunStatus.FAILED
+    assert "db down" in result.error
+
+
+async def test_a_raising_assembler_fails_the_run_without_escaping():
+    class BrokenAssembler:
+        def build(self, *args, **kwargs):
+            raise ValueError("assembler exploded")
+
+    result = await Runner(
+        {"gw": ScriptedModel(text_response("hi"))},
+        tools=[echo_tool()],
+        assembler=BrokenAssembler(),
+    ).run(spec(), "go", config())
+
+    assert result.status is RunStatus.FAILED
+    assert "assembler exploded" in result.error
+
+
+async def test_a_raising_tool_registry_does_not_escape():
+    class BrokenRegistry(ToolRegistry):
+        def schemas(self):
+            raise RuntimeError("registry exploded")
+
+    result = await Runner(
+        {"gw": ScriptedModel(text_response("hi"))}, tool_registry=BrokenRegistry()
+    ).run(spec(), "go", config())
+    assert result.status is RunStatus.FAILED
+    assert "registry exploded" in result.error
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [RuntimeError("nobody predicted this"), OverflowError(), MemoryError(), KeyError("k")],
+    ids=lambda e: type(e).__name__,
+)
+async def test_no_unforeseen_exception_type_escapes_the_runner(exc):
+    class Exploding:
+        async def send(self, request):
+            raise exc
+
+    result = await Runner({"gw": Exploding()}, tools=[echo_tool()]).run(spec(), "go", config())
+    assert result.status is RunStatus.FAILED
+    assert result.error
+
+
+async def test_a_failed_run_still_returns_its_events():
+    class Exploding:
+        async def send(self, request):
+            raise RuntimeError("boom")
+
+    result = await Runner({"gw": Exploding()}, tools=[echo_tool()]).run(spec(), "go", config())
+    assert result.events, "a failed run must still carry the events it produced"
+    assert result.events[-1].event_type is EventType.RUN_FAILED
+
+
+async def test_an_exception_that_cannot_be_rendered_is_still_contained():
+    """The boundary's own error path must not be able to raise.
+
+    describe_exception() runs inside every except block in this SDK; a hostile
+    __str__ would escape the mechanism built to contain it.
+    """
+
+    class ExplodingStr(Exception):
+        def __str__(self):
+            raise ValueError("__str__ explodes")
+
+    class Exploding:
+        async def send(self, request):
+            raise ExplodingStr()
+
+    result = await Runner({"gw": Exploding()}, tools=[echo_tool()]).run(spec(), "go", config())
+    assert result.status is RunStatus.FAILED
+    assert "ExplodingStr" in result.error
+
+
+async def test_a_tool_raising_an_unrenderable_exception_is_contained():
+    class ExplodingStr(Exception):
+        def __str__(self):
+            raise ValueError("__str__ explodes")
+
+    def boom(text):
+        raise ExplodingStr()
+
+    model = ScriptedModel(tool_response(), text_response("handled"))
+    result = await make_runner(model, tools=[echo_tool(boom)]).run(spec(), "go", config())
+    assert result.status is RunStatus.COMPLETED
+    tool_result = [m for m in model.requests[1].messages if m.role is Role.TOOL][0].tool_results[0]
+    assert tool_result.is_error is True
+
+
+async def test_cancellation_is_not_swallowed_by_the_total_boundary():
+    """Control flow, not failure. Swallowing this would break cancellation."""
+    import asyncio
+
+    class Cancelling:
+        async def send(self, request):
+            raise asyncio.CancelledError()
+
+    with pytest.raises(asyncio.CancelledError):
+        await Runner({"gw": Cancelling()}, tools=[echo_tool()]).run(spec(), "go", config())
+
+
+async def test_configuration_errors_still_raise_loudly():
+    """Deliberate exception to the total boundary: a caller bug must surface at
+    the call site, not hide inside a RunResult nobody inspects."""
+    with pytest.raises(ValueError, match="unknown model client"):
+        await make_runner(ScriptedModel()).run(
+            spec(preferred_model="nosuch:model"), "go", config()
+        )
+
+
+async def test_a_raising_event_sink_does_not_break_the_failure_path():
+    """Telemetry must not be able to fail the thing it observes."""
+
+    class Exploding:
+        async def send(self, request):
+            raise RuntimeError("model boom")
+
+    def exploding_emit(*args, **kwargs):
+        raise RuntimeError("sink boom")
+
+    runner = Runner({"gw": Exploding()}, tools=[echo_tool()])
+    result = await runner.run(spec(), "go", config())
+    assert result.status is RunStatus.FAILED
+
+    # And directly: an executor whose emit raises still returns an outcome.
+    from agentsdk.executor import ToolExecutor
+
+    executor = ToolExecutor(
+        registry=ToolRegistry(),
+        permission_checker=AllowlistPermissionChecker({"echo"}),
+        emit=exploding_emit,
+    )
+    outcome = await executor.execute(ToolCall(id="c1", name="missing", arguments={}))
+    assert outcome.result.is_error is True
 
 
 # --- FR-7: context assembly --------------------------------------------------
@@ -440,6 +688,50 @@ async def test_a_bare_model_id_works_when_only_one_client_is_registered():
     model = ScriptedModel(text_response("ok"))
     await make_runner(model).run(spec(preferred_model="openai.gpt-4o-mini"), "go", config())
     assert model.requests[0].model_settings["model"] == "openai.gpt-4o-mini"
+
+
+def test_an_empty_caller_supplied_registry_is_not_silently_replaced():
+    """ToolRegistry defines __len__, so an empty one is falsy.
+
+    `tool_registry or ToolRegistry()` therefore discarded a caller's registry
+    and substituted a fresh one -- silently, and only when it happened to be
+    empty. Collaborator defaults must key on identity, not truthiness.
+    """
+    supplied = ToolRegistry()
+    assert not supplied, "precondition: an empty registry is falsy"
+    runner = Runner({"gw": ScriptedModel()}, tool_registry=supplied)
+    assert runner._registry is supplied
+
+    supplied.register(echo_tool())
+    assert "echo" in runner._registry, "the runner kept a different registry object"
+
+
+def test_a_falsy_session_store_is_not_silently_replaced():
+    """Same trap as the registry: any collaborator may define __len__."""
+
+    class CountingStore(InMemorySessionStore):
+        def __len__(self):
+            return 0  # always falsy
+
+    store = CountingStore()
+    assert not store, "precondition: this store is falsy"
+    runner = Runner({"gw": ScriptedModel()}, session_store=store)
+    assert runner._sessions is store
+
+
+async def test_a_falsy_hook_and_assembler_are_not_silently_replaced():
+    class FalsyHook(RuntimeHook):
+        def __len__(self):
+            return 0
+
+    class FalsyAssembler(ContextAssembler):
+        def __len__(self):
+            return 0
+
+    hook, assembler = FalsyHook(), FalsyAssembler()
+    runner = Runner({"gw": ScriptedModel()}, hook=hook, assembler=assembler)
+    assert runner._hook is hook
+    assert runner._assembler is assembler
 
 
 def test_a_runner_with_no_model_clients_is_rejected():

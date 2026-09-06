@@ -13,12 +13,11 @@ Two things this deliberately does NOT do:
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from typing import Any
 
 from .context import ContextAssembler
-from .errors import ModelError, ModelRateLimited, ModelTimeout
+from .errors import ModelError, describe_exception
 from .events import EventSink, EventType
 from .executor import ToolExecutor
 from .hooks import HookAction, RuntimeHook
@@ -51,18 +50,14 @@ class AgentLoop:
         event_sink: EventSink,
         assembler: ContextAssembler | None = None,
         hook: RuntimeHook | None = None,
-        max_model_retries: int = 2,
-        retry_backoff_seconds: float = 0.5,
     ) -> None:
         self._model = model_client
         self._sessions = session_store
         self._executor = tool_executor
         self._registry = tool_registry
         self._events = event_sink
-        self._assembler = assembler or ContextAssembler()
-        self._hook = hook or RuntimeHook()
-        self._max_model_retries = max_model_retries
-        self._retry_backoff = retry_backoff_seconds
+        self._assembler = assembler if assembler is not None else ContextAssembler()
+        self._hook = hook if hook is not None else RuntimeHook()
 
     async def run(
         self,
@@ -93,13 +88,11 @@ class AgentLoop:
                 request = before.replacement
 
             try:
-                response = await self._send_with_retry(request)
+                response = await self._model.send(request)
             except ModelError as exc:
-                # Retries are exhausted or the error is not transient. The run
-                # fails; it does not raise past Runner.
-                return LoopOutcome(
-                    None, usage, turn, error=f"{type(exc).__name__}: {exc}"
-                )
+                # The client's own retries are exhausted, or the error is not
+                # transient. The run fails; it does not raise past Runner.
+                return LoopOutcome(None, usage, turn, error=describe_exception(exc))
 
             usage = usage + response.usage
             after = self._hook.after_model(response)
@@ -141,22 +134,14 @@ class AgentLoop:
 
         return LoopOutcome(None, usage, max_turns, exhausted_turns=True)
 
-    async def _send_with_retry(self, request: Any) -> ModelResponse:
-        """LLD 4.5: retry timeouts and rate limits only.
-
-        The adapter has its own RetryPolicy; this is the loop-level backstop for
-        a client that does not retry, and it deliberately retries the same two
-        transient classes and nothing else. No side effect has occurred at this
-        point, so replaying the request is safe -- which stops being true once
-        Phase 6 tracks execution attempts near real side effects.
-        """
-        delay = self._retry_backoff
-        for attempt in range(self._max_model_retries + 1):
-            try:
-                return await self._model.send(request)
-            except (ModelTimeout, ModelRateLimited):
-                if attempt == self._max_model_retries:
-                    raise
-                await asyncio.sleep(delay)
-                delay *= 2
-        raise AssertionError("unreachable")  # pragma: no cover
+    # NOTE ON RETRY (FR-15): the loop does not retry.
+    #
+    # It used to, as a "backstop" for a client that does not retry -- but the
+    # adapter retries too, and the two layers multiplied: 3 outer attempts times
+    # 3 inner ones meant 9 HTTP calls where FR-15 permits 3. Neither layer knew
+    # about the other and both were on by default.
+    #
+    # Retry belongs to the ModelClient, because that is where ModelTimeout and
+    # ModelRateLimited are classified in the first place and where FR-15's
+    # numbers live. A client that chooses not to retry is making a policy
+    # decision the loop must not silently override.

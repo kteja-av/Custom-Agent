@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-06T11:28:21.994Z"
+    "updated_at": "2026-09-06T12:41:01.697Z"
   },
   "policy": {
     "ponytail": "full",
@@ -205,6 +205,12 @@
       "text": "A boundary's error path must not be able to raise. send() wraps any non-AgentSDKError, but str(exc) runs inside that handler: a hostile __str__ that raises, or returns a non-string, escapes the very mechanism built to make the boundary total. Rendering a caught exception goes through _describe_failure, which guards str(exc) explicitly and sits inside a last-resort catch returning a fixed string.",
       "source": "L4 review round 4, fresh reviewer, 2026-09-06",
       "recorded_at": "2026-09-06T10:59:59.334Z"
+    },
+    {
+      "id": "INVARIANT-af776957",
+      "text": "Runner.run() is a total boundary: it always returns a RunResult with a terminal status and never lets an exception reach application code. ToolExecutor.execute() is likewise total and always returns an outcome. Configuration errors (unknown model client, invalid RunConfig) are the deliberate exception and raise at the call site, because a caller bug must surface loudly rather than hide in a RunResult nobody inspects. BaseException passes through as control flow.",
+      "source": "M4 review defect 2, 2026-09-06",
+      "recorded_at": "2026-09-06T12:41:01.347Z"
     }
   ],
   "decisions": [
@@ -255,6 +261,14 @@
       "status": "accepted",
       "source": "L4 review round 3, finding 3, 2026-09-06",
       "recorded_at": "2026-09-06T10:36:31.899Z"
+    },
+    {
+      "id": "DECISION-ba428321",
+      "title": "Retry belongs to the ModelClient and to exactly one layer",
+      "text": "AgentLoop retried transient model errors as a backstop while the adapter retried too. Neither knew about the other and both were on by default, so a single timeout became 3 x 3 = 9 HTTP calls where FR-15 permits 3. Independently measured at 9 by an L4 reviewer through the public API. The loop's retry is deleted: retry lives where ModelTimeout and ModelRateLimited are classified, which is the adapter, and a client that declines to retry is making a policy decision the loop must not silently override. Verified back to exactly 3 attempts.",
+      "status": "accepted",
+      "source": "M4 review defect 1, 2026-09-06",
+      "recorded_at": "2026-09-06T12:41:01.080Z"
     }
   ],
   "knowledge": [
@@ -495,9 +509,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M4-loop-and-api-unit.json",
-            "source_hash": "0f538752bfe322d9567b26b087b000b9ab95652d021f8f2399dfd84c91aa11e9",
-            "hash": "3f9c399ef22cd4733b35d5d2d28617edfa1b14326557a550780d07e9a88e0d60",
-            "observed_at": "2026-09-06T11:27:04.780Z"
+            "source_hash": "25599265306419d0919c2d9db1d6a33c77c75e8e8c23491a8dc1b169dcd46a5e",
+            "hash": "67d783f5fa0b7eb7924c8a8582b51cdea1b75759a2032f4ee5396d0910cfe1c3",
+            "observed_at": "2026-09-06T12:41:00.853Z"
           }
         },
         {
@@ -514,7 +528,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T18:09:51.849Z",
-      "updated_at": "2026-09-06T11:27:04.853Z"
+      "updated_at": "2026-09-06T12:41:00.935Z"
     },
     {
       "id": "M5-postgres",
@@ -684,15 +698,33 @@
       "human": "Claude (fresh independent L4 reviewer, round 5)",
       "reason": "Fresh independent review, round 5. VERIFIED: gate tests/test_model_client.py 121 passed; full suite 161 passed. 39 mutants (the 16 listed plus 23 of my own): 36 caught, of which mutant 18 (drop the outer last-resort guard in _describe_failure) escapes as a raw ValueError that aborts pytest with INTERNALERROR rather than a clean assertion, so it is not green. 3 survived as test gaps over correct code only: the non-JSON-2xx guard is now redundant under the total boundary and no test asserts its message; _redact with an empty key is untested; the default max_tokens=1024 on the wire is untested. Boundary probed with 20 hostile shapes (str/format/replace/metaclass hostility, Response subclass whose status_code raises, closed client, ExceptionGroup, attempts=0, non-serialisable payloads): only AgentSDKError leaves send(); BaseExceptionGroup passes through as the documented BaseException control-flow path. Live gateway: openai.gpt-4o-mini and bedrock.anthropic.claude-haiku-4-5 both return parsed tool_calls and complete a two-turn round trip through the same adapter (NFR-1/FR-3); 400, 401 and ConnectTimeout classify correctly with no key in any message; ModelRequest.metadata and provider_state never reach the wire. M2 executor tests pass unchanged. All files restored, SHA-256 verified. CAVEATS, latent and non-blocking: (1) _error_text catches ValueError only, so a 429 or 5xx whose body raises RecursionError on decode is wrapped as generic ModelError and NOT retried (repro: 6000-deep JSON 429 -> ModelError, attempts=1, versus shallow 429 -> ModelRateLimited, attempts=3); add RecursionError there as _post already does. (2) Redaction covers error paths only: a 2xx body that echoes the Authorization header lands verbatim in message.content, i.e. model context and a persisted message row. LiteLLM does not do this, but it is the same threat the 4xx defence exists for. (3) RetryPolicy(attempts=0) surfaces as ModelError: AssertionError: unreachable rather than a configuration error. (4) ModelTimeout carries an empty message for httpx.ConnectTimeout because str(exc) is empty; only the class name informs the operator. (5) A base_url already ending in /v1 produces /v1/v1/chat/completions; the current .env is fine. (6) For M5: only the ModelError message is redacted, the chained __cause__ is not, so a RunEvent payload must never serialise __cause__ or a formatted traceback. (7) ToolExecutor._failed accepts tool_reached but never uses it. (8) The type-name-raises fixture also breaks pytest saferepr when it escapes, which hides the assertion behind an INTERNALERROR.",
       "revision": null
+    },
+    {
+      "id": "40e0cb0f-3a98-4770-8043-d693fc87baea",
+      "at": "2026-09-06T12:18:55.463Z",
+      "action": "reject",
+      "task": "M4-loop-and-api",
+      "human": "Claude Sonnet 5 (fresh independent L4 reviewer, first M4 review)",
+      "reason": "REJECT. Verified gates: test_agent_loop.py 39 passed, full suite 200 passed; live gateway multi-turn tool run (openai.gpt-4o-mini) completed correctly and AC-8 low-max_turns run terminated MAX_TURNS_EXCEEDED with no raise. Re-ran the 18 applicable listed mutations plus 5 invented ones on loop.py/api.py/context.py/session.py/events.py/__init__.py, all backed up and SHA-256-restored: all 18 listed mutations killed (confirms the empty-tool-profile-denies fix holds); 2 of 5 invented ones killed, 1 revealed a real but currently-inert test blind spot (ContextAssembler leaking provenance via the instructions channel is untested; current code does not do this), 2 were equivalent mutants (dead Phase-0-unreachable branch, and a branch already unreachable given surrounding logic) -- no code defect from those three. DEFECT 1 (reject-worthy): retry duplication. AgentLoop._send_with_retry (default max_model_retries=2, i.e. 3 outer attempts) wraps calls to a ModelClient whose own adapter (OpenAICompatibleModelClient) already retries ModelTimeout/ModelRateLimited up to its own RetryPolicy default of 3 attempts. Both layers are active simultaneously in every Runner() built through the public API with defaults. Empirically measured via a transport that always times out: 9 real HTTP attempts before failure, not ~3. This violates FR-15's 'retry up to 2 times' by 3x, is not a hostile edge case -- it fires on any ordinary transient network blip -- and triples worst-case latency/cost silently. DEFECT 2 (reject-worthy): Runner.run()'s FR-1 promise of a terminal RunResult is not total, it is an enumeration of one protected call site. AgentLoop.run() wraps only the single  call in try/except ModelError; every other call in the same method (hook.before_model/after_model, executor.execute per tool call, hook.before_tool/after_tool inside the executor, sessions.append/history, assembler.build) is unguarded, and Runner.run() itself adds no outer safety net at all. Constructed concrete, realistic (non-hostile) exceptions from each of the sources the review brief named and confirmed all five escape as raw exceptions instead of a RunResult: (a) a RuntimeHook subclass raising in before_model -- hooks are an explicit FR-8 extension point, not a hostile input; (b) a RuntimeHook raising in after_tool mid tool-call turn; (c) a Tool registered with a syntactically invalid JSON Schema (e.g. an unsupported 'type' value) raises jsonschema.SchemaError from ToolExecutor's validate step, which only catches jsonschema.ValidationError -- an ordinary schema typo, not adversarial input; (d) an unknown model_override/preferred_model prefix raises ValueError from Runner._resolve_model (this one is deliberately tested and arguably a defensible config-time-error precedent, listed as a caveat rather than a hard defect on its own); (e) a custom SessionStore/ContextAssembler raising (currently unreachable with the shipped in-memory implementations, so latent/forward-looking only, flagged as a caveat for M5's Postgres store). (a)-(c) are reachable today through completely ordinary application usage (a hook bug, a tool schema typo) and directly contradict FR-1's stated contract that Runner.run() always returns a RunResult with a terminal status; this is the same total-boundary-vs-enumeration failure mode this project already named and fixed once at the ModelClient.send() layer in M3, recurring one layer up at the Runner/AgentLoop layer, which M4 was supposed to close. SOUND, VERIFIED CORRECT: FR-7 provenance genuinely never reaches the wire (confirmed by inspecting the actual JSON payload built by build_payload(), not just ModelRequest.metadata); max_turns is counted per loop iteration matching FR-14/AC-8 exactly (verified live and via test); RunStatus.FAILED never reported as COMPLETED and no partial output leaks on failure; NFR-5 public surface and NFR-6 no-vendor-SDK both hold and are mutation-tested; RunEvent's later-phase identifier slots are correctly-scoped forward seams per FR-16, not premature implementation; RunResult.error as a 5th field is justified (debuggability) and not scope creep. All 6 files touched (loop.py, api.py, context.py, session.py, events.py, __init__.py) restored to their original SHA-256 after every mutation; final git status is clean.",
+      "revision": null
+    },
+    {
+      "id": "dfa5ded9-6c24-4c6f-94a9-51c9458f0d9d",
+      "at": "2026-09-06T12:40:59.414Z",
+      "action": "retry",
+      "task": "M4-loop-and-api",
+      "human": "owner",
+      "reason": "Both review defects repaired: retry consolidated to one layer, Runner.run made a total boundary",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-06T11:28:21.923Z",
+    "at": "2026-09-06T12:41:01.532Z",
     "revision": {
-      "commit": "bdb1760ed5b0bf66d161648fafca7dfa72328771",
+      "commit": "bb9ff7c8fd972fb791ebb999a505b581dcc6bbb5",
       "dirty": true,
-      "source_hash": "0f538752bfe322d9567b26b087b000b9ab95652d021f8f2399dfd84c91aa11e9"
+      "source_hash": "25599265306419d0919c2d9db1d6a33c77c75e8e8c23491a8dc1b169dcd46a5e"
     },
     "active_task": "M4-loop-and-api",
     "next_action": "Run the task pre-flight."
