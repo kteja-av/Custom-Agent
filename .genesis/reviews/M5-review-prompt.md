@@ -2,7 +2,7 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
-## Rounds 1-5 -- what was rejected, and what changed
+## Rounds 1-6 -- what was rejected, and what changed
 
 A previous reviewer rejected this milestone and was right to. Their finding, and the response:
 
@@ -53,9 +53,16 @@ Round 5 rejected on the identifier and name fields -- `ToolCall.id`, `function.n
 
 **`history()` is now tenant-scoped on read** (`DECISION-e692386f`), which the reviewer raised as "worth a decision, not a fix". Both directions were arguable; NFR-2's premise settled it.
 
+Round 6 rejected on `ToolCall.__post_init__` exempting `arguments_error` from the very walk round 5 introduced to end exemptions -- and the test asserting "the guarantee is structural, not a list of names" contained `if name == "arguments_error": continue`. The fix and its guard were written together, and the guard was shaped around the gap. Both are gone.
+
+Worth knowing how the repair went, because it repeated round 5's mistake: the first attempt added the walk coverage AND a follow-up check on the generated reason string. Reintroducing the carve-out then left all 380 tests green, because whichever guard was deleted the other still produced a storable value -- and the second guard was unreachable anyway. It was removed, and the mutation now dies. **Two guards for the SAME property do not add defence; they remove the suite's ability to notice either being deleted.**
+
+**All three caveats were taken, not carried.** `PostgresTrace.reconstruct`, `get_run` and `finish_run` take a `RunScope` and filter on tenancy (`DECISION-56558d52`), so AC-7's vehicle no longer answers the question the opposite way to `history()` one function over. The `<unstorable>` marker is a prefix with a per-replacement suffix, so two unstorable ids stay distinct and call-to-result correlation survives. `RunScope` refuses an unstorable `run_id`/`tenant_id`/`project_id`, and `start_run` refuses an unstorable `agent_spec_id`/`model_id` -- refusing rather than degrading, because these are configuration, not model output.
+
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
 - `unstorable_reason` decides what every primitive will accept, and has now been wrong twice. Find a value Postgres refuses that it passes, or one it rejects that would have stored fine. Probe the DATABASE for the answer rather than reasoning about it -- both previous holes were found that way, and the helper's verdicts are only worth what a live comparison says.
 - The backstop calls `json.dumps` on every tool-call argument dict. Measured at 0.1-8ms for 10k keys, a 1MB string and a 50k-element list, with no false positives -- confirm or refute, and find a shape that is pathological.
+- **Look for the next exemption.** Round 6's defect was a `skip=` argument; round 5's was a field nobody listed. Grep for `skip=` and for any conditional inside a guard or its test, then check each is load-bearing by deleting it and running the suite.
 - **The field walk is the new single point of failure.** It covers `str` fields on dataclasses. What about a string inside a tuple field, a nested dataclass, or a field added as `list[str]`? Find a persisted string it does not reach.
 - `history()` now refuses an unbound store. Does anything legitimate need an unscoped read -- support tooling, a future replay -- and is raising the right answer there?
 - **Hunt false positives, not just misses.** Four rounds hunted values the helper wrongly accepts; the depth-cap defect was one it wrongly rejected, and only a live-database comparison exposed it. Ask Postgres what it accepts and diff the two verdicts in both directions.
@@ -113,7 +120,13 @@ State: `active`, `unit:pass`, `independent-review:pending`.
 ### Files in scope
 
 New: `agentsdk/schema.sql`, `agentsdk/postgres.py`, `agentsdk/persistence.py`, `agentsdk/manifest.py`, `agentsdk/version.py`, `tests/test_persistence.py`.
-Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup, usage reconstruction), `agentsdk/__init__.py`.
+Modified by the review rounds, and in scope for that reason: `agentsdk/api.py`
+(persistence wiring, manifest, usage reconstruction), `agentsdk/primitives.py`
+(storability), `agentsdk/model.py` (`token_count`, `Usage`, `ModelResponse`),
+`agentsdk/executor.py` (unstorable tool results),
+`agentsdk/providers/openai_compatible.py`, `agentsdk/__init__.py`, and
+`tests/test_primitives.py`, `tests/test_model_client.py`,
+`tests/test_agent_loop.py`, `tests/test_tool_executor.py`.
 
 `api.py` belongs to approved M4 — a change that breaks a completed milestone is still a defect.
 
@@ -122,10 +135,15 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
 1. Read the files, `SPEC.md`, and the decisions/invariants/knowledge in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 59
-   .venv\Scripts\python.exe -m pytest -q                             # expect 370
+   .venv\Scripts\python.exe -m pytest -q                             # 380
+   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # 65
    ```
-   A different number is itself a finding.
+   Per file, so a mismatch is locatable rather than merely alarming:
+   `test_agent_loop 75` + `test_model_client 150` + `test_persistence 65` +
+   `test_primitives 66` + `test_tool_executor 24` = **380**.
+   A different number is itself a finding. Round 6 lost time on a stale count
+   in this document; these were regenerated after the round-6 fixes and are
+   the only counts in this file.
 3. **Mutation-test.** Round 1: 21 mutations, six survivors. Round 2's reviewer ran 56 and found 12 blind spots. Round 3: 12 targeted, 12 killed. Round 4: 12 targeted at the storability work, 12 killed -- one initially survived (removing the cycle-depth guard) because the outer catch absorbed the RecursionError, so the test now pins the *diagnosis* rather than mere survival. Every round's reviewer has found blind spots the author's own matrix did not; assume more exist. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:
    ```
    sequence_no constant not computed   append without scope allowed

@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-07T14:39:01.243Z"
+    "updated_at": "2026-09-07T15:24:01.574Z"
   },
   "policy": {
     "ponytail": "full",
@@ -331,6 +331,14 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-07T14:38:02.667Z"
+    },
+    {
+      "id": "DECISION-56558d52",
+      "title": "Tenancy is enforced on every runs and trace statement",
+      "text": "PostgresRunStore.finish_run and get_run take a RunScope, and PostgresTrace.reconstruct takes one too; all filter on tenant_id and project_id. Extends DECISION-e692386f from history() to the rest. Rationale: AC-7's own vehicle was deciding the tenancy question the opposite way to the session store one function over, and the same question answered inconsistently is worse than either answer applied consistently. RunScope itself now refuses an unstorable run_id, tenant_id or project_id, and start_run refuses an unstorable agent_spec_id or model_id: these are caller-supplied configuration rather than model output, so there is no run to keep alive and refusing beats degrading -- the error names the field instead of surfacing as an opaque psycopg failure later.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-07T15:22:06.221Z"
     }
   ],
   "knowledge": [
@@ -453,6 +461,22 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-07T14:38:02.820Z"
+    },
+    {
+      "id": "KNOWLEDGE-0e7be079",
+      "title": "An exemption in the test is the tell",
+      "text": "Round 6 found ToolCall.__post_init__ exempting arguments_error from the field walk introduced in round 5 to end exemptions -- and the test asserting 'the guarantee is structural, not a list of names' contained 'if name == arguments_error: continue'. The fix and its guard were written together and the guard was shaped around the gap, so the suite could never have caught it. When a test carries a special case for the code under test, treat the special case as the finding, not as scaffolding: verify the exemption is load-bearing by deleting it and running the suite. Here it was not -- 380 tests passed with it gone.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-07T15:22:05.887Z"
+    },
+    {
+      "id": "KNOWLEDGE-aa97d748",
+      "title": "Two guards for one property hide each other",
+      "text": "Second occurrence in two rounds. The round-6 fix added BOTH a field-walk covering arguments_error and a follow-up check on the generated reason string; reintroducing the carve-out then left all 380 tests green, because whichever guard was removed the other still produced a storable value. The second guard was also unreachable -- the reason string is built from field names and our own messages, always ASCII. Resolution: keep the structural guard, delete the unreachable one. Where two guards enforce the SAME property rather than different ones, the redundancy does not add defence; it removes the suite's ability to notice either one being deleted. Compare KNOWLEDGE-fd4720a4, where the layers guarded genuinely different surfaces and the answer was a test per layer.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-07T15:22:06.080Z"
     }
   ],
   "tasks": [
@@ -686,9 +710,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "35fa4e85681915abfab690bb927cbb59ca82d8f724904d6d625024d99620eddb",
-            "hash": "740232a707aaf7e94ec1e9bbad660cb88c46f068091c0ab4cb2fbeefbffbd2d5",
-            "observed_at": "2026-09-07T14:38:28.017Z"
+            "source_hash": "91035cd5ec740a92746a17d2d8cef5e193753e000c5db020616254b361563db0",
+            "hash": "00908eb6347b992d20c810b2815ee6bbfc3d5c06d6b5d30cddc1f013e459b807",
+            "observed_at": "2026-09-07T15:22:28.599Z"
           }
         },
         {
@@ -708,7 +732,7 @@
         "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-07T14:38:28.155Z"
+      "updated_at": "2026-09-07T15:22:28.679Z"
     },
     {
       "id": "M6-golden-eval",
@@ -956,15 +980,33 @@
       "human": "Opus 5 (implementer)",
       "reason": "Round-5 defect fixed by walking dataclasses.fields() in every primitive constructor rather than checking the fields someone thought of: id, name, tool_call_id, source_uri_or_hash and provider_response_id are now covered, and a field added later is covered automatically. All three of the reviewer's wire cases converge through the real adapter. Defect 2 addressed with a documented recursion margin that errs toward refusing. Blind spots closed: runs.status for every loop-path outcome, event-id fidelity, the runs row's model/spec/max_turns, and the RunStarted payload. history() is now tenant-scoped on read, recorded as a decision. 370 tests, 16/16 mutations killed.",
       "revision": null
+    },
+    {
+      "id": "cbb29027-71b6-4c7e-b120-a32e18097169",
+      "at": "2026-09-07T15:10:05.113Z",
+      "action": "reject",
+      "task": "M5-postgres",
+      "human": "Independent L4 reviewer, fresh session, M5 round 6",
+      "reason": "DEFECT: ToolCall.arguments_error is the one persisted string field excluded from the round-5 storability walk. primitives.py:154 calls _replace_unstorable_text(self, skip=(\"arguments_error\",)) and no compensating check exists (Message.content and ToolResult.content are skipped but each has one). postgres.py:76 writes it verbatim into messages.tool_calls JSONB. Reproduced end-to-end through Runner.run() with a custom ModelClient: the identical run returns COMPLETED in memory and FAILED (UntranslatableCharacter / InvalidTextRepresentation) against Postgres, breaking postgres.py's own header contract. The assistant message is never persisted, ModelCalled is never emitted, and _usage_from_events reports 0 of 16 tokens spent -- the exact NFR-3 audit-trail loss the round-5 fix existed to prevent. Round 3's bug shape, third recurrence, now inside the walk written to make application total. Not reachable through the shipped OpenAI adapter (fuzzed 33 hostile provider payloads, 0 hits), but reachable through any second ModelClient -- which is the reachability standard this project itself set when round 3 was validated through a custom client on NFR-1 grounds -- and through a RuntimeHook after_model MODIFY. The carve-out is not load-bearing: deleting it leaves the full suite green (370 passed), and tests/test_primitives.py:452 explicitly 'continue's past this field, so the property test that claims the guarantee is structural was weakened to accommodate the hole. VERIFIED SOUND: 370 passed; unstorable_reason agrees with live PostgreSQL 16.13 in both directions across 34 probe values except the documented depth margin (501-969, confirmed PG stores 900-deep JSON the helper refuses); start_run atomic under injected transient and real NotNullViolation (0 runs rows survived both); concurrency 11/12 committed, 1 UniqueViolation, sequence_nos unique and contiguous, confirming the claimed availability improvement; history() tenant-scoped on read; Message's raise contained -- _parse raises ValueError, send() converts to ModelError; 34 of 44 mutations killed. BLIND SPOTS (code correct, full-suite verified): walk stopping after the first bad field survives; Message's walk call is dead and its removal survives; _json_safe dict-key sanitisation, datetime and Enum branches all survive; the named non-finite check survives (mirror of the documented allow_nan overlap, so the NaN/inf diagnosis is unpinned); MAX(sequence_no)+1 -> COUNT+1 survives. CAVEATS: PostgresTrace.reconstruct, get_run and finish_run carry no tenancy predicate, inconsistent with DECISION-e692386f which scoped history() on NFR-2's premise; the <unstorable> marker collides so two tool calls with unstorable ids become indistinguishable in the persisted record; tenant_id/project_id/agent_spec_id/model_id/principal_context are not storability-checked and diverge memory-vs-Postgres (fails clean and early, much lower severity). The prompt's 'expect 59' for tests/test_persistence.py is stale: it is 57, has been byte-identical since round 5's commit 8c880dd, and 75+150+57+64+24 = 370 exactly, so nothing was lost.",
+      "revision": null
+    },
+    {
+      "id": "afac74fe-f5f1-477a-bde4-dad9fa66ac0a",
+      "at": "2026-09-07T15:24:01.176Z",
+      "action": "retry",
+      "task": "M5-postgres",
+      "human": "Opus 5 (implementer)",
+      "reason": "Round-6 defect fixed: the arguments_error carve-out is gone from both the walk and the test that had been shaped around it. Files in scope also updated (primitives.py, model.py, executor.py were missing). The first repair repeated round 5's mistake by adding a second overlapping guard, which left the carve-out mutation green; the unreachable guard was removed so the mutation now dies. All three caveats taken: trace/get_run/finish_run are tenant-scoped, the unstorable marker no longer collides, and scope/spec identifiers are validated. 380 tests, 7/7 mutations killed.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-07T14:39:01.179Z",
+    "at": "2026-09-07T15:24:01.513Z",
     "revision": {
-      "commit": "48e3e27cf56c2a4718a8316ff43585dd0fed678f",
+      "commit": "8c880dd25a9aebe4562e00ae4f8140770fe6130c",
       "dirty": true,
-      "source_hash": "752ef782f3193c917009876ff964944ba815ac17a3363cf4e5921f32c4207c3e"
+      "source_hash": "24fa3bcaae2d1ff47e5519895c9c4df78454e7b2eddbabe9455a8a1137b2f84f"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."

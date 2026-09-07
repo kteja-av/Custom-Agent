@@ -363,7 +363,7 @@ def test_the_trace_reconstructs_in_order_however_the_rows_were_written(started):
                  started.project_id, started.run_id),
             )
 
-    trace = PostgresTrace(DSN).reconstruct(started.run_id)
+    trace = PostgresTrace(DSN).reconstruct(started)
     assert [m["sequence_no"] for m in trace["messages"]] == [1, 2, 3]
     assert [m["content"] for m in trace["messages"]] == ["first", "second", "third"]
     assert [e["sequence_no"] for e in trace["events"]] == [1, 2, 3]
@@ -521,7 +521,7 @@ def test_the_manifest_records_the_principal_context_run_settings(scope):
         principal_context={"principal_id": "u-42", "roles": ["reader"]},
         manifest=a_manifest(),
     )
-    stored = PostgresRunStore(DSN).get_run(scope.run_id)
+    stored = PostgresRunStore(DSN).get_run(scope)
     assert stored["principal_context"] == {"principal_id": "u-42", "roles": ["reader"]}
     assert stored["max_turns"] == 7
 
@@ -708,7 +708,9 @@ async def test_a_whole_run_persists_and_reconstructs():
     )
     assert result.status is RunStatus.COMPLETED
 
-    trace = PostgresTrace(DSN).reconstruct(result.run_id)
+    trace = PostgresTrace(DSN).reconstruct(
+        RunScope(run_id=result.run_id, tenant_id="t-e2e", project_id="p-e2e")
+    )
 
     # AC-7: the trace reconstructs from state PLUS events, in order.
     assert trace["run"]["status"] == "completed"
@@ -1056,7 +1058,9 @@ async def test_the_runs_row_records_what_the_runner_was_asked_for():
         "go",
         RunConfig(tenant_id="t-recorded", project_id="p-recorded", max_turns=9),
     )
-    stored = PostgresRunStore(DSN).get_run(result.run_id)
+    stored = PostgresRunStore(DSN).get_run(
+        RunScope(run_id=result.run_id, tenant_id="t-recorded", project_id="p-recorded")
+    )
     assert stored["agent_spec_id"] == "recorded-spec"
     assert stored["model_id"] == "openai.gpt-4o-mini"
     assert stored["max_turns"] == 9
@@ -1190,3 +1194,99 @@ def test_a_stringified_object_that_renders_unstorably_is_also_marked(started):
         "SELECT payload FROM run_events WHERE run_id=%s", (started.run_id,)
     )[0][0]
     assert "unstorable" in payload["obj"] and "NUL" in payload["obj"]
+
+
+# --- M5 round 6 --------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "arguments_error",
+    ["bad" + chr(0) + "json", "bad" + json.loads('"' + chr(92) + 'ud800"') + "json"],
+    ids=["nul", "surrogate"],
+)
+async def test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage(
+    arguments_error,
+):
+    """arguments_error was the one field exempt from the walk that exists to
+    end exemptions, and postgres.py writes it verbatim into JSONB.
+
+    Two invariants broke at once: the store divergence round 5 was rejected
+    for, and usage under-reporting -- append raises before the ModelCalled
+    emit, so tokens that were really spent are reported as zero, reopening by
+    another route the gap round 2's reconstruction exists to close.
+    """
+
+    class Provider:
+        async def send(self, request):
+            return ModelResponse(
+                message=Message(
+                    role=Role.ASSISTANT,
+                    tool_calls=(
+                        ToolCall(id="c1", name="echo", arguments={},
+                                 arguments_error=arguments_error),
+                    ),
+                ),
+                stop_reason=StopReason.TOOL_CALLS,
+                usage=Usage(10, 6, 16),
+            )
+
+    async def run(persistence):
+        return await Runner(
+            {"gw": Provider()}, tools=[echo_tool()], persistence=persistence
+        ).run(
+            AgentSpec(id="s", instructions="i", preferred_model="gw:m",
+                      tool_profile=("echo",)),
+            "go",
+            RunConfig(tenant_id="t-argerr", project_id="p-argerr", max_turns=1),
+        )
+
+    in_memory = await run(None)
+    persisted = await run(Persistence.postgres(DSN))
+    assert in_memory.status is persisted.status
+    assert persisted.usage.total_tokens == 16, "spent tokens reported as zero"
+
+
+def test_the_trace_is_tenant_scoped(started):
+    """AC-7's own vehicle answered the tenancy question the opposite way to
+    history(), one function over. Same question, same answer now."""
+    PostgresSessionStore(DSN).bind(started).append(
+        started.run_id, Message(role=Role.USER, content="tenant A")
+    )
+    intruder = RunScope(run_id=started.run_id, tenant_id="t-other", project_id="p-other")
+    trace = PostgresTrace(DSN).reconstruct(intruder)
+    assert trace["run"] is None
+    assert trace["messages"] == []
+    assert trace["events"] == []
+    assert trace["manifest"] is None
+
+
+def test_finishing_a_run_is_tenant_scoped(started):
+    intruder = RunScope(run_id=started.run_id, tenant_id="t-other", project_id="p-other")
+    PostgresRunStore(DSN).finish_run(intruder, "completed")
+    assert query("SELECT status FROM runs WHERE run_id=%s", (started.run_id,))[0][0] == (
+        "running"
+    ), "another tenant closed this run"
+
+
+@pytest.mark.parametrize("field", ["run_id", "tenant_id", "project_id"])
+def test_a_scope_that_cannot_be_stored_is_refused(field):
+    """Caller-supplied configuration, not model output: there is no run to keep
+    alive, so refusing beats degrading, and the message names the field rather
+    than surfacing as an opaque psycopg error later."""
+    values = {"run_id": str(uuid.uuid4()), "tenant_id": "t", "project_id": "p"}
+    values[field] = "bad" + chr(0)
+    with pytest.raises(ValueError, match=f"RunScope.{field} cannot be stored"):
+        RunScope(**values)
+
+
+def test_an_unstorable_agent_spec_id_is_refused(scope):
+    with pytest.raises(ValueError, match="agent_spec_id cannot be stored"):
+        PostgresRunStore(DSN).start_run(
+            scope,
+            agent_spec_id="spec" + chr(0),
+            max_turns=1,
+            model_id=None,
+            principal_context=None,
+            manifest=a_manifest(),
+        )
+    assert query("SELECT 1 FROM runs WHERE run_id=%s", (scope.run_id,)) == []

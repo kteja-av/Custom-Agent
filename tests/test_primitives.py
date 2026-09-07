@@ -405,13 +405,13 @@ def test_an_unstorable_tool_name_does_not_take_the_run_down():
     error -- which is what happens without persistence -- instead of a run that
     dies at the write with no record of what the model said (NFR-3)."""
     call = ToolCall(id="c1", name="ec" + NUL + "ho", arguments={})
-    assert call.name == UNSTORABLE
+    assert call.name.startswith(UNSTORABLE)
     assert call.arguments_error is not None and "name" in call.arguments_error
 
 
 def test_an_unstorable_tool_call_id_is_replaced():
     call = ToolCall(id="c" + NUL + "1", name="echo", arguments={})
-    assert call.id == UNSTORABLE
+    assert call.id.startswith(UNSTORABLE)
     assert call.arguments_error is not None and "id" in call.arguments_error
 
 
@@ -421,14 +421,14 @@ def test_an_unstorable_tool_result_id_is_replaced_without_losing_the_result():
         content="the answer",
         provenance=ContentProvenance.internal_tool(),
     )
-    assert result.tool_call_id == UNSTORABLE
+    assert result.tool_call_id.startswith(UNSTORABLE)
     assert result.content == "the answer", "a bad id must not destroy a good result"
     assert result.is_error is False
 
 
 def test_an_unstorable_provenance_source_is_replaced():
     provenance = ContentProvenance.internal_tool(source_uri_or_hash="ha" + NUL + "sh")
-    assert provenance.source_uri_or_hash == UNSTORABLE
+    assert provenance.source_uri_or_hash.startswith(UNSTORABLE)
 
 
 def test_every_string_field_is_checked_not_a_list_of_names():
@@ -449,8 +449,6 @@ def test_every_string_field_is_checked_not_a_list_of_names():
         ]
         assert string_fields, f"{cls.__name__} has no string fields to check"
         for name in string_fields:
-            if name == "arguments_error":
-                continue  # the channel the reasons travel on, not an input
             instance = cls(**{**kwargs, name: "bad" + NUL})
             # Not "becomes the marker" -- ToolResult.content deliberately
             # becomes the reason instead, with is_error set. The property that
@@ -459,3 +457,21 @@ def test_every_string_field_is_checked_not_a_list_of_names():
             assert unstorable_reason(getattr(instance, name)) is None, (
                 f"{cls.__name__}.{name} is not covered by the storability walk"
             )
+
+
+def test_two_unstorable_identifiers_do_not_collapse_into_one():
+    """The marker used to be a single constant, so two tool calls with
+    unstorable ids became the same string -- destroying the call-to-result
+    correlation in the very record kept to explain what happened."""
+    first = ToolCall(id="a" + NUL, name="echo", arguments={})
+    second = ToolCall(id="b" + NUL, name="echo", arguments={})
+    assert first.id != second.id
+    assert first.id.startswith(UNSTORABLE) and second.id.startswith(UNSTORABLE)
+
+
+def test_the_reason_channel_is_itself_storable():
+    """arguments_error is written to JSONB like every other field. It used to
+    be exempt from the walk -- a carve-out inside the mechanism whose purpose
+    was to end carve-outs."""
+    call = ToolCall(id="c1", name="echo", arguments={}, arguments_error="bad" + NUL + "json")
+    assert unstorable_reason(call.arguments_error) is None

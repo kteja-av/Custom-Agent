@@ -131,6 +131,17 @@ class RunScope:
     tenant_id: str
     project_id: str
 
+    def __post_init__(self) -> None:
+        # These reach NOT NULL columns on every table, so an unstorable one
+        # fails the write with an opaque psycopg error at some later point.
+        # Refused here instead, where the caller can see which field it was:
+        # this is caller-supplied configuration, not model output, so there is
+        # no run to keep alive and nothing is gained by degrading it.
+        for name in ("run_id", "tenant_id", "project_id"):
+            reason = unstorable_reason(getattr(self, name))
+            if reason is not None:
+                raise ValueError(f"RunScope.{name} cannot be stored: {reason}")
+
 
 class PostgresSessionStore:
     """FR-9. Insert-only; no update, no delete."""
@@ -340,6 +351,10 @@ class PostgresRunStore:
         exists without its manifest" stops being a state this API can express.
         Either both rows commit or neither does.
         """
+        for name, value in (("agent_spec_id", agent_spec_id), ("model_id", model_id)):
+            reason = unstorable_reason(value)
+            if reason is not None:
+                raise ValueError(f"{name} cannot be stored: {reason}")
         with psycopg.connect(self._dsn) as conn:
             with conn.transaction():
                 conn.execute(
@@ -361,11 +376,25 @@ class PostgresRunStore:
                 )
                 self._insert_manifest(conn, scope, manifest)
 
-    def finish_run(self, run_id: str, status: str) -> None:
+    def finish_run(self, scope: RunScope, status: str) -> None:
+        """Tenant-scoped, like every other statement here.
+
+        history() was scoped by DECISION-e692386f on the premise that NFR-2
+        means tenancy is enforced rather than unguessable. Leaving the writes
+        and the trace unscoped answered the same question the other way one
+        function over, which is worse than either answer consistently applied.
+        """
         with psycopg.connect(self._dsn) as conn:
             conn.execute(
-                "UPDATE runs SET status = %s, completed_at = %s WHERE run_id = %s",
-                (status, datetime.now(timezone.utc), run_id),
+                "UPDATE runs SET status = %s, completed_at = %s"
+                " WHERE run_id = %s AND tenant_id = %s AND project_id = %s",
+                (
+                    status,
+                    datetime.now(timezone.utc),
+                    scope.run_id,
+                    scope.tenant_id,
+                    scope.project_id,
+                ),
             )
 
     def write_manifest(self, scope: RunScope, manifest: dict[str, Any]) -> None:
@@ -407,15 +436,16 @@ class PostgresRunStore:
             ),
         )
 
-    def get_run(self, run_id: str) -> dict[str, Any] | None:
+    def get_run(self, scope: RunScope) -> dict[str, Any] | None:
         with psycopg.connect(self._dsn) as conn:
             row = conn.execute(
                 """
                 SELECT run_id, tenant_id, project_id, agent_spec_id, status,
                        principal_context, max_turns, model_id, started_at, completed_at
-                FROM runs WHERE run_id = %s
+                FROM runs
+                WHERE run_id = %s AND tenant_id = %s AND project_id = %s
                 """,
-                (run_id,),
+                (scope.run_id, scope.tenant_id, scope.project_id),
             ).fetchone()
         if row is None:
             return None
@@ -437,24 +467,30 @@ class PostgresTrace:
         self._dsn = dsn
         self._runs = PostgresRunStore(dsn)
 
-    def reconstruct(self, run_id: str) -> dict[str, Any]:
-        run = self._runs.get_run(run_id)
+    def reconstruct(self, scope: RunScope) -> dict[str, Any]:
+        """AC-7's own vehicle, so it enforces tenancy rather than deciding it
+        differently from the store it reads beside."""
+        run = self._runs.get_run(scope)
+        tenancy = (scope.run_id, scope.tenant_id, scope.project_id)
         with psycopg.connect(self._dsn) as conn:
             messages = conn.execute(
                 "SELECT sequence_no, role, content, tool_calls, tool_results"
-                " FROM messages WHERE run_id = %s ORDER BY sequence_no",
-                (run_id,),
+                " FROM messages WHERE run_id = %s AND tenant_id = %s AND project_id = %s"
+                " ORDER BY sequence_no",
+                tenancy,
             ).fetchall()
             events = conn.execute(
                 "SELECT sequence_no, event_type, payload, timestamp"
-                " FROM run_events WHERE run_id = %s ORDER BY sequence_no",
-                (run_id,),
+                " FROM run_events WHERE run_id = %s AND tenant_id = %s AND project_id = %s"
+                " ORDER BY sequence_no",
+                tenancy,
             ).fetchall()
             manifest = conn.execute(
                 "SELECT sdk_version, agent_spec_hash, instructions_hash, model_id,"
                 " model_version, model_adapter_version, tool_spec_hashes, policy_version"
-                " FROM execution_manifests WHERE run_id = %s",
-                (run_id,),
+                " FROM execution_manifests"
+                " WHERE run_id = %s AND tenant_id = %s AND project_id = %s",
+                tenancy,
             ).fetchone()
         return {
             "run": run,

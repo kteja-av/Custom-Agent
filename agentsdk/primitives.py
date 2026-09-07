@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import dataclasses
 import sys
+import uuid
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any
@@ -151,7 +152,7 @@ class ToolCall:
         # The check is here rather than in an adapter because every adapter
         # would otherwise have to remember it, and NFR-1's whole claim is that
         # a new provider is a configuration change.
-        problems = _replace_unstorable_text(self, skip=("arguments_error",))
+        problems = _replace_unstorable_text(self)
         reason = unstorable_reason(self.arguments)
         if reason is not None:
             # Cleared, not merely flagged. Flagging alone still leaves the
@@ -165,6 +166,13 @@ class ToolCall:
             problems.append(f"arguments cannot be stored: {reason}")
         if problems and self.arguments_error is None:
             object.__setattr__(self, "arguments_error", "; ".join(problems))
+        # No second check on arguments_error. The walk above already covers it
+        # -- it is a field like any other, and exempting it was the round-6
+        # defect: a carve-out inside the mechanism whose purpose was to end
+        # carve-outs. A backstop here would only be reachable if the reason
+        # string this method just built were itself unstorable, which it cannot
+        # be, and it would mask the carve-out coming back: with both guards in
+        # place, reintroducing the skip left the whole suite green.
 
 
 @dataclass(frozen=True)
@@ -229,7 +237,15 @@ class Message:
 # --- storability (M5 round 3) -----------------------------------------------
 
 _NUL = "\x00"
-UNSTORABLE = "<unstorable>"
+# A PREFIX, not a value. Two tool calls with unstorable ids used to collapse to
+# the same marker, which destroys the call-to-result correlation in the very
+# record kept to explain what happened. Each replacement gets its own suffix so
+# distinct values stay distinct.
+UNSTORABLE = "<unstorable"
+
+
+def _unstorable_marker() -> str:
+    return f"{UNSTORABLE}:{uuid.uuid4().hex[:8]}>"
 # Half the recursion limit: see the margin note in _named_unstorable_reason.
 _MAX_NESTING = max(64, sys.getrecursionlimit() // 2)
 
@@ -262,7 +278,7 @@ def _replace_unstorable_text(instance: Any, *, skip: tuple[str, ...] = ()) -> li
                 continue
             reason = unstorable_reason(value)
             if reason is not None:
-                object.__setattr__(instance, f.name, UNSTORABLE)
+                object.__setattr__(instance, f.name, _unstorable_marker())
                 problems.append(f"{f.name} cannot be stored: {reason}")
     except Exception:  # noqa: BLE001 - total by intent
         problems.append("a field could not be checked for storability")

@@ -1200,7 +1200,7 @@ def test_model_response_identifiers_cannot_hold_an_unstorable_value():
         stop_reason=StopReason.END_TURN,
         provider_response_id="chatcmpl" + chr(0) + "1",
     )
-    assert response.provider_response_id == UNSTORABLE
+    assert response.provider_response_id.startswith(UNSTORABLE)
 
 
 def test_a_clean_provider_response_id_is_untouched():

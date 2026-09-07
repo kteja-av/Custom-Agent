@@ -187,7 +187,7 @@ class Runner:
         except Exception as exc:  # noqa: BLE001
             reason = describe_exception(exc)
             self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason})
-            self._safe_finish(run_id, RunStatus.FAILED)
+            self._safe_finish(scope, RunStatus.FAILED)
             return RunResult(
                 status=RunStatus.FAILED,
                 output=None,
@@ -200,11 +200,11 @@ class Runner:
                 error=reason,
             )
 
-    def _safe_finish(self, run_id: str, status: RunStatus) -> None:
+    def _safe_finish(self, scope: RunScope, status: RunStatus) -> None:
         if self._persistence is None:
             return
         try:
-            self._persistence.runs.finish_run(run_id, status.value)
+            self._persistence.runs.finish_run(scope, status.value)
         except Exception:  # noqa: BLE001 - persistence must not mask the real failure
             pass
 
@@ -305,7 +305,7 @@ class Runner:
             {"status": status.value, "turns": outcome.turns, "reason": error},
         )
         if self._persistence is not None:
-            self._persistence.runs.finish_run(run_id, status.value)
+            self._persistence.runs.finish_run(scope, status.value)
         return RunResult(
             status=status,
             output=outcome.output,
