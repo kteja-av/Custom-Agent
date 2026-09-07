@@ -69,6 +69,15 @@ The consequence was worse than a failed run: `start_run` raised before `RunStart
 
 **One thing the review prompted that no round asked for.** The hygiene note about a DSN in a traceback led to testing NFR-4 on the connection-failure path for the first time: a wrong-password connection does not render the password into an exception message, on either `psycopg.connect` or `Persistence.postgres`. Now a test. The repo, its full git history and the scratchpad were checked for the real password: no occurrences, and `.env` is gitignored.
 
+**Declared limitations -- known, recorded, and NOT findings.** Do not spend the round rediscovering these; they are on the task record and accepted for the Phase 0 prototype profile. Report them only if you can show one is reachable as a *correctness* failure in Phase 0, which is a different claim:
+
+- **No connection pool.** Every store method opens and closes its own psycopg connection, and the calls are synchronous psycopg made from inside the async loop, so they block the event loop thread. First thing to change before real load; not a Phase 0 correctness bug.
+- **Event `sequence_no` comes from an in-process counter** (`len(buffer) + 1`), so ordering is per sink instance rather than per run as stored. One process per run makes it correct today; it breaks on resume, which is Phase 6.
+- **`schema.sql` has no migration path** -- `CREATE TABLE IF NOT EXISTS` can create a database but not evolve one.
+- **`messages` and `run_events` grow unbounded** -- no retention, partitioning or archival.
+- **Concurrent appends to one run are safe but not available** (a loser raises `UniqueViolation`), measured across several rounds. Unreachable in Phase 0; Phase 2 needs a retry or an advisory lock.
+- **`_json_safe` collapses distinct unstorable dict KEYS** into the same marked string -- round 7's open caveat (c), unreachable in Phase 0.
+
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
 - `unstorable_reason` decides what every primitive will accept, and has now been wrong twice. Find a value Postgres refuses that it passes, or one it rejects that would have stored fine. Probe the DATABASE for the answer rather than reasoning about it -- both previous holes were found that way, and the helper's verdicts are only worth what a live comparison says.
 - The backstop calls `json.dumps` on every tool-call argument dict. Measured at 0.1-8ms for 10k keys, a 1MB string and a 50k-element list, with no false positives -- confirm or refute, and find a shape that is pathological.
