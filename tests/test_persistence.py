@@ -35,6 +35,7 @@ from agentsdk.postgres import (
 )
 from agentsdk.primitives import (
     ContentProvenance,
+    unstorable_reason,
     Message,
     Origin,
     Role,
@@ -1290,3 +1291,87 @@ def test_an_unstorable_agent_spec_id_is_refused(scope):
             manifest=a_manifest(),
         )
     assert query("SELECT 1 FROM runs WHERE run_id=%s", (scope.run_id,)) == []
+
+
+async def test_an_unstorable_principal_context_leaves_nothing_behind(scope):
+    """Round 7's defect. principal_context went straight to Jsonb(), so
+    start_run raised a raw psycopg error BEFORE RunStarted was emitted -- and
+    the follow-up RunFailed then hit a foreign key against a run row that was
+    never written, where _safe_emit swallowed it. Round 1's defect at least
+    left a discoverable orphan; this left nothing at all.
+    """
+    with pytest.raises(ValueError, match="principal_context cannot be stored"):
+        PostgresRunStore(DSN).start_run(
+            scope,
+            agent_spec_id="spec-1",
+            max_turns=1,
+            model_id=None,
+            principal_context={"agent_principal": "ag" + chr(0) + "ent"},
+            manifest=a_manifest(),
+        )
+    assert query("SELECT 1 FROM runs WHERE run_id=%s", (scope.run_id,)) == []
+
+
+def test_every_value_start_run_writes_is_checked():
+    """Structural guard on the guard. Round 6's caveat listed four fields, the
+    repair implemented that list, and round 7 rejected on the fifth. Derived
+    from the signature so a parameter added later fails here until it is
+    covered."""
+    import inspect
+
+    checked = {"agent_spec_id", "model_id", "max_turns", "principal_context", "manifest"}
+    parameters = {
+        name
+        for name, p in inspect.signature(PostgresRunStore.start_run).parameters.items()
+        if name not in ("self", "scope")
+    }
+    assert parameters <= checked, (
+        f"start_run writes {parameters - checked} without a storability check"
+    )
+
+
+async def test_an_unstorable_manifest_leaves_nothing_behind(scope):
+    """Note which manifest fields can carry one: `instructions` and
+    `tool_profile` are HASHED, so a NUL there comes out as clean hex. The raw
+    passthrough fields -- model_id, versions, policy_version -- are the ones
+    that reach the row unchanged."""
+    with pytest.raises(ValueError, match="manifest cannot be stored"):
+        PostgresRunStore(DSN).start_run(
+            scope,
+            agent_spec_id="spec-1",
+            max_turns=1,
+            model_id=None,
+            principal_context=None,
+            manifest=a_manifest(model_id="gpt" + chr(0) + "4"),
+        )
+    assert query("SELECT 1 FROM runs WHERE run_id=%s", (scope.run_id,)) == []
+
+
+def test_hashed_manifest_fields_launder_an_unstorable_value():
+    """Worth pinning as a fact, not an assumption: it is why the manifest test
+    above uses model_id, and why a future non-hashed field would need one."""
+    manifest = a_manifest(instructions="be" + chr(0) + "terse")
+    assert unstorable_reason(manifest["instructions_hash"]) is None
+    assert unstorable_reason(manifest) is None
+
+
+def test_a_connection_failure_never_renders_the_password(monkeypatch):
+    """NFR-4: no credential reaches a persisted row, and a psycopg error is
+    copied verbatim into RunResult.error and a RunFailed payload.
+
+    Prompted by a round-7 hygiene note: a reviewer's probe echoed a DSN
+    fragment into its own tool output. Nothing in the SDK was covering this
+    path. Uses the real host with a CANARY password, so the server answers for
+    real and no true credential is ever in play.
+    """
+    canary = "hunter2-CANARY-do-not-log"
+    head, tail = DSN.split("://", 1)
+    creds, hostpart = tail.split("@", 1)
+    user = creds.split(":", 1)[0]
+    wrong = f"{head}://{user}:{canary}@{hostpart}"
+
+    with pytest.raises(psycopg.OperationalError) as excinfo:
+        Persistence.postgres(wrong)
+    rendered = f"{type(excinfo.value).__name__}: {excinfo.value}"
+    assert canary not in rendered, "the DSN password reached an exception message"
+    assert canary not in repr(excinfo.value)

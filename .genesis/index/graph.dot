@@ -233,6 +233,7 @@ digraph genesis {
   "symbol:agentsdk/primitives.py#function:ContentProvenance.is_tainted" [label="ContentProvenance.is_tainted",class="symbol"];
   "symbol:agentsdk/primitives.py#function:ContentProvenance.with_taint" [label="ContentProvenance.with_taint",class="symbol"];
   "symbol:agentsdk/primitives.py#function:Message.__post_init__" [label="Message.__post_init__",class="symbol"];
+  "symbol:agentsdk/primitives.py#function:refuse_unstorable_fields" [label="refuse_unstorable_fields",class="symbol"];
   "symbol:agentsdk/primitives.py#function:ToolCall.__post_init__" [label="ToolCall.__post_init__",class="symbol"];
   "symbol:agentsdk/primitives.py#function:ToolResult.__post_init__" [label="ToolResult.__post_init__",class="symbol"];
   "symbol:agentsdk/primitives.py#function:unstorable_reason" [label="unstorable_reason",class="symbol"];
@@ -543,6 +544,7 @@ digraph genesis {
   "symbol:tests/test_persistence.py#function:ScriptedModel.send" [label="ScriptedModel.send",class="symbol"];
   "symbol:tests/test_persistence.py#function:started" [label="started",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_a_bound_store_refuses_a_different_run" [label="test_a_bound_store_refuses_a_different_run",class="symbol"];
+  "symbol:tests/test_persistence.py#function:test_a_connection_failure_never_renders_the_password" [label="test_a_connection_failure_never_renders_the_password",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed" [label="test_a_failed_run_is_recorded_as_failed",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed.Exploding.send" [label="test_a_failed_run_is_recorded_as_failed.Exploding.send",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_a_failed_tool_result_is_still_a_failure_after_a_round_trip" [label="test_a_failed_tool_result_is_still_a_failure_after_a_round_trip",class="symbol"];
@@ -563,6 +565,8 @@ digraph genesis {
   "symbol:tests/test_persistence.py#function:test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage" [label="test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage.Provider.send" [label="test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage.Provider.send",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage.run" [label="test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage.run",class="symbol"];
+  "symbol:tests/test_persistence.py#function:test_an_unstorable_manifest_leaves_nothing_behind" [label="test_an_unstorable_manifest_leaves_nothing_behind",class="symbol"];
+  "symbol:tests/test_persistence.py#function:test_an_unstorable_principal_context_leaves_nothing_behind" [label="test_an_unstorable_principal_context_leaves_nothing_behind",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail" [label="test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail.Provider.send" [label="test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail.Provider.send",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail.run" [label="test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail.run",class="symbol"];
@@ -578,8 +582,10 @@ digraph genesis {
   "symbol:tests/test_persistence.py#function:test_event_sequence_numbers_are_unique_per_run" [label="test_event_sequence_numbers_are_unique_per_run",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_events_persist_with_the_full_envelope" [label="test_events_persist_with_the_full_envelope",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_every_run_this_suite_started_has_exactly_one_manifest" [label="test_every_run_this_suite_started_has_exactly_one_manifest",class="symbol"];
+  "symbol:tests/test_persistence.py#function:test_every_value_start_run_writes_is_checked" [label="test_every_value_start_run_writes_is_checked",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_exactly_one_manifest_per_run_with_every_field_populated" [label="test_exactly_one_manifest_per_run_with_every_field_populated",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_finishing_a_run_is_tenant_scoped" [label="test_finishing_a_run_is_tenant_scoped",class="symbol"];
+  "symbol:tests/test_persistence.py#function:test_hashed_manifest_fields_launder_an_unstorable_value" [label="test_hashed_manifest_fields_launder_an_unstorable_value",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_history_is_tenant_scoped_on_read" [label="test_history_is_tenant_scoped_on_read",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_history_orders_by_sequence_no_not_by_insertion" [label="test_history_orders_by_sequence_no_not_by_insertion",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_manifest_hashes_are_stable_and_sensitive" [label="test_manifest_hashes_are_stable_and_sensitive",class="symbol"];
@@ -624,9 +630,13 @@ digraph genesis {
   "symbol:tests/test_primitives.py#function:test_an_unstorable_provenance_source_is_replaced" [label="test_an_unstorable_provenance_source_is_replaced",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_call_id_is_replaced" [label="test_an_unstorable_tool_call_id_is_replaced",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_name_does_not_take_the_run_down" [label="test_an_unstorable_tool_name_does_not_take_the_run_down",class="symbol"];
+  "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_result_content_is_marked_as_an_error" [label="test_an_unstorable_tool_result_content_is_marked_as_an_error",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_result_id_is_replaced_without_losing_the_result" [label="test_an_unstorable_tool_result_id_is_replaced_without_losing_the_result",class="symbol"];
+  "symbol:tests/test_primitives.py#function:test_configuration_refuses_rather_than_degrades" [label="test_configuration_refuses_rather_than_degrades",class="symbol"];
+  "symbol:tests/test_primitives.py#function:test_container_fields_are_covered_not_just_strings" [label="test_container_fields_are_covered_not_just_strings",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_deep_nesting_postgres_accepts_is_not_rejected" [label="test_deep_nesting_postgres_accepts_is_not_rejected",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family" [label="test_errors_sit_under_the_right_family",class="symbol"];
+  "symbol:tests/test_primitives.py#function:test_every_configuration_field_is_covered_whatever_its_shape" [label="test_every_configuration_field_is_covered_whatever_its_shape",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_every_string_field_is_checked_not_a_list_of_names" [label="test_every_string_field_is_checked_not_a_list_of_names",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_every_tool_result_carries_exactly_one_provenance" [label="test_every_tool_result_carries_exactly_one_provenance",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_families_are_disjoint" [label="test_families_are_disjoint",class="symbol"];
@@ -865,6 +875,7 @@ digraph genesis {
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:ContentProvenance.is_tainted" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:ContentProvenance.with_taint" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:Message.__post_init__" [label="defines"];
+  "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:refuse_unstorable_fields" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:ToolCall.__post_init__" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:ToolResult.__post_init__" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:unstorable_reason" [label="defines"];
@@ -1175,6 +1186,7 @@ digraph genesis {
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:ScriptedModel.send" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:started" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_a_bound_store_refuses_a_different_run" [label="defines"];
+  "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_a_connection_failure_never_renders_the_password" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_a_failed_run_is_recorded_as_failed.Exploding.send" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_a_failed_tool_result_is_still_a_failure_after_a_round_trip" [label="defines"];
@@ -1195,6 +1207,8 @@ digraph genesis {
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage.Provider.send" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_arguments_error_neither_diverges_nor_loses_usage.run" [label="defines"];
+  "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_manifest_leaves_nothing_behind" [label="defines"];
+  "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_principal_context_leaves_nothing_behind" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail.Provider.send" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail.run" [label="defines"];
@@ -1210,8 +1224,10 @@ digraph genesis {
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_event_sequence_numbers_are_unique_per_run" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_events_persist_with_the_full_envelope" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_every_run_this_suite_started_has_exactly_one_manifest" [label="defines"];
+  "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_every_value_start_run_writes_is_checked" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_exactly_one_manifest_per_run_with_every_field_populated" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_finishing_a_run_is_tenant_scoped" [label="defines"];
+  "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_hashed_manifest_fields_launder_an_unstorable_value" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_history_is_tenant_scoped_on_read" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_history_orders_by_sequence_no_not_by_insertion" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_manifest_hashes_are_stable_and_sensitive" [label="defines"];
@@ -1256,9 +1272,13 @@ digraph genesis {
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_an_unstorable_provenance_source_is_replaced" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_call_id_is_replaced" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_name_does_not_take_the_run_down" [label="defines"];
+  "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_result_content_is_marked_as_an_error" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_an_unstorable_tool_result_id_is_replaced_without_losing_the_result" [label="defines"];
+  "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_configuration_refuses_rather_than_degrades" [label="defines"];
+  "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_container_fields_are_covered_not_just_strings" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_deep_nesting_postgres_accepts_is_not_rejected" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_errors_sit_under_the_right_family" [label="defines"];
+  "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_every_configuration_field_is_covered_whatever_its_shape" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_every_string_field_is_checked_not_a_list_of_names" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_every_tool_result_carries_exactly_one_provenance" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_families_are_disjoint" [label="defines"];
@@ -1377,6 +1397,7 @@ digraph genesis {
   "file:agentsdk/hooks.py" -> "runtime:python:dataclasses" [label="imports"];
   "file:agentsdk/hooks.py" -> "runtime:python:enum" [label="imports"];
   "file:agentsdk/hooks.py" -> "runtime:python:typing" [label="imports"];
+  "file:agentsdk/identity.py" -> "file:agentsdk/primitives.py" [label="imports"];
   "file:agentsdk/identity.py" -> "runtime:python:__future__" [label="imports"];
   "file:agentsdk/identity.py" -> "runtime:python:dataclasses" [label="imports"];
   "file:agentsdk/loop.py" -> "file:agentsdk/context.py" [label="imports"];
@@ -1513,11 +1534,13 @@ digraph genesis {
   "file:tests/test_persistence.py" -> "package:pypi:psycopg" [label="imports"];
   "file:tests/test_persistence.py" -> "package:pypi:pytest" [label="imports"];
   "file:tests/test_persistence.py" -> "runtime:python:datetime" [label="imports"];
+  "file:tests/test_persistence.py" -> "runtime:python:inspect" [label="imports"];
   "file:tests/test_persistence.py" -> "runtime:python:json" [label="imports"];
   "file:tests/test_persistence.py" -> "runtime:python:os" [label="imports"];
   "file:tests/test_persistence.py" -> "runtime:python:threading" [label="imports"];
   "file:tests/test_persistence.py" -> "runtime:python:uuid" [label="imports"];
   "file:tests/test_primitives.py" -> "file:agentsdk/__init__.py" [label="imports"];
+  "file:tests/test_primitives.py" -> "file:agentsdk/identity.py" [label="imports"];
   "file:tests/test_primitives.py" -> "file:agentsdk/outcomes.py" [label="imports"];
   "file:tests/test_primitives.py" -> "file:agentsdk/primitives.py" [label="imports"];
   "file:tests/test_primitives.py" -> "package:pypi:pytest" [label="imports"];

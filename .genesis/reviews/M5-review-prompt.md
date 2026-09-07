@@ -2,7 +2,7 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
-## Rounds 1-6 -- what was rejected, and what changed
+## Rounds 1-7 -- what was rejected, and what changed
 
 A previous reviewer rejected this milestone and was right to. Their finding, and the response:
 
@@ -59,9 +59,20 @@ Worth knowing how the repair went, because it repeated round 5's mistake: the fi
 
 **All three caveats were taken, not carried.** `PostgresTrace.reconstruct`, `get_run` and `finish_run` take a `RunScope` and filter on tenancy (`DECISION-56558d52`), so AC-7's vehicle no longer answers the question the opposite way to `history()` one function over. The `<unstorable>` marker is a prefix with a per-replacement suffix, so two unstorable ids stay distinct and call-to-result correlation survives. `RunScope` refuses an unstorable `run_id`/`tenant_id`/`project_id`, and `start_run` refuses an unstorable `agent_spec_id`/`model_id` -- refusing rather than degrading, because these are configuration, not model output.
 
+Round 7 rejected on `principal_context`, the one caller-supplied value still reaching `Jsonb()` unchecked -- and it is round 6's caveat (c) verbatim. That caveat named four fields; the repair implemented those four names, and the fifth was the defect. **A review names examples; the finding is the class.** (`KNOWLEDGE-4c167492`.)
+
+The consequence was worse than a failed run: `start_run` raised before `RunStarted` was emitted, so the follow-up `RunFailed` hit a foreign key against a run row that never existed and was swallowed by `_safe_emit`. Round 1's defect at least left a discoverable orphan; this left nothing.
+
+**The fix is one guard for configuration types.** `refuse_unstorable_fields` walks `dataclasses.fields()` and RAISES with the field named; `RunScope` and `PrincipalContext` use it. It also covers fields of **any shape**, not just `str` -- which is the deeper half: the replacement walk only handles string fields, and the reviewer found the gap through `PrincipalContext.scopes`, a `tuple[str, ...]` whose contents reached JSONB unchecked. `start_run` now checks every value it writes, with a test derived from its signature so a new parameter fails until it is covered (`DECISION-cc1f8297`).
+
+**The blind spot the round-7 reviewer self-corrected on is closed.** `ToolResult`'s `skip=("content",)` was unpinned -- removing it let the field walk mark content storable before the compensating check ran, so `is_error` silently stayed False. A direct test now kills that mutation.
+
+**One thing the review prompted that no round asked for.** The hygiene note about a DSN in a traceback led to testing NFR-4 on the connection-failure path for the first time: a wrong-password connection does not render the password into an exception message, on either `psycopg.connect` or `Persistence.postgres`. Now a test. The repo, its full git history and the scratchpad were checked for the real password: no occurrences, and `.env` is gitignored.
+
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
 - `unstorable_reason` decides what every primitive will accept, and has now been wrong twice. Find a value Postgres refuses that it passes, or one it rejects that would have stored fine. Probe the DATABASE for the answer rather than reasoning about it -- both previous holes were found that way, and the helper's verdicts are only worth what a live comparison says.
 - The backstop calls `json.dumps` on every tool-call argument dict. Measured at 0.1-8ms for 10k keys, a 1MB string and a 50k-element list, with no false positives -- confirm or refute, and find a shape that is pathological.
+- **Look for the next unchecked value, not the next unchecked FIELD.** Rounds 5, 6 and 7 were all the same shape: a guard applied to what someone enumerated. Ask what reaches a column, then check the guard covers all of it -- including containers, and including values that never pass through a primitive at all.
 - **Look for the next exemption.** Round 6's defect was a `skip=` argument; round 5's was a field nobody listed. Grep for `skip=` and for any conditional inside a guard or its test, then check each is load-bearing by deleting it and running the suite.
 - **The field walk is the new single point of failure.** It covers `str` fields on dataclasses. What about a string inside a tuple field, a nested dataclass, or a field added as `list[str]`? Find a persisted string it does not reach.
 - `history()` now refuses an unbound store. Does anything legitimate need an unscoped read -- support tooling, a future replay -- and is raising the right answer there?
@@ -135,12 +146,12 @@ Modified by the review rounds, and in scope for that reason: `agentsdk/api.py`
 1. Read the files, `SPEC.md`, and the decisions/invariants/knowledge in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest -q                             # 380
-   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # 65
+   .venv\Scripts\python.exe -m pytest -q                             # 389
+   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # 70
    ```
    Per file, so a mismatch is locatable rather than merely alarming:
-   `test_agent_loop 75` + `test_model_client 150` + `test_persistence 65` +
-   `test_primitives 66` + `test_tool_executor 24` = **380**.
+   `test_agent_loop 75` + `test_model_client 150` + `test_persistence 70` +
+   `test_primitives 70` + `test_tool_executor 24` = **389**.
    A different number is itself a finding. Round 6 lost time on a stale count
    in this document; these were regenerated after the round-6 fixes and are
    the only counts in this file.

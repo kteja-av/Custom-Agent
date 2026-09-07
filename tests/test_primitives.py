@@ -475,3 +475,53 @@ def test_the_reason_channel_is_itself_storable():
     was to end carve-outs."""
     call = ToolCall(id="c1", name="echo", arguments={}, arguments_error="bad" + NUL + "json")
     assert unstorable_reason(call.arguments_error) is None
+
+
+def test_an_unstorable_tool_result_content_is_marked_as_an_error():
+    """Pins ToolResult's compensating check, which was a blind spot: with its
+    skip=("content",) removed, the field walk marks content storable BEFORE
+    this check runs, so is_error silently stays False. The shipped code is
+    correct; nothing stopped a future cleanup of that skip -- round 6's exact
+    defect shape -- from shipping green."""
+    result = ToolResult(
+        tool_call_id="c1",
+        content="a" + NUL + "b",
+        provenance=ContentProvenance.internal_tool(),
+    )
+    assert result.is_error is True
+    assert "cannot be stored" in result.content
+    assert unstorable_reason(result.content) is None
+
+
+def test_configuration_refuses_rather_than_degrades():
+    """Model output has a run to keep alive, so it is replaced and flagged.
+    Configuration arrives before anything starts, so it is refused by name."""
+    from agentsdk.identity import PrincipalContext
+
+    with pytest.raises(ValueError, match="PrincipalContext.agent_principal cannot be stored"):
+        PrincipalContext(agent_principal="ag" + NUL + "ent")
+
+
+def test_container_fields_are_covered_not_just_strings():
+    """The replacement walk only covers `str` fields. PrincipalContext.scopes
+    is a tuple[str, ...] whose CONTENTS reach JSONB, and that is how this got
+    through six rounds -- the round-6 prompt named it as the gap to attack and
+    the round-7 reviewer found it there."""
+    from agentsdk.identity import PrincipalContext
+
+    with pytest.raises(ValueError, match="PrincipalContext.scopes cannot be stored"):
+        PrincipalContext(agent_principal="a", scopes=("read", "wr" + NUL + "ite"))
+
+
+def test_every_configuration_field_is_covered_whatever_its_shape():
+    """Structural, like the model-output equivalent: derived from
+    dataclasses.fields(), so a field added tomorrow is covered. Each field is
+    given an unstorable value of a shape its own type can hold."""
+    import dataclasses
+    from agentsdk.identity import PrincipalContext
+
+    base = dict(agent_principal="a")
+    for f in dataclasses.fields(PrincipalContext):
+        bad = ("x" + NUL,) if f.name == "scopes" else "x" + NUL
+        with pytest.raises(ValueError, match=f"PrincipalContext.{f.name} cannot be stored"):
+            PrincipalContext(**{**base, f.name: bad})

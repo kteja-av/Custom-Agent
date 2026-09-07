@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .primitives import refuse_unstorable_fields
+
 
 @dataclass(frozen=True)
 class PrincipalContext:
@@ -26,6 +28,11 @@ class PrincipalContext:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "scopes", tuple(self.scopes))
+        # Every field, including `scopes` -- a tuple[str, ...] whose CONTENTS
+        # reach runs.principal_context as JSONB. The storability walk on the
+        # model-output primitives only covers plain string fields, which is how
+        # this got through six rounds.
+        refuse_unstorable_fields(self)
 
     def to_json(self) -> dict[str, object]:
         """Shape written to `runs.principal_context`. No consumer reads it yet."""

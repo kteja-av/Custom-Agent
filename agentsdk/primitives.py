@@ -250,6 +250,29 @@ def _unstorable_marker() -> str:
 _MAX_NESTING = max(64, sys.getrecursionlimit() // 2)
 
 
+def refuse_unstorable_fields(instance: Any) -> None:
+    """For CONFIGURATION types: refuse and name the field, never degrade.
+
+    Two differences from _replace_unstorable_text, both deliberate:
+
+    * It RAISES. Model output has a run to keep alive, so an unstorable value
+      there is replaced and flagged; configuration is supplied by the caller
+      before anything starts, so there is nothing to preserve and a named
+      error beats an opaque psycopg failure three frames later.
+    * It covers fields of ANY shape, not just `str`. The replacement walk only
+      handles string fields, and round 7 found the gap through
+      `PrincipalContext.scopes` -- a `tuple[str, ...]` whose contents reached
+      JSONB unchecked. `unstorable_reason` already recurses, so passing it the
+      whole field value covers tuples, lists and nested dicts alike.
+    """
+    for f in dataclasses.fields(instance):
+        reason = unstorable_reason(getattr(instance, f.name, None))
+        if reason is not None:
+            raise ValueError(
+                f"{type(instance).__name__}.{f.name} cannot be stored: {reason}"
+            )
+
+
 def _replace_unstorable_text(instance: Any, *, skip: tuple[str, ...] = ()) -> list[str]:
     """Replace every unstorable STRING field with a marker; return the reasons.
 

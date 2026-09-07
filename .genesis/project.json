@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-07T15:24:01.574Z"
+    "updated_at": "2026-09-07T16:38:50.787Z"
   },
   "policy": {
     "ponytail": "full",
@@ -339,6 +339,14 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-07T15:22:06.221Z"
+    },
+    {
+      "id": "DECISION-cc1f8297",
+      "title": "Configuration refuses by name; model output is replaced and flagged",
+      "text": "primitives.refuse_unstorable_fields walks dataclasses.fields() and RAISES with the field named; used by RunScope and PrincipalContext. primitives._replace_unstorable_text walks the same fields but REPLACES with a marker and records the reason; used by ToolCall, ToolResult, ContentProvenance, Message and ModelResponse. The split is deliberate: model output has a run in flight that should survive a bad byte, whereas configuration is supplied before anything starts, so there is nothing to preserve and a named error beats an opaque psycopg failure several frames later. refuse_unstorable_fields also covers fields of ANY shape, not just str -- unstorable_reason recurses -- because round 7 found PrincipalContext.scopes, a tuple[str, ...] whose contents reached JSONB unchecked while the str-only replacement walk saw nothing.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-07T16:37:51.545Z"
     }
   ],
   "knowledge": [
@@ -477,6 +485,14 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-07T15:22:06.080Z"
+    },
+    {
+      "id": "KNOWLEDGE-4c167492",
+      "title": "Implementing a caveat's list is not implementing the caveat",
+      "text": "Round 6's caveat (c) read 'tenant_id, project_id, agent_spec_id and model_id are unchecked for storability'. The repair implemented exactly those four names, and round 7 rejected on principal_context -- the fifth caller-supplied value, which the caveat had not enumerated. A review names examples; the finding is the class. Read every caveat as 'what is the property, and where else does it fail?' rather than as a checklist. Same failure mode as rounds 5 and 6 (a check applied to the fields someone thought of), arriving this time through the review process itself rather than through the code.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-07T16:37:51.404Z"
     }
   ],
   "tasks": [
@@ -710,9 +726,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "91035cd5ec740a92746a17d2d8cef5e193753e000c5db020616254b361563db0",
-            "hash": "00908eb6347b992d20c810b2815ee6bbfc3d5c06d6b5d30cddc1f013e459b807",
-            "observed_at": "2026-09-07T15:22:28.599Z"
+            "source_hash": "e32d17055eede4087b5e10f4af2c9f35aea3e23f0342437c71741f053c72ab00",
+            "hash": "568d3ed9a1cad10527acbf36d0b11e697b64efef8dd6e11312e6704ca445544e",
+            "observed_at": "2026-09-07T16:37:30.881Z"
           }
         },
         {
@@ -732,7 +748,7 @@
         "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-07T15:22:28.679Z"
+      "updated_at": "2026-09-07T16:37:30.972Z"
     },
     {
       "id": "M6-golden-eval",
@@ -998,15 +1014,33 @@
       "human": "Opus 5 (implementer)",
       "reason": "Round-6 defect fixed: the arguments_error carve-out is gone from both the walk and the test that had been shaped around it. Files in scope also updated (primitives.py, model.py, executor.py were missing). The first repair repeated round 5's mistake by adding a second overlapping guard, which left the carve-out mutation green; the unreachable guard was removed so the mutation now dies. All three caveats taken: trace/get_run/finish_run are tenant-scoped, the unstorable marker no longer collides, and scope/spec identifiers are validated. 380 tests, 7/7 mutations killed.",
       "revision": null
+    },
+    {
+      "id": "3d7d7dc8-7781-4ba3-80f1-d3531bcd5cd9",
+      "at": "2026-09-07T15:44:03.194Z",
+      "action": "reject",
+      "task": "M5-postgres",
+      "human": "L4-reviewer-round7-fresh-session",
+      "reason": "REJECT. Reachable defect: RunConfig.principal_context is the one caller-supplied configuration field DECISION-56558d52 left unchecked for storability, while its siblings (run_id/tenant_id/project_id via RunScope, agent_spec_id/model_id via start_run) were fixed. Reproduced end-to-end through the public API (Runner.run, stock EchoClient, no persistence variable changed except backend): PrincipalContext(agent_principal='a\\x00b') via RunConfig.principal_context -> in-memory run COMPLETED; Postgres-backed run FAILED with a raw psycopg UntranslatableCharacter error (DETAIL/portal-parameter text), not the clean ValueError naming the field that agent_spec_id/model_id get. This is the same memory-vs-Postgres divergence bug class rejected in M5 rounds 3-6, in the exact field round 6's own caveat list named and round 7 did not close. Atomicity holds (0 orphan runs/manifest rows on injected and real failures - AC-6 not violated) and Runner.run() stays a total boundary (caught, reported as RunStatus.FAILED), but postgres.py's own contract ('the loop cannot tell whether it is talking to memory or Postgres') is broken, and because start_run raises before RUN_STARTED is emitted, the run leaves no persisted record at all (not even a run row), which is worse than round 1's zero-manifest case since even that left a discoverable runs row. Secondary, confirmed-still-open but currently unreachable in Phase 0 (no test regression, latent): _json_safe uses a fixed '<unstorable: <reason>' string per reason rather than a per-instance marker (unlike primitives._unstorable_marker's uuid suffix), so two distinct unstorable dict KEYS with the same reason collapse and one is silently dropped (verified: _json_safe({'a\\x00':'first','b\\x00':'second'}) -> single key, 'first' lost); not reachable today because every payload dict in Phase 0 has SDK-literal keys, never model- or attacker-derived ones. VERIFIED SOUND: full suite 380 passed (75+150+65+66+24, matches the prompt exactly); AC-6 atomicity re-confirmed by injecting OperationalError into _insert_manifest, 0 runs rows survive; concurrency re-measured, 12 barrier-synchronised writers on one run -> 9 committed unique contiguous sequence_nos, 3 UniqueViolation, 0 duplicates (safety holds, availability partial, as claimed); round-6 defect (arguments_error skip= carve-out and its matching test continue) confirmed gone by grep and by the two skip= sites both being on ToolResult/Message content only; the <unstorable> marker confirmed per-instance (uuid suffix) for the primitives-level walk; PostgresTrace.reconstruct/get_run/finish_run all confirmed tenant-scoped in source (caveat (a) closed). GATE BLIND SPOT, not a defect (code verified correct by direct construction): ToolResult.__post_init__'s skip=(\"content\",) is untested in isolation - deleting it leaves the FULL suite green (380/380) because the field-walk's own marker makes self.content storable before the second explicit check runs, so is_error silently stays False and the diagnostic message is never set; the equivalent guard in Message IS pinned (deleting it turns 2 tests red, ValueError no longer raised). Direct construction of ToolResult(content=NUL) on the unmutated tree correctly yields is_error=True and 'tool result cannot be stored: ...', so today's code is right - only the regression-test coverage is asymmetric between the two skip= sites. Database left undamaged: orphan manifest-less runs count still exactly 979, all synthetic tenant_id-prefixed probe rows deleted, no throwaway schemas created. All mutated files (agentsdk/primitives.py, two mutations tried individually) restored and SHA-256-verified identical to the pre-mutation baseline; git status --porcelain agentsdk tests is empty.",
+      "revision": null
+    },
+    {
+      "id": "973e59e8-108c-47f8-851a-5eb4afc7b473",
+      "at": "2026-09-07T16:37:51.675Z",
+      "action": "retry",
+      "task": "M5-postgres",
+      "human": "Opus 5 (implementer)",
+      "reason": "Round-7 defect fixed at the class, not the field: refuse_unstorable_fields walks dataclasses.fields() and covers values of any shape, applied to PrincipalContext (including scopes, the tuple that got through) and RunScope; start_run checks every value it writes, with a signature-derived test so a new parameter fails until covered. The ToolResult blind spot the reviewer self-corrected on is now pinned -- removing that skip fails the suite. NFR-4 tested for the first time on the connection-failure path: no DSN password reaches an exception message. 389 tests, 9/9 mutations killed.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-07T15:24:01.513Z",
+    "at": "2026-09-07T16:38:50.713Z",
     "revision": {
-      "commit": "8c880dd25a9aebe4562e00ae4f8140770fe6130c",
+      "commit": "527da41011fe25905b19cc40c69932c3f109a7f0",
       "dirty": true,
-      "source_hash": "24fa3bcaae2d1ff47e5519895c9c4df78454e7b2eddbabe9455a8a1137b2f84f"
+      "source_hash": "e32d17055eede4087b5e10f4af2c9f35aea3e23f0342437c71741f053c72ab00"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."

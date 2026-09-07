@@ -24,6 +24,7 @@ from psycopg.types.json import Jsonb
 from .events import SCHEMA_VERSION, EventType, RunEvent
 from .primitives import (
     UNSTORABLE,
+    refuse_unstorable_fields,
     ContentProvenance,
     InstructionAuthority,
     Message,
@@ -134,13 +135,10 @@ class RunScope:
     def __post_init__(self) -> None:
         # These reach NOT NULL columns on every table, so an unstorable one
         # fails the write with an opaque psycopg error at some later point.
-        # Refused here instead, where the caller can see which field it was:
-        # this is caller-supplied configuration, not model output, so there is
-        # no run to keep alive and nothing is gained by degrading it.
-        for name in ("run_id", "tenant_id", "project_id"):
-            reason = unstorable_reason(getattr(self, name))
-            if reason is not None:
-                raise ValueError(f"RunScope.{name} cannot be stored: {reason}")
+        # Refused here instead, where the caller can see which field it was.
+        # The shared helper walks dataclasses.fields() rather than the three
+        # names this used to list -- a field added here is covered.
+        refuse_unstorable_fields(self)
 
 
 class PostgresSessionStore:
@@ -351,7 +349,19 @@ class PostgresRunStore:
         exists without its manifest" stops being a state this API can express.
         Either both rows commit or neither does.
         """
-        for name, value in (("agent_spec_id", agent_spec_id), ("model_id", model_id)):
+        # Every value this statement writes, not the two that were named in a
+        # review caveat. Round 6's caveat listed tenant_id, project_id,
+        # agent_spec_id and model_id; the repair implemented that list, and
+        # round 7 rejected on principal_context -- the one caller-supplied
+        # value the caveat had not enumerated. Keyed by column so a new column
+        # is added here in the same edit that adds it to the INSERT.
+        for name, value in {
+            "agent_spec_id": agent_spec_id,
+            "model_id": model_id,
+            "max_turns": max_turns,
+            "principal_context": principal_context,
+            "manifest": manifest,
+        }.items():
             reason = unstorable_reason(value)
             if reason is not None:
                 raise ValueError(f"{name} cannot be stored: {reason}")
