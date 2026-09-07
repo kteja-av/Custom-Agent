@@ -14,7 +14,7 @@ Load the official Ponytail skill at `full`. Verify repository state and baseline
 - owner: unassigned
 - blocker: none
 - next action: Run the task pre-flight.
-- source hash: e32d17055eede4087b5e10f4af2c9f35aea3e23f0342437c71741f053c72ab00
+- source hash: 64dba17a5e8f452b5fe0400d82abd4286362de0c0c93c808f4a3879a6080312a
 - phase instruction: Implement only the active task and prove it against current sources.
 - specification: SPEC.md / approved
 - requirements: AC-1, AC-10, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, FR-1, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6, NFR-7
@@ -29,9 +29,9 @@ Load the official Ponytail skill at `full`. Verify repository state and baseline
 
 ## Active evidence and failures
 
-- gates: unit:pass (.genesis/evidence/M5-postgres-unit.json), independent-review:pending
+- gates: unit:stale (.genesis/evidence/M5-postgres-unit.json), independent-review:pending
 - failures: none recorded
-- limitations: Carried from M4 review: a tool on the FINAL turn executes with no turn left to consume its result, so a side-effecting tool can fire on a turn whose outcome is max_turns_exceeded. Matches LLD 3.10 literally and is harmless for Phase 0's echo tool, but must be revisited in Phase 2 when tools do more than echo.; Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence.
+- limitations: Carried from M4 review: a tool on the FINAL turn executes with no turn left to consume its result, so a side-effecting tool can fire on a turn whose outcome is max_turns_exceeded. Matches LLD 3.10 literally and is harmless for Phase 0's echo tool, but must be revisited in Phase 2 when tools do more than echo.; Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence.; No connection pool: every store method opens its own psycopg connection (~15 connect-auth-close cycles per short run), and the calls are synchronous psycopg made from inside the async AgentLoop, so they block the event loop thread. Correct for Phase 0's one-run-at-a-time profile, and the FIRST thing to change before real load -- connect latency would dominate and Postgres max_connections would cap concurrent runs. Fix: psycopg_pool.AsyncConnectionPool plus async store methods; the protocols do not change.; Event sequence_no comes from an in-process counter (len(buffer)+1), so ordering is per SINK INSTANCE, not per run as stored. One process per run makes this correct in Phase 0. It breaks the moment a run resumes in a new process or a second sink observes it: numbering restarts at 1 and collides with UNIQUE (run_id, sequence_no). Phase 6 (durable interruptions, replay) cannot land without moving this into the insert, the way messages.sequence_no already is.; Schema has no migration path: schema.sql is CREATE TABLE IF NOT EXISTS, so it can create a database but cannot evolve one. Any column change in production needs a real migration tool (Alembic or equivalent) before there is data worth keeping.; messages and run_events grow without bound: no retention policy, no partitioning, no archival. Fine at prototype volume; a production deployment needs a plan before the first long-running tenant.
 - notes: none recorded
 
 ## Binding context

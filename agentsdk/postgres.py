@@ -1,6 +1,9 @@
 """Postgres-backed stores (FR-9, FR-10, FR-11, NFR-2, LLD 2, 3.9).
 
-One connection pool, several stores, one database. The protocols these
+One database, several stores. NOT one connection pool: every method opens its
+own connection and closes it, which is fine for Phase 0's one-run-at-a-time
+profile and is the first thing to change before any real load -- see the
+recorded limitation. The protocols these
 implement are defined in `session.py` and `events.py`, so the loop cannot tell
 whether it is talking to memory or Postgres.
 
