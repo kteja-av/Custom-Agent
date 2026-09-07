@@ -34,6 +34,7 @@ from agentsdk.outcomes import Failed
 from agentsdk.permissions import AllowlistPermissionChecker
 from agentsdk.tools import Tool, ToolRegistry, ToolSpec
 from agentsdk.primitives import (
+    UNSTORABLE,
     ContentProvenance,
     Message,
     Role,
@@ -1187,3 +1188,25 @@ async def test_the_adapter_no_longer_coerces_token_counts_itself():
         ModelRequest(messages=(Message(role=Role.USER, content="go"),))
     )
     assert response.usage == Usage(0, 9, 0)
+
+
+def test_model_response_identifiers_cannot_hold_an_unstorable_value():
+    """Pinned at the type, not only end to end. `_json_safe` also guards the
+    event payload, so an end-to-end test passes with this walk removed -- the
+    two layers overlap deliberately, and each has to be pinned where it lives.
+    """
+    response = ModelResponse(
+        message=Message(role=Role.ASSISTANT, content="fine"),
+        stop_reason=StopReason.END_TURN,
+        provider_response_id="chatcmpl" + chr(0) + "1",
+    )
+    assert response.provider_response_id == UNSTORABLE
+
+
+def test_a_clean_provider_response_id_is_untouched():
+    response = ModelResponse(
+        message=Message(role=Role.ASSISTANT, content="fine"),
+        stop_reason=StopReason.END_TURN,
+        provider_response_id="chatcmpl-abc123",
+    )
+    assert response.provider_response_id == "chatcmpl-abc123"

@@ -338,7 +338,7 @@ def test_history_orders_by_sequence_no_not_by_insertion(started):
                     content,
                 ),
             )
-    history = PostgresSessionStore(DSN).history(started.run_id)
+    history = PostgresSessionStore(DSN).bind(started).history(started.run_id)
     assert [m.content for m in history] == ["first", "second", "third"]
 
 
@@ -423,7 +423,7 @@ def test_runs_are_isolated(started, scope):
     PostgresSessionStore(DSN).bind(started).append(
         started.run_id, Message(role=Role.USER, content="mine")
     )
-    assert PostgresSessionStore(DSN).history(other.run_id) == []
+    assert PostgresSessionStore(DSN).bind(other).history(other.run_id) == []
 
 
 # --- FR-10: events ----------------------------------------------------------
@@ -991,3 +991,202 @@ async def test_persistence_does_not_change_the_outcome(content, arguments):
         f"the store changed the outcome: {in_memory.status} vs {persisted.status} "
         f"({persisted.error})"
     )
+
+
+# --- M5 round 5: the runs row as the Runner writes it ------------------------
+
+
+@pytest.mark.parametrize(
+    "responses,expected_status,max_turns",
+    [
+        ([], "completed", 4),
+        ("explode", "failed", 4),
+        ("loop", "max_turns_exceeded", 1),
+    ],
+    ids=["completed", "failed", "max_turns_exceeded"],
+)
+async def test_the_runs_row_records_the_real_outcome(responses, expected_status, max_turns):
+    """AC-7 reconstructs the trace from runs.status, and nothing asserted it for
+    any loop-path outcome: hardcoding finish_run to 'completed' left the whole
+    suite green while every exhausted and failed run was recorded as a success.
+    """
+
+    class Exploding:
+        async def send(self, request):
+            raise RuntimeError("model exploded")
+
+    class Looping:
+        async def send(self, request):
+            return tool_call()
+
+    if responses == "explode":
+        model = Exploding()
+    elif responses == "loop":
+        model = Looping()
+    else:
+        model = ScriptedModel(text("done"))
+
+    result = await Runner(
+        {"gw": model}, tools=[echo_tool()], persistence=Persistence.postgres(DSN)
+    ).run(
+        AgentSpec(id="outcome-spec", instructions="be terse",
+                  preferred_model="gw:openai.gpt-4o-mini", tool_profile=("echo",)),
+        "go",
+        RunConfig(tenant_id="t-outcome", project_id="p-outcome", max_turns=max_turns),
+    )
+
+    assert result.status.value == expected_status
+    row = query(
+        "SELECT status, completed_at FROM runs WHERE run_id=%s", (result.run_id,)
+    )[0]
+    assert row[0] == expected_status, "runs.status disagrees with the RunResult"
+    assert row[1] is not None, "a finished run has no completed_at"
+
+
+async def test_the_runs_row_records_what_the_runner_was_asked_for():
+    """model_id, agent_spec_id and max_turns were all unasserted: the row could
+    have been written with any of them wrong and nothing would have noticed."""
+    result = await Runner(
+        {"gw": ScriptedModel(text("done"))},
+        tools=[echo_tool()],
+        persistence=Persistence.postgres(DSN),
+    ).run(
+        AgentSpec(id="recorded-spec", instructions="be terse",
+                  preferred_model="gw:openai.gpt-4o-mini", tool_profile=("echo",)),
+        "go",
+        RunConfig(tenant_id="t-recorded", project_id="p-recorded", max_turns=9),
+    )
+    stored = PostgresRunStore(DSN).get_run(result.run_id)
+    assert stored["agent_spec_id"] == "recorded-spec"
+    assert stored["model_id"] == "openai.gpt-4o-mini"
+    assert stored["max_turns"] == 9
+    assert stored["tenant_id"] == "t-recorded"
+
+    payload = query(
+        "SELECT payload FROM run_events WHERE run_id=%s AND event_type='RunStarted'",
+        (result.run_id,),
+    )[0][0]
+    assert payload["model"] == "openai.gpt-4o-mini"
+    assert payload["agent_spec_id"] == "recorded-spec"
+    assert payload["max_turns"] == 9
+
+
+async def test_persisted_event_ids_are_the_ones_that_were_emitted():
+    """Phase 2's parent_event_id will reference these. An event whose stored id
+    is not the emitted one breaks that link before it is ever used, and nothing
+    compared the two."""
+    events = []
+
+    class Watching:
+        async def send(self, request):
+            return text("done")
+
+    runner = Runner(
+        {"gw": Watching()}, tools=[echo_tool()], persistence=Persistence.postgres(DSN)
+    )
+    result = await runner.run(
+        AgentSpec(id="s", instructions="i", preferred_model="gw:m", tool_profile=("echo",)),
+        "go",
+        RunConfig(tenant_id="t-eventid", project_id="p-eventid"),
+    )
+    emitted = [(str(e.event_id), e.event_type.value, e.sequence_no) for e in result.events]
+    stored = [
+        (str(r[0]), r[1], r[2])
+        for r in query(
+            "SELECT event_id, event_type, sequence_no FROM run_events"
+            " WHERE run_id=%s ORDER BY sequence_no",
+            (result.run_id,),
+        )
+    ]
+    assert emitted == stored, "the stored events are not the events that were emitted"
+    assert len({e[0] for e in stored}) == len(stored), "duplicate event ids"
+
+
+def test_history_is_tenant_scoped_on_read(started):
+    """A bound store used to return any tenant's messages given a run id.
+    Recorded as a decision rather than left implicit: run ids being UUIDv4
+    makes that hard to exploit, but NFR-2's premise is that tenancy is
+    enforced, not that identifiers are unguessable."""
+    PostgresSessionStore(DSN).bind(started).append(
+        started.run_id, Message(role=Role.USER, content="tenant A's message")
+    )
+    intruder = RunScope(
+        run_id=started.run_id, tenant_id="t-other", project_id="p-other"
+    )
+    assert PostgresSessionStore(DSN).bind(intruder).history(started.run_id) == []
+
+
+def test_reading_history_without_a_bound_scope_is_refused():
+    with pytest.raises(ValueError, match="tenancy is enforced on read"):
+        PostgresSessionStore(DSN).history(str(uuid.uuid4()))
+
+
+async def test_an_unstorable_provider_response_id_does_not_lose_the_audit_trail():
+    """provider_response_id travels beside the message into the ModelCalled
+    payload, so it reaches run_events.payload exactly as the message reaches
+    messages. Round 5 found it unguarded because the check had been applied to
+    the message and not to what rides alongside it."""
+
+    class Provider:
+        async def send(self, request):
+            return ModelResponse(
+                message=Message(role=Role.ASSISTANT, content="done"),
+                stop_reason=StopReason.END_TURN,
+                usage=Usage(1, 1, 2),
+                provider_response_id="chatcmpl" + chr(0) + "1",
+            )
+
+    async def run(persistence):
+        return await Runner(
+            {"gw": Provider()}, tools=[echo_tool()], persistence=persistence
+        ).run(
+            AgentSpec(id="s", instructions="i", preferred_model="gw:m",
+                      tool_profile=("echo",)),
+            "go",
+            RunConfig(tenant_id="t-respid", project_id="p-respid", max_turns=2),
+        )
+
+    in_memory = await run(None)
+    persisted = await run(Persistence.postgres(DSN))
+    assert in_memory.status is persisted.status
+    assert persisted.status is RunStatus.COMPLETED
+    # The event was still written -- an event that cannot be written is an
+    # event the trail simply lacks, which is worse than one marked unstorable.
+    payload = query(
+        "SELECT payload FROM run_events WHERE run_id=%s AND event_type='ModelCalled'",
+        (persisted.run_id,),
+    )[0][0]
+    assert "unstorable" in str(payload["provider_response_id"])
+
+
+def test_an_event_payload_that_cannot_be_stored_is_marked_not_dropped(started):
+    """_json_safe is the last line of defence for the audit trail: the
+    primitives refuse unstorable values upstream, but a payload is assembled
+    from many sources, and a row that will not write means no record at all."""
+    sink = PostgresEventStore(DSN, started.tenant_id, started.project_id, started.run_id)
+    sink.emit(EventType.RUN_STARTED, {"note": "bad" + chr(0) + "value", "ok": "fine"})
+
+    payload = query(
+        "SELECT payload FROM run_events WHERE run_id=%s", (started.run_id,)
+    )[0][0]
+    assert payload["ok"] == "fine"
+    assert "unstorable" in payload["note"]
+    assert "NUL" in payload["note"], "the marker should say why"
+
+
+def test_a_stringified_object_that_renders_unstorably_is_also_marked(started):
+    """_json_safe's str() fallback is a second doorway into the payload: an
+    object whose repr carries a NUL reaches JSONB the same way a bare string
+    does, and only the string branch was pinned."""
+
+    class Awkward:
+        def __str__(self):
+            return "rendered" + chr(0) + "badly"
+
+    sink = PostgresEventStore(DSN, started.tenant_id, started.project_id, started.run_id)
+    sink.emit(EventType.RUN_STARTED, {"obj": Awkward()})
+
+    payload = query(
+        "SELECT payload FROM run_events WHERE run_id=%s", (started.run_id,)
+    )[0][0]
+    assert "unstorable" in payload["obj"] and "NUL" in payload["obj"]

@@ -2,7 +2,7 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
-## Rounds 1-4 -- what was rejected, and what changed
+## Rounds 1-5 -- what was rejected, and what changed
 
 A previous reviewer rejected this milestone and was right to. Their finding, and the response:
 
@@ -43,9 +43,21 @@ Round 4 confirmed rounds 1 and 3 dead, and rejected on a fourth defect inside th
 
 **Known equivalent mutant.** Flipping the backstop's `allow_nan=False` to `True` leaves the suite green, because the named layer catches non-finite floats first. It is kept deliberately as overlapping defence, and documented in the code. Do not report it as a fresh blind spot without saying why the overlap should go.
 
+Round 5 rejected on the identifier and name fields -- `ToolCall.id`, `function.name`, `provider_response_id` -- which reach the same JSONB columns the guarded fields do. Its diagnosis is the part that matters: `unstorable_reason` is total over VALUES, but its APPLICATION was an enumeration of the fields someone had thought of. Five rounds, five defects, each fix one level more general than the last.
+
+**So the application is no longer an enumeration.** `_replace_unstorable_text` walks `dataclasses.fields()` and is called by `ToolCall`, `ToolResult`, `ContentProvenance`, `Message` and `ModelResponse`. A string field added tomorrow is covered without anyone remembering. Identifiers are REPLACED with a conspicuous marker rather than refused, so a NUL in a tool name becomes an ordinary "no such tool" error -- what happens without persistence -- instead of a run dying at the write with no record of what the model said (NFR-3). There is a test asserting the property over `dataclasses.fields()` itself, not over today's field list.
+
+**Defect 2 (the recursion window) is fixed by erring toward refusal.** The window moves with the caller's stack, so the two verdicts cannot be made to agree exactly. `_MAX_NESTING` (half the recursion limit) refuses early: accepting-then-failing costs the audit trail, refusing costs an explicit tool error on nesting no model emits. The band between the margin and the true limit IS a deliberate false positive, and a test says so.
+
+**All four blind spots are closed**, including the two the reviewer verified personally: `runs.status` is now asserted for every loop-path outcome (hardcoding `finish_run` to `completed` used to leave the suite green), event ids are compared emitted-to-stored, and the runs row's model/spec/max_turns plus the RunStarted payload are asserted.
+
+**`history()` is now tenant-scoped on read** (`DECISION-e692386f`), which the reviewer raised as "worth a decision, not a fix". Both directions were arguable; NFR-2's premise settled it.
+
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
 - `unstorable_reason` decides what every primitive will accept, and has now been wrong twice. Find a value Postgres refuses that it passes, or one it rejects that would have stored fine. Probe the DATABASE for the answer rather than reasoning about it -- both previous holes were found that way, and the helper's verdicts are only worth what a live comparison says.
 - The backstop calls `json.dumps` on every tool-call argument dict. Measured at 0.1-8ms for 10k keys, a 1MB string and a 50k-element list, with no false positives -- confirm or refute, and find a shape that is pathological.
+- **The field walk is the new single point of failure.** It covers `str` fields on dataclasses. What about a string inside a tuple field, a nested dataclass, or a field added as `list[str]`? Find a persisted string it does not reach.
+- `history()` now refuses an unbound store. Does anything legitimate need an unscoped read -- support tooling, a future replay -- and is raising the right answer there?
 - **Hunt false positives, not just misses.** Four rounds hunted values the helper wrongly accepts; the depth-cap defect was one it wrongly rejected, and only a live-database comparison exposed it. Ask Postgres what it accepts and diff the two verdicts in both directions.
 - **Raising in `Message.__post_init__` is the riskiest thing here.** Find a path where that raise is not contained by a total boundary, or where it fires on an error path and takes down a handler.
 - `ToolCall.__post_init__` silently empties `arguments`. Is the reason always preserved, and can a caller be confused by arguments that vanish?
@@ -110,8 +122,8 @@ Modified: `agentsdk/api.py` (persistence wiring, manifest, model-version lookup,
 1. Read the files, `SPEC.md`, and the decisions/invariants/knowledge in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 47
-   .venv\Scripts\python.exe -m pytest -q                             # expect 354
+   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # expect 59
+   .venv\Scripts\python.exe -m pytest -q                             # expect 370
    ```
    A different number is itself a finding.
 3. **Mutation-test.** Round 1: 21 mutations, six survivors. Round 2's reviewer ran 56 and found 12 blind spots. Round 3: 12 targeted, 12 killed. Round 4: 12 targeted at the storability work, 12 killed -- one initially survived (removing the cycle-depth guard) because the outer catch absorbed the RecursionError, so the test now pins the *diagnosis* rather than mere survival. Every round's reviewer has found blind spots the author's own matrix did not; assume more exist. Invent your own -- the survivors were found by a reviewer, not by the author. Five shared one cause worth understanding: `schema.sql` uses `CREATE TABLE IF NOT EXISTS`, so mutating the file has **no effect on an already-created database** — the schema tests were proving the live database correct, not the file. A test now applies `schema.sql` into a throwaway namespace and asserts there. Re-run these and invent your own:

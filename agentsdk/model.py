@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
-from .primitives import Message, ToolCall
+from .primitives import Message, ToolCall, _replace_unstorable_text
 
 
 class StopReason(str, Enum):
@@ -104,6 +104,14 @@ class ModelResponse:
     structured_output: dict[str, Any] | None = None
     provider_response_id: str | None = None
     provider_metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        # provider_response_id is copied into the ModelCalled event payload and
+        # written to run_events.payload, so it reaches a column exactly as the
+        # message does -- and round 5 found it unguarded for that reason: the
+        # check had been applied to the message and not to what travels beside
+        # it. Same walk as the primitives, for the same reason.
+        _replace_unstorable_text(self)
 
     @property
     def tool_calls(self) -> tuple[ToolCall, ...]:

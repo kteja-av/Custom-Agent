@@ -23,6 +23,7 @@ from psycopg.types.json import Jsonb
 
 from .events import SCHEMA_VERSION, EventType, RunEvent
 from .primitives import (
+    UNSTORABLE,
     ContentProvenance,
     InstructionAuthority,
     Message,
@@ -32,6 +33,7 @@ from .primitives import (
     ToolCall,
     ToolResult,
     TrustZone,
+    unstorable_reason,
 )
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
@@ -198,13 +200,30 @@ class PostgresSessionStore:
                     )
 
     def history(self, run_id: str) -> list[Message]:
+        """Tenant-scoped on READ as well as write.
+
+        A bound store used to return any tenant's messages given a run id.
+        Defensible on the grounds that run ids are UUIDv4 and FR-9's signature
+        is history(run_id) -- but NFR-2's premise is that tenancy is enforced,
+        not merely unguessable, and an id is a capability only until one leaks
+        into a log or a support ticket. Enforcing it here costs one WHERE
+        clause; the index on (tenant_id, project_id) already exists.
+        """
+        scope = self._scope
+        if scope is None or scope.run_id != run_id:
+            raise ValueError(
+                "PostgresSessionStore must be bound to the run's scope before reading; "
+                "tenancy is enforced on read as well as write (NFR-2)"
+            )
         with psycopg.connect(self._dsn) as conn:
             rows = conn.execute(
                 """
                 SELECT role, content, tool_calls, tool_results
-                FROM messages WHERE run_id = %s ORDER BY sequence_no
+                FROM messages
+                WHERE run_id = %s AND tenant_id = %s AND project_id = %s
+                ORDER BY sequence_no
                 """,
-                (run_id,),
+                (run_id, scope.tenant_id, scope.project_id),
             ).fetchall()
         return [_message_from_row(row) for row in rows]
 
@@ -267,18 +286,30 @@ class PostgresEventStore:
 
 
 def _json_safe(value: Any) -> Any:
-    """Payloads carry enums and datetimes; JSONB does not."""
+    """Payloads carry enums and datetimes; JSONB does not.
+
+    Also the last line of defence for the audit trail. The primitives refuse
+    unstorable values upstream, but a payload is assembled here from many
+    sources -- ids, model names, a stringified object -- and an event that
+    cannot be written is an event the trail simply lacks, which is strictly
+    worse than one marked as unstorable. So a value that would fail the write
+    is replaced with a marker naming the reason, rather than taking the run
+    down with it.
+    """
     if isinstance(value, dict):
-        return {str(k): _json_safe(v) for k, v in value.items()}
+        return {_json_safe(str(k)): _json_safe(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
         return [_json_safe(v) for v in value]
     if isinstance(value, datetime):
         return value.isoformat()
     if hasattr(value, "value") and hasattr(value, "name"):  # Enum
-        return value.value
+        return _json_safe(value.value)
     if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    return str(value)
+        reason = unstorable_reason(value)
+        return value if reason is None else f"{UNSTORABLE}: {reason}"
+    rendered = str(value)
+    reason = unstorable_reason(rendered)
+    return rendered if reason is None else f"{UNSTORABLE}: {reason}"
 
 
 class PostgresRunStore:

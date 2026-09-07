@@ -23,7 +23,7 @@ from agentsdk import (
     TrustZone,
     WorkflowError,
 )
-from agentsdk.primitives import unstorable_reason
+from agentsdk.primitives import UNSTORABLE, unstorable_reason
 from agentsdk.outcomes import (
     ApprovalRequired,
     Completed,
@@ -192,7 +192,7 @@ def test_run_interruption_type_exists_without_persistence():
 # primitives so every provider gets it, not just the adapter that was fixed.
 
 NUL = chr(0)
-UNSTORABLE = [
+UNSTORABLE_VALUES = [
     float("inf"),
     float("-inf"),
     float("nan"),
@@ -200,7 +200,7 @@ UNSTORABLE = [
 ]
 
 
-@pytest.mark.parametrize("value", UNSTORABLE, ids=lambda v: repr(v)[:20])
+@pytest.mark.parametrize("value", UNSTORABLE_VALUES, ids=lambda v: repr(v)[:20])
 def test_unstorable_values_are_named(value):
     assert unstorable_reason(value) is not None
 
@@ -261,7 +261,7 @@ def test_unstorable_reason_is_total():
     assert unstorable_reason([Hostile()]) is not None
 
 
-@pytest.mark.parametrize("value", UNSTORABLE, ids=lambda v: repr(v)[:20])
+@pytest.mark.parametrize("value", UNSTORABLE_VALUES, ids=lambda v: repr(v)[:20])
 def test_a_tool_call_with_unstorable_arguments_flags_itself(value):
     """The same channel undecodable JSON already uses: empty arguments plus the
     reason they are empty, which ToolExecutor rejects before anything runs."""
@@ -354,23 +354,33 @@ def _nest(depth):
     return value
 
 
-@pytest.mark.parametrize("depth", [10, 61, 100, 500, 900], ids=lambda d: f"depth-{d}")
+@pytest.mark.parametrize("depth", [10, 61, 100, 400], ids=lambda d: f"depth-{d}")
 def test_deep_nesting_postgres_accepts_is_not_rejected(depth):
     """Found by probing rather than by review: the walk used to declare
-    anything past depth 60 unstorable, and Postgres stores 900-deep JSON
+    anything past depth 60 unstorable, while Postgres stores 900-deep JSON
     without complaint. A model returning deeply nested arguments had its tool
     call refused over a limit that does not exist -- over-rejection fails runs
     that should work, which is a defect in the same class as under-rejection.
-
-    Verified against the live database: json.dumps and JSONB both accept every
-    depth here, and both give up at ~1000 on the interpreter's recursion limit.
     """
     assert unstorable_reason(_nest(depth)) is None
 
 
-def test_nesting_past_the_serialisers_limit_is_still_refused():
-    """The line is drawn by the serialiser, which is where Postgres draws it
-    too -- not by a number this module picked."""
+def test_nesting_near_the_recursion_limit_is_refused_deliberately():
+    """A round-5 reviewer showed this helper and psycopg disagree in a window
+    near the recursion limit (~969-975), because the limit is really "how much
+    stack is left" and the two run at different depths -- so the window moves.
+
+    Refusing early is the cheaper mistake. Disagreeing in the accepting
+    direction means the write fails and the audit trail loses the message
+    (NFR-3); disagreeing in the refusing direction costs an explicit tool error
+    on nesting no model plausibly emits. This test pins that the margin exists
+    and is a deliberate false positive, not a rediscovered depth cap: the band
+    between it and the real limit IS refused, and that is the intended trade.
+    """
+    from agentsdk.primitives import _MAX_NESTING
+
+    assert unstorable_reason(_nest(_MAX_NESTING - 10)) is None
+    assert unstorable_reason(_nest(_MAX_NESTING + 10)) is not None
     assert unstorable_reason(_nest(2000)) is not None
 
 
@@ -384,3 +394,68 @@ def test_a_nul_is_found_however_deeply_it_is_buried():
         cursor = cursor["n"]
     cursor["leaf"] = "deep" + chr(0) + "value"
     assert unstorable_reason(buried) == "text contains a NUL character"
+
+
+# --- round 5: every field, not the fields someone thought of -----------------
+
+
+def test_an_unstorable_tool_name_does_not_take_the_run_down():
+    """A NUL in function.name reached the same JSONB column arguments did.
+    Replaced rather than refused, so it becomes an ordinary "no such tool"
+    error -- which is what happens without persistence -- instead of a run that
+    dies at the write with no record of what the model said (NFR-3)."""
+    call = ToolCall(id="c1", name="ec" + NUL + "ho", arguments={})
+    assert call.name == UNSTORABLE
+    assert call.arguments_error is not None and "name" in call.arguments_error
+
+
+def test_an_unstorable_tool_call_id_is_replaced():
+    call = ToolCall(id="c" + NUL + "1", name="echo", arguments={})
+    assert call.id == UNSTORABLE
+    assert call.arguments_error is not None and "id" in call.arguments_error
+
+
+def test_an_unstorable_tool_result_id_is_replaced_without_losing_the_result():
+    result = ToolResult(
+        tool_call_id="c" + NUL + "1",
+        content="the answer",
+        provenance=ContentProvenance.internal_tool(),
+    )
+    assert result.tool_call_id == UNSTORABLE
+    assert result.content == "the answer", "a bad id must not destroy a good result"
+    assert result.is_error is False
+
+
+def test_an_unstorable_provenance_source_is_replaced():
+    provenance = ContentProvenance.internal_tool(source_uri_or_hash="ha" + NUL + "sh")
+    assert provenance.source_uri_or_hash == UNSTORABLE
+
+
+def test_every_string_field_is_checked_not_a_list_of_names():
+    """The guarantee is structural: the walk covers dataclasses.fields(), so a
+    string field added tomorrow is covered without anyone remembering. Assert
+    that directly rather than trusting today's field list.
+    """
+    import dataclasses
+
+    for cls, kwargs in (
+        (ToolCall, dict(id="i", name="n")),
+        (ToolResult, dict(tool_call_id="i", content="c",
+                          provenance=ContentProvenance.internal_tool())),
+    ):
+        string_fields = [
+            f.name for f in dataclasses.fields(cls)
+            if f.type in ("str", "str | None")
+        ]
+        assert string_fields, f"{cls.__name__} has no string fields to check"
+        for name in string_fields:
+            if name == "arguments_error":
+                continue  # the channel the reasons travel on, not an input
+            instance = cls(**{**kwargs, name: "bad" + NUL})
+            # Not "becomes the marker" -- ToolResult.content deliberately
+            # becomes the reason instead, with is_error set. The property that
+            # matters is that NO string field of a constructed primitive is
+            # still unstorable, however that field is handled.
+            assert unstorable_reason(getattr(instance, name)) is None, (
+                f"{cls.__name__}.{name} is not covered by the storability walk"
+            )

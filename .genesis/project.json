@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-06T18:47:38.076Z"
+    "updated_at": "2026-09-07T14:39:01.243Z"
   },
   "policy": {
     "ponytail": "full",
@@ -315,6 +315,22 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-06T16:53:59.294Z"
+    },
+    {
+      "id": "DECISION-53461588",
+      "title": "Storability is applied by walking every field, not a list of names",
+      "text": "Primitive constructors call _replace_unstorable_text, which walks dataclasses.fields() and replaces any unstorable string field with the marker '<unstorable>', recording the reason on the type's existing error channel where one exists. Applied by ToolCall, ToolResult, ContentProvenance, Message and ModelResponse. Rationale: five review rounds found the storability CHECK correct but its APPLICATION an enumeration -- Message.content, ToolCall.arguments and ToolResult.content were guarded while id, name, tool_call_id, source_uri_or_hash and provider_response_id reached the same columns unguarded. Walking the fields means a field added later is covered without anyone remembering. Identifiers are replaced rather than refused so a NUL in a tool name becomes an ordinary ToolNotFound error result -- what happens without persistence -- instead of a run that dies at the write with no record of what the model said (NFR-3).",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-07T14:38:02.495Z"
+    },
+    {
+      "id": "DECISION-e692386f",
+      "title": "history() is tenant-scoped on read, not only on write",
+      "text": "PostgresSessionStore.history requires a bound RunScope and filters on tenant_id and project_id, like append. Previously a store bound to tenant B could read tenant A's messages given only a run id. The counter-argument is real -- FR-9's signature is history(run_id) and run ids are UUIDv4 -- but NFR-2's premise is that tenancy is ENFORCED, not that identifiers are unguessable, and an id is a capability only until one leaks into a log or a support ticket. The cost is one WHERE clause against an index that already exists. Raised as 'worth a decision, not a fix' by the M5 round-5 reviewer; recorded here rather than left implicit.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-07T14:38:02.667Z"
     }
   ],
   "knowledge": [
@@ -429,6 +445,14 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-06T18:47:12.769Z"
+    },
+    {
+      "id": "KNOWLEDGE-fd4720a4",
+      "title": "Overlapping guards need a test at each layer",
+      "text": "Two mutations survived the round-6 matrix because the storability guards overlap: removing ModelResponse's field walk still passed end-to-end, since _json_safe marks the same value downstream, and vice versa. Overlap is deliberate defence in depth, but an end-to-end test cannot pin either layer -- it only proves that at least one still works. Each layer now has a test at its own level (ModelResponse asserted directly on the type; _json_safe asserted on both its string and its str()-fallback branch). Where a mutation survives because another layer covers it, the answer is a narrower test, not a weaker claim.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-07T14:38:02.820Z"
     }
   ],
   "tasks": [
@@ -662,9 +686,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "acb005f91d21d4d1af486588ee93179fae2d3a26a928c5c17498356d7be8c49a",
-            "hash": "d6e4a2b18336ce2abf026439a416f194c92984bd30b574da05421349542fb959",
-            "observed_at": "2026-09-06T18:47:11.318Z"
+            "source_hash": "35fa4e85681915abfab690bb927cbb59ca82d8f724904d6d625024d99620eddb",
+            "hash": "740232a707aaf7e94ec1e9bbad660cb88c46f068091c0ab4cb2fbeefbffbd2d5",
+            "observed_at": "2026-09-07T14:38:28.017Z"
           }
         },
         {
@@ -684,7 +708,7 @@
         "Carried from M4 review: RunResult.usage is zeroed when Runner's total boundary catches a non-SDK exception, even though the ModelCalled events still carry per-turn usage. Reconstructible from events but under-reported on the result object; fix while M5 touches Runner for persistence."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-06T18:47:11.631Z"
+      "updated_at": "2026-09-07T14:38:28.155Z"
     },
     {
       "id": "M6-golden-eval",
@@ -914,15 +938,33 @@
       "human": "Opus 5 (implementer)",
       "reason": "Round-4 defect fixed: unstorable_reason now backs its named checks with the serialisation the store performs, catching lone surrogates and oversized integers as a class. Verified against a live database in both directions -- no false positives on astral emoji, 4-byte CJK or int(1e308). The reviewer's third finding was checked and is incorrect: INVARIANT-3c123c38 was pinned all along (full suite goes red); the test was merely unfindable by -k selection, and is renamed. 343 tests, 7/8 mutations killed with the survivor documented as a deliberate equivalent mutant.",
       "revision": null
+    },
+    {
+      "id": "d7a264e0-c695-4080-9164-59b907fc967d",
+      "at": "2026-09-07T14:18:53.648Z",
+      "action": "reject",
+      "task": "M5-postgres",
+      "human": "Claude (Fable 5.1) - fresh independent L4 reviewer, M5 round 5",
+      "reason": "REJECT. Primary defect (reachable, in scope): the storability guarantee (DECISION-65528763) is enforced on Message.content, ToolCall.arguments and successful tool results only. ToolCall.name, ToolCall.id, ToolCall.arguments_error, ModelResponse.provider_response_id and the error text of a failed ToolResult (tool exception message, ToolNotFound name) reach the JSONB columns unchecked. Reproduced through the real OpenAICompatibleModelClient over httpx.MockTransport with valid RFC-8259 bodies: a U+0000 escape in function.name, in tool_calls[].id, or in the response id, and a tool raising with a NUL in its exception message, each COMPLETE in memory and FAIL against Postgres (UntranslatableCharacter), leaving runs.status=failed with only RunStarted+RunFailed events (the assistant message and ModelCalled event never persist). This is the round-3 defect class in fields no round examined; the same values flow into ModelCalled/ToolCalled payloads. Secondary defect: the backstop's verdict is call-stack dependent, not value dependent. Through Runner, argument nesting depths 969-975 pass unstorable_reason (json.dumps on a shallower stack) and then fail psycopg's own json.dumps with RecursionError on the deeper store stack; a 972-deep argument body via the adapter completes in memory and fails on Postgres. The claim that the serialiser 'agrees with Postgres exactly' does not hold at the boundary, and the window's position moves with the caller's stack depth. Verified sound: gate 47 and 354 as claimed; helper-vs-live-Postgres verdict diff over 52 values (controls, nonchars, surrogates, NUL, big ints, floats, keys, 900-deep, 10k keys, 1MB) found zero mismatches in either direction for the fields that ARE checked; escaped surrogate pairs decode and store correctly; AC-6 atomicity holds; 5 trials of 12 barrier-synchronised writers gave 10-11 committed contiguous rows, 1-2 UniqueViolation, 0 duplicates; a NUL in the user's task is contained identically on both backends; Runner.run stays total in every probe. Suite blind spots (code correct, each a FULL-suite 354-pass survivor): provenance.instruction_authority on read; ToolCall.id and ToolResult.tool_call_id on read (every test uses 'c1'); run_events.event_id not pinned to the RunEvent's id; runs.model_id, agent_spec_id and max_turns as written by Runner never asserted; runs.status on loop-path failures (ModelError, max_turns) never persisted by a test; RunStarted payload model. Caveats: a bound PostgresSessionStore.history() and PostgresTrace.reconstruct read any tenant's run by run_id alone; a custom ModelClient reporting a 4301+ digit integer token count passes token_count and fails the run on Postgres only; a provider 4xx body carrying U+0000 loses the real failure reason from the persisted RunFailed event. Database left as found: probe rows deleted, orphan count 979 unchanged, no throwaway schemas; mutated files restored (SHA-256 verified) and git clean.",
+      "revision": null
+    },
+    {
+      "id": "e0b066f1-4fb9-462b-8d4e-e692f60a040e",
+      "at": "2026-09-07T14:38:29.219Z",
+      "action": "retry",
+      "task": "M5-postgres",
+      "human": "Opus 5 (implementer)",
+      "reason": "Round-5 defect fixed by walking dataclasses.fields() in every primitive constructor rather than checking the fields someone thought of: id, name, tool_call_id, source_uri_or_hash and provider_response_id are now covered, and a field added later is covered automatically. All three of the reviewer's wire cases converge through the real adapter. Defect 2 addressed with a documented recursion margin that errs toward refusing. Blind spots closed: runs.status for every loop-path outcome, event-id fidelity, the runs row's model/spec/max_turns, and the RunStarted payload. history() is now tenant-scoped on read, recorded as a decision. 370 tests, 16/16 mutations killed.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-06T18:47:38.002Z",
+    "at": "2026-09-07T14:39:01.179Z",
     "revision": {
-      "commit": "002a2717dfc8d9ecb20ef88b24d110cc5d978a83",
+      "commit": "48e3e27cf56c2a4718a8316ff43585dd0fed678f",
       "dirty": true,
-      "source_hash": "035dba435ff607843d9340cc69157553c9ccd928e0c033f9cad57af7ac8e8daf"
+      "source_hash": "752ef782f3193c917009876ff964944ba815ac17a3363cf4e5921f32c4207c3e"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."

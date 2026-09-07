@@ -7,6 +7,8 @@ module knows what a provider is.
 from __future__ import annotations
 
 import json
+import dataclasses
+import sys
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any
@@ -74,6 +76,8 @@ class ContentProvenance:
         # and union behave regardless of what the caller passed.
         if not isinstance(self.taint_flags, frozenset):
             object.__setattr__(self, "taint_flags", frozenset(self.taint_flags))
+        # source_uri_or_hash is persisted with every tool result.
+        _replace_unstorable_text(self)
 
     @classmethod
     def internal_tool(cls, source_uri_or_hash: str | None = None) -> ContentProvenance:
@@ -138,26 +142,29 @@ class ToolCall:
     arguments_error: str | None = None
 
     def __post_init__(self) -> None:
-        # Arguments that no durable store can hold travel on the SAME channel as
-        # undecodable ones, and the check is here rather than in an adapter
-        # because every adapter would otherwise have to remember it -- and
-        # NFR-1's whole claim is that a new provider is a configuration change.
-        # A ToolCall whose arguments cannot be stored therefore cannot exist
-        # without saying so.
-        if self.arguments_error is None:
-            reason = unstorable_reason(self.arguments)
-            if reason is not None:
-                object.__setattr__(
-                    self, "arguments_error", f"arguments cannot be stored: {reason}"
-                )
-                # Cleared, not merely flagged. Flagging alone still leaves the
-                # unstorable value in `arguments`, and the assistant message
-                # carrying this call is persisted whether or not the executor
-                # runs it -- so the write fails anyway and the divergence
-                # survives. This is the same shape undecodable JSON already
-                # takes: empty arguments plus the reason they are empty, which
-                # ToolExecutor step 2 rejects before anything can execute {}.
-                object.__setattr__(self, "arguments", {})
+        # `id` and `name` reach the same JSONB column `arguments` does. Round 5
+        # found them unguarded because the check had been applied to the fields
+        # someone thought of -- so this walks EVERY field instead (see
+        # _replace_unstorable_text), and a field added later is covered without
+        # anyone remembering.
+        #
+        # The check is here rather than in an adapter because every adapter
+        # would otherwise have to remember it, and NFR-1's whole claim is that
+        # a new provider is a configuration change.
+        problems = _replace_unstorable_text(self, skip=("arguments_error",))
+        reason = unstorable_reason(self.arguments)
+        if reason is not None:
+            # Cleared, not merely flagged. Flagging alone still leaves the
+            # unstorable value in `arguments`, and the assistant message
+            # carrying this call is persisted whether or not the executor runs
+            # it -- so the write fails anyway and the divergence survives. This
+            # is the shape undecodable JSON already takes: empty arguments plus
+            # the reason they are empty, which ToolExecutor step 2 rejects
+            # before anything can execute {}.
+            object.__setattr__(self, "arguments", {})
+            problems.append(f"arguments cannot be stored: {reason}")
+        if problems and self.arguments_error is None:
+            object.__setattr__(self, "arguments_error", "; ".join(problems))
 
 
 @dataclass(frozen=True)
@@ -180,6 +187,16 @@ class ToolResult:
                 "ToolResult.provenance must be a ContentProvenance, got "
                 f"{type(self.provenance).__name__}"
             )
+        # tool_call_id goes into the same JSONB column the content does.
+        _replace_unstorable_text(self, skip=("content",))
+        reason = unstorable_reason(self.content)
+        if reason is not None:
+            # A result whose content cannot be stored is a failed result: the
+            # model is told why, rather than the run dying at the write. The
+            # executor normally catches this first; this is the backstop for a
+            # ToolResult built anywhere else.
+            object.__setattr__(self, "content", f"tool result cannot be stored: {reason}")
+            object.__setattr__(self, "is_error", True)
 
 
 @dataclass(frozen=True)
@@ -203,6 +220,7 @@ class Message:
         # and ModelClient.send() converts it to a typed ModelError on the way
         # out -- which is what lets a caller tell "the model emitted something
         # unstorable" from "the database is down".
+        _replace_unstorable_text(self, skip=("content",))
         reason = unstorable_reason(self.content)
         if reason is not None:
             raise ValueError(f"Message.content cannot be stored: {reason}")
@@ -211,6 +229,45 @@ class Message:
 # --- storability (M5 round 3) -----------------------------------------------
 
 _NUL = "\x00"
+UNSTORABLE = "<unstorable>"
+# Half the recursion limit: see the margin note in _named_unstorable_reason.
+_MAX_NESTING = max(64, sys.getrecursionlimit() // 2)
+
+
+def _replace_unstorable_text(instance: Any, *, skip: tuple[str, ...] = ()) -> list[str]:
+    """Replace every unstorable STRING field with a marker; return the reasons.
+
+    Walks `dataclasses.fields()` rather than a list of names, because the
+    enumeration IS the defect this exists to fix. Five review rounds found the
+    storability check correct but applied only to the fields someone had
+    thought of -- Message.content, ToolCall.arguments, ToolResult.content --
+    while id, name, tool_call_id and source_uri_or_hash reached the same
+    columns unguarded. Walking the fields means one added tomorrow is covered
+    without anyone remembering.
+
+    Identifiers are replaced rather than refused: a NUL in a tool name should
+    become an ordinary "no such tool" error result, which is what happens
+    without persistence -- not a run that dies at the write with no record of
+    what the model said (NFR-3). The marker is deliberately conspicuous.
+
+    Total by intent: it is called from constructors that sit under boundaries.
+    """
+    problems: list[str] = []
+    try:
+        for f in dataclasses.fields(instance):
+            if f.name in skip:
+                continue
+            value = getattr(instance, f.name, None)
+            if not isinstance(value, str):
+                continue
+            reason = unstorable_reason(value)
+            if reason is not None:
+                object.__setattr__(instance, f.name, UNSTORABLE)
+                problems.append(f"{f.name} cannot be stored: {reason}")
+    except Exception:  # noqa: BLE001 - total by intent
+        problems.append("a field could not be checked for storability")
+    return problems
+
 
 
 def unstorable_reason(value: Any) -> str | None:
@@ -274,10 +331,24 @@ def _named_unstorable_reason(value: Any) -> str | None:
     quietly stopped doing.
     """
     try:
-        stack = [value]
+        stack = [(value, 0)]
         seen: set[int] = set()
         while stack:
-            item = stack.pop()
+            item, depth = stack.pop()
+            if depth > _MAX_NESTING:
+                # A MARGIN, not a storage limit -- and deliberately a false
+                # positive in a narrow band. Postgres accepts about 969 levels,
+                # but that number is the interpreter's recursion limit minus
+                # whatever stack the caller already used, so it moves: this
+                # helper and psycopg run at different depths and can disagree.
+                # Disagreeing in the accepting direction means the write fails,
+                # which costs the audit trail (NFR-3); disagreeing in the
+                # refusing direction costs an explicit tool error on nesting no
+                # model plausibly emits. Refusing is the cheaper mistake.
+                return (
+                    f"nested more than {_MAX_NESTING} deep, which is too close to "
+                    "the serialiser's recursion limit to store reliably"
+                )
             if isinstance(item, str):
                 if _NUL in item:
                     return "text contains a NUL character"
@@ -295,14 +366,14 @@ def _named_unstorable_reason(value: Any) -> str | None:
                     continue
                 seen.add(id(item))
                 for key, sub in item.items():
-                    stack.append(key)
-                    stack.append(sub)
+                    stack.append((key, depth + 1))
+                    stack.append((sub, depth + 1))
                 continue
             if isinstance(item, (list, tuple, set, frozenset)):
                 if id(item) in seen:
                     continue
                 seen.add(id(item))
-                stack.extend(item)
+                stack.extend((sub, depth + 1) for sub in item)
                 continue
             # Not reachable from decoded JSON. The backstop decides it.
         return None
