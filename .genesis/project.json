@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-08T15:13:52.881Z"
+    "updated_at": "2026-09-08T18:33:32.921Z"
   },
   "policy": {
     "ponytail": "full",
@@ -24,7 +24,7 @@
   },
   "lifecycle": {
     "phase": "build",
-    "status": "active",
+    "status": "rejected",
     "active_task": "M6-golden-eval",
     "blocker": null,
     "next_action": "Run the task pre-flight."
@@ -565,6 +565,30 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-08T15:13:23.484Z"
+    },
+    {
+      "id": "KNOWLEDGE-80e34ccc",
+      "title": "Converting one proxy assertion does not convert its siblings",
+      "text": "M6 round 1 replaced four assertions that were one step removed from their claims. Round 2 found the identical shape in three places nobody had touched: AC-2 was asserted on the wire in the scripted half but not the live half, AC-4 enumerated four of five provenance fields, and AC-9 rebuilt its own specs instead of observing the runs. The shape is easier to remove from the assertion you are looking at than from the file. When a defect class is found, sweep every assertion in the file for it in the same pass and say which ones were checked.",
+      "source": "M6 round 2",
+      "tags": [],
+      "recorded_at": "2026-09-08T18:33:32.621Z"
+    },
+    {
+      "id": "KNOWLEDGE-101334df",
+      "title": "A test that builds its own inputs cannot observe the code under test",
+      "text": "test_both_providers_are_reached_through_the_same_unchanged_spec rebuilt its AgentSpecs from the same constant the live runs used, so making the live half diverge per provider left it green: it compared a constant with itself. The fix is to record what each run actually used and assert on that. The trap survives one level down -- recording task=TASK, the module constant, rather than the local actually passed to runner.run, is the same tautology, and a mutation of the call site would still pass. Record the value that was passed, not the value it came from.",
+      "source": "M6 round 2 defect 3",
+      "tags": [],
+      "recorded_at": "2026-09-08T18:33:32.762Z"
+    },
+    {
+      "id": "KNOWLEDGE-c5f6ab25",
+      "title": "Match an error class by its hierarchy, never by its name",
+      "text": "The golden eval's live retry fired only when result.error contained the string ModelError. Probed against a closed port, an unreachable gateway reports ModelProviderUnavailable, so the retry never ran for the one condition it was written for -- measured, not supposed. The condition is now derived by walking ModelError.__subclasses__() transitively, so a class added later is covered. describe_exception renders the concrete class name, which makes name-matching look sufficient and be wrong for every subclass.",
+      "source": "M6 round 2",
+      "tags": [],
+      "recorded_at": "2026-09-08T18:33:32.919Z"
     }
   ],
   "tasks": [
@@ -835,7 +859,7 @@
     {
       "id": "M6-golden-eval",
       "outcome": "The golden eval passes end to end against the live gateway on two upstream providers, exercising the permission-denial and validation-failure paths and leaking no credential into any row or event",
-      "state": "active",
+      "state": "rejected",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -859,9 +883,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M6-golden-eval-unit.json",
-            "source_hash": "0106599ab1376ccaf424e4d17c4675ddc87a14e2f34c144a3379e23c1f13251d",
-            "hash": "f2444e0ac2969a74262abe571159c183ea360cb6d5104827d29c083b3624fe44",
-            "observed_at": "2026-09-08T15:12:58.140Z"
+            "source_hash": "32e0dfc444a2cd6ca944cebaffb0f71d935f86504c8590b59135abef192fa182",
+            "hash": "6b650f7367a55a5a576d2a4d8cf8ce31b4f100b54eca41bf969491642c8ab39f",
+            "observed_at": "2026-09-08T18:33:12.420Z"
           }
         },
         {
@@ -880,7 +904,7 @@
         "Carried from M5: concurrent appends to one run are safe but not available -- a losing writer raises UniqueViolation rather than serialising. Unreachable in Phase 0 (single writer per run); Phase 2 needs a retry loop or per-run advisory lock."
       ],
       "created_at": "2026-09-05T18:10:01.160Z",
-      "updated_at": "2026-09-08T15:12:58.284Z"
+      "updated_at": "2026-09-08T18:33:12.597Z"
     }
   ],
   "learning_proposals": [],
@@ -1172,6 +1196,15 @@
       "task": "M6-golden-eval",
       "human": "Opus 5 (implementer)",
       "reason": "Both defects fixed. AC-3 now runs live on both providers via a maxLength constraint the instructed input cannot satisfy -- the reviewer's trigger, reproduced 4/4 before being believed, and the validation mutants are now killed by the LIVE test. AC-10 scans whole rows across every table in the schema rather than an enumerated column subset, and the reviewer's M07 canary in run_events.tool_call_id is now caught. The synthesis was taken as a whole: 'surfaced to the model' asserts the next request actually sent, NFR-4 asserts the wire body through a recording transport, and NFR-7 asserts the decision is identical across three principals rather than checking an error type. 421 tests, 8/8 mutations killed with attribution checked per test.",
+      "revision": null
+    },
+    {
+      "id": "ed85798e-5536-4939-91c7-a018bbc7f7f1",
+      "at": "2026-09-08T17:15:57.861Z",
+      "action": "reject",
+      "task": "M6-golden-eval",
+      "human": "Independent L4 reviewer (fresh session, M6 round 2)",
+      "reason": "REJECT. Gates verified exact and green before and after every mutation: full suite 421 passed in 70.35s; per file test_agent_loop 77 / test_golden_eval 14 / test_model_client 150 / test_persistence 80 / test_primitives 74 / test_tool_executor 26 = 421. ROUND 1'S TWO DEFECTS ARE BOTH CLOSED, verified independently, not on trust. AC-10: the scan is now dynamic over information_schema and whole-row ({table}::text LIKE), and it caught a LEAK-CANARY-<4> canary written one at a time into runs.agent_spec_id, run_events.attempt_id, messages.tool_calls, execution_manifests.policy_version and model_registry.known_quirks -- every one of those columns, and the whole model_registry table, was invisible to the round-1 enumeration -- failing on each and passing again after removal. AC-3: genuinely exercised live on both providers (register_code maxLength 8 vs a 36-character task input); 33 bedrock and 27 openai live executions, register.calls == [] in all of them. 19 mutations run, every file backed up, restored in a finally and SHA-256-verified, git diff HEAD empty; 16 killed (allowlist-allows-everything, validation-skipped, execute-before-validate, execute-before-permission-check, manifest-never-written, ToolCalled-not-emitted, tool-results-dropped-on-write, provenance-partly-dropped-on-write, is_error-not-set, origin-mislabelled, output_schema-populated, same-arguments-reused, error-results-dropped-from-the-wire, checker-reads-principal_context.scopes, plus DB canaries in all five tables). DEFECT 1 (reject-worthy; round 1 caveat 2 closed only for the scripted half). AC-2's third clause -- 'is surfaced to the model as an error tool result' -- is still not asserted on the live run. Mutating build_payload so every error tool result reaches the wire as the neutral string 'done' (\"content\": (\"done\" if result.is_error else result.content)) SURVIVES the FULL suite: 421 passed in 54.58s. The live test already records the exact bytes (RecordingTransport.bodies) and applies that standard to NFR-4 four lines earlier, but never looks for the denial in them; test_model_client never constructs an is_error ToolResult at all, so the adapter's serialisation of an error result is unasserted end to end. On the only run with a real model on the other end, nothing proves the error text left the process -- while the module docstring claims 'surfaced to the model is asserted on what the model was actually SENT'. AC-2 says 'in that same run', the same wording that made AC-3's scripted-only proof a round-1 defect. DEFECT 2 (reject-worthy; round 1 caveat 5 untouched). AC-4's 'fully populated' is still asserted over an enumerated four-field list shaped around the one field that is null. ToolExecutor._failed calls ContentProvenance.internal_tool() with no source_uri_or_hash even when the tool resolved and tool.spec.schema_hash() is in scope (executor.py:225), so FR-2's fifth provenance field is null on every error result: the database holds 5788 persisted error tool results with provenance.source_uri_or_hash NULL, against 4312 success results with it populated. Nothing in the suite asserts that field anywhere -- dropping the schema hash from the SUCCESS path too (executor.py:169-171) SURVIVES the full suite, 421 passed in 81.55s. Adding source_uri_or_hash to the test's field tuple fails today. This is exactly the enumeration shape the same file's docstring says it removed from AC-10. DEFECT 3 (weaker, tautology). test_both_providers_are_reached_through_the_same_unchanged_spec cannot fail: it rebuilds its own specs from GOLDEN_SPEC and never observes what the live test used. Making the live half secretly use tool_profile=('echo',) and instructions='DIFFERENT' for bedrock leaves it green (1 passed in 0.43s) -- the precise divergence its docstring says it exists to catch. CAVEATS (not blocking): the live half flaked once in 33 bedrock executions (fails red, never falsely green; cause not reproduced in 32 further runs); 'assert ApprovalRequired and InputRequired and Pending' is still tautological and the rest of test_the_later_phase_seams_exist_and_are_inert is field-name existence; AC-9 asserts no evidence that the two model ids actually reached different upstreams (the response's echoed model is never checked); the AC-10 needle is interpolated into LIKE without ESCAPE, harmless for this 25-character alphanumeric key but a backslash in a future key would give a false negative; SPEC.md NFR-5 says the golden eval imports no internal collaborator, and it imports agentsdk.postgres, agentsdk.providers, agentsdk.model, agentsdk.config, agentsdk.tools, agentsdk.events, agentsdk.identity and agentsdk.outcomes (NFR-5 is M4's requirement and this tension was already recorded in M5's review). VERIFIED SOUND: AC-1/AC-2's denial/AC-3/NFR-3/NFR-4-on-the-wire/NFR-7's principal-independence are all fitness tests that die under mutation; the NFR-4 wire assertion is non-vacuous because the same needle is proven findable in the recorded Authorization header; the environment test is deliberately unskippable and the gate goes red, not green, when the gateway or the database is unreachable. Database left as found: all 60 orphan runs my 'manifest never written' mutation and my synthetic canary run created were deleted (orphan count back to exactly 994: 979 from Sep 6 plus the author's 15 from Sep 8 18:00); all REVIEW-CANARY rows removed; final whole-row scan for the key, its 8-character prefix, the LEAK-CANARY form and REVIEW-CANARY across every column of all five tables returned 0 hits.",
       "revision": null
     }
   ],

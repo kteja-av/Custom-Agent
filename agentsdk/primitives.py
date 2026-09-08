@@ -97,6 +97,27 @@ class ContentProvenance:
         )
 
     @classmethod
+    def executor_error(cls, error_type: str) -> ContentProvenance:
+        """Provenance for an error result the ToolExecutor produced itself.
+
+        A failed call's content is the SDK's rendering of the error, never
+        anything the tool returned -- on the validation and permission paths the
+        tool is not reached at all, and on the ToolNotFound path no tool exists.
+        Recording the tool's schema hash here would therefore claim the tool
+        produced text it never produced, so the source named is the executor's
+        own error path, which is available on every failure without exception.
+
+        origin stays INTERNAL_TOOL: this is still the provenance of a result for
+        an internal tool call, and the field says where the CALL was directed.
+        What differs is source_uri_or_hash, which says what produced the bytes.
+
+        FR-2 requires all five fields on every ToolResult and AC-4 requires them
+        non-null on every persisted one; before this existed, source_uri_or_hash
+        was null on every error result ever written.
+        """
+        return cls.internal_tool(source_uri_or_hash=f"urn:agentsdk:tool-error:{error_type}")
+
+    @classmethod
     def from_model(cls, *inputs: ContentProvenance) -> ContentProvenance:
         """Provenance for content a model generated from `inputs`.
 

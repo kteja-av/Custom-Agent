@@ -151,6 +151,47 @@ async def test_tool_message_fans_out_to_one_wire_message_per_result():
     ]
 
 
+async def test_an_error_tool_result_reaches_the_wire_with_its_message_intact():
+    """The OpenAI wire format has no error flag on a tool message, so the error
+    text IS the whole channel: whatever the model learns about a failed call, it
+    learns from this string.
+
+    Nothing constructed an is_error result here before, so replacing every
+    failed result's body with a neutral word left the entire suite green while
+    the model was told each denial and validation failure had succeeded.
+    """
+    seen = {}
+
+    def handler(request):
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(200, json=completion(content="ok"))
+
+    await build(handler).send(
+        ModelRequest(
+            messages=(
+                Message(
+                    role=Role.TOOL,
+                    tool_results=(
+                        ToolResult(
+                            tool_call_id="c1",
+                            content="ToolPermissionDenied: purge_records is not allowed",
+                            provenance=ContentProvenance.internal_tool(),
+                            is_error=True,
+                        ),
+                    ),
+                ),
+            )
+        )
+    )
+    assert seen["body"]["messages"] == [
+        {
+            "role": "tool",
+            "tool_call_id": "c1",
+            "content": "ToolPermissionDenied: purge_records is not allowed",
+        }
+    ]
+
+
 async def test_assistant_tool_calls_are_serialised_with_json_arguments():
     seen = {}
 

@@ -222,7 +222,7 @@ class ToolExecutor:
         result = ToolResult(
             tool_call_id=tool_call.id,
             content=describe_exception(error),
-            provenance=ContentProvenance.internal_tool(),
+            provenance=ContentProvenance.executor_error(type(error).__name__),
             is_error=True,
         )
         self._safe_emit(

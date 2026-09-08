@@ -50,7 +50,7 @@
 
 ### M6-golden-eval — The golden eval passes end to end against the live gateway on two upstream providers, exercising the permission-denial and validation-failure paths and leaking no credential into any row or event
 
-- state/risk: active / medium
+- state/risk: rejected / medium
 - requirements: AC-1, AC-2, AC-3, AC-4, AC-9, AC-10, NFR-3, NFR-4, NFR-7
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_golden_eval.py -q, independent-review: pending
