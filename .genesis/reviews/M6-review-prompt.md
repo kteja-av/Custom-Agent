@@ -103,7 +103,7 @@ All four were repaired.
    that were populated.** This one was a real SDK defect, not only a gate one:
    `ToolExecutor._failed` called `ContentProvenance.internal_tool()` with no
    `source_uri_or_hash`, so FR-2's fifth field was null on every error result
-   ever written (5,908 rows in this database). Fixed in the SDK with
+   ever written (5,951 rows in this database). Fixed in the SDK with
    `ContentProvenance.executor_error(error_type)`, and the test now reads the
    field names off `dataclasses.fields(ContentProvenance)`.
    **Judge the value chosen.** A failed call's content is the executor's
@@ -213,12 +213,13 @@ Round 2's two caveats were also addressed, and both are new surface for you:
 
 ## The database will look worse than it is — read this before reporting it
 
-Queried across all five tables right now, with the current code:
+Queried across all five tables at the final commit. Every count below grows
+when you run the suite; they are the shape to expect, not constants:
 
-- **5,908 persisted error results carry `provenance.source_uri_or_hash` NULL.**
+- **5,951 persisted error results carry `provenance.source_uri_or_hash` NULL.**
   These are historical, written before round 2's fix. Every error result
   written since carries `urn:agentsdk:tool-error:<ErrorType>`.
-- **220 persisted SUCCESS results carry it NULL.** These are mutation debris,
+- **261 persisted SUCCESS results carry it NULL.** These are mutation debris,
   from the round-2 reviewer's "provenance dropped on write" mutants and the
   author's "success provenance drops the schema hash" mutant, plus a handful of
   store-level unit-test fixtures that construct a `ToolResult` by hand.
@@ -230,7 +231,7 @@ Queried across all five tables right now, with the current code:
   trip, which is not a result persisted *by a run*. Decide for yourself whether
   that satisfies AC-4.
 - **994 `runs` rows have no manifest**: development data predating the M5 fix.
-  Unchanged from round 2. **22 failed `p-live` runs** exist, from probes that
+  Unchanged from round 2. **26 failed `p-live` runs** exist, from probes that
   point `BASE_URL` at a closed port to prove the gate goes red rather than
   green; they are not orphans.
 - Whole-row scan for the key, its 8-character prefix, `LEAK-CANARY-` and
