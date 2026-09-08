@@ -57,7 +57,7 @@ milestone in Phase 0.
 
 ### Files in scope
 
-- `tests/test_golden_eval.py` (~790 lines, the milestone itself).
+- `tests/test_golden_eval.py` (841 lines, the milestone itself).
 - `agentsdk/executor.py` and `agentsdk/primitives.py` — one round-2 defect was
   in the SDK, not the gate: see below.
 - `tests/test_model_client.py` — one backstop test added in round 2.
