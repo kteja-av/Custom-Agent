@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "agent-sdk",
-  "revision": "d322bbb75977bcf73cdf8bd714cea84956182871",
-  "sourceHash": "a17db14e395cff9c608fda161a278b17f3be2a2c9d407be98070c02976d5cd39",
+  "revision": "317318a922ecf2a8d4773b45a7b893d42ec0ab8c",
+  "sourceHash": "041835c325a77beebd2af22fc4f64592dcce556dc5a65e4b3446d5b5f8fb9fd2",
   "provenance": {
     "tool": "genesis-graphizer",
     "method": "static-analysis",
@@ -345,7 +345,7 @@
         "extractor": "filesystem",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "0ba7f228851e63c26a3308a7cb0eae8f33957a2085d9518580481c3fc12336d8"
+      "contentHash": "84e838d6736d9a358fa8a73bd5bfa605b18c44168cbe0695be7b2f584326e6ff"
     },
     {
       "id": "file:tests/test_model_client.py",
@@ -6692,12 +6692,28 @@
       "contentHash": "d4015acb83f551f9ef7eac6528de22a93ca95e636b4af3f43848a112285ee12c"
     },
     {
+      "id": "symbol:tests/test_golden_eval.py#class:RecordingTransport",
+      "type": "symbol",
+      "name": "RecordingTransport",
+      "qualifiedName": "RecordingTransport",
+      "kind": "class",
+      "line": 388,
+      "label": "RecordingTransport",
+      "path": "tests/test_golden_eval.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "ce390d3bd0372cd9c3e134b0ffd0a4c96164b39fac2aec4da9bb376c86232afa"
+    },
+    {
       "id": "symbol:tests/test_golden_eval.py#class:ScriptedGolden",
       "type": "symbol",
       "name": "ScriptedGolden",
       "qualifiedName": "ScriptedGolden",
       "kind": "class",
-      "line": 156,
+      "line": 193,
       "label": "ScriptedGolden",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6713,7 +6729,7 @@
       "name": "Spy",
       "qualifiedName": "Spy",
       "kind": "class",
-      "line": 108,
+      "line": 134,
       "label": "Spy",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6724,44 +6740,12 @@
       "contentHash": "91fb7ccc4d9b6a7a36521d4475829dd06d401231a904dc0a773f13979f35deae"
     },
     {
-      "id": "symbol:tests/test_golden_eval.py#class:test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording",
-      "type": "symbol",
-      "name": "Recording",
-      "qualifiedName": "test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording",
-      "kind": "class",
-      "line": 556,
-      "label": "test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording",
-      "path": "tests/test_golden_eval.py",
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "24d713fd6341229b1834d13540f0c5895ce1c6416dc73c4078b368413d54bc0e"
-    },
-    {
-      "id": "symbol:tests/test_golden_eval.py#class:test_the_model_never_receives_the_credential.Recording",
-      "type": "symbol",
-      "name": "Recording",
-      "qualifiedName": "test_the_model_never_receives_the_credential.Recording",
-      "kind": "class",
-      "line": 361,
-      "label": "test_the_model_never_receives_the_credential.Recording",
-      "path": "tests/test_golden_eval.py",
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "be8e0ad65a079f35e652a7da1762fafd601b40613415e2093ab13ba494ae5bdb"
-    },
-    {
       "id": "symbol:tests/test_golden_eval.py#function:_requires_environment",
       "type": "symbol",
       "name": "_requires_environment",
       "qualifiedName": "_requires_environment",
       "kind": "function",
-      "line": 96,
+      "line": 122,
       "label": "_requires_environment",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6772,20 +6756,36 @@
       "contentHash": "8095ac21a1dcddfdf60620b039b1b9b1c29284e0817cf3515565479170ba243c"
     },
     {
-      "id": "symbol:tests/test_golden_eval.py#function:golden_run",
+      "id": "symbol:tests/test_golden_eval.py#function:credential_needles",
       "type": "symbol",
-      "name": "golden_run",
-      "qualifiedName": "golden_run",
+      "name": "credential_needles",
+      "qualifiedName": "credential_needles",
       "kind": "function",
-      "line": 189,
-      "label": "golden_run",
+      "line": 347,
+      "label": "credential_needles",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
       "provenance": {
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "28deb00ed4ca0a795eea5df285e10193cef0c733f177fb40ff55baec64ade49d"
+      "contentHash": "91e3c214b9cc74ccffae0d3ad47c55ab3bc280c3ae7d1e552e08c0880a938d02"
+    },
+    {
+      "id": "symbol:tests/test_golden_eval.py#function:errors_for",
+      "type": "symbol",
+      "name": "errors_for",
+      "qualifiedName": "errors_for",
+      "kind": "function",
+      "line": 189,
+      "label": "errors_for",
+      "path": "tests/test_golden_eval.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "9e9654745cc72e22c2eb0e47d4cfc4b4a3438f5f7bf5bf4067b3b34cda013d57"
     },
     {
       "id": "symbol:tests/test_golden_eval.py#function:golden_tools",
@@ -6793,7 +6793,7 @@
       "name": "golden_tools",
       "qualifiedName": "golden_tools",
       "kind": "function",
-      "line": 121,
+      "line": 147,
       "label": "golden_tools",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6809,7 +6809,7 @@
       "name": "query",
       "qualifiedName": "query",
       "kind": "function",
-      "line": 144,
+      "line": 180,
       "label": "query",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6820,12 +6820,60 @@
       "contentHash": "7f1af29eaa75bd3dc7caf12b72aa82fee4a1199a375b95363588f8253c3082f2"
     },
     {
+      "id": "symbol:tests/test_golden_eval.py#function:RecordingTransport.__init__",
+      "type": "symbol",
+      "name": "__init__",
+      "qualifiedName": "RecordingTransport.__init__",
+      "kind": "function",
+      "line": 396,
+      "label": "RecordingTransport.__init__",
+      "path": "tests/test_golden_eval.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "940786bf6e7cf53fbd614182bb8db42984a8f1004b137b6602190fda8e78d781"
+    },
+    {
+      "id": "symbol:tests/test_golden_eval.py#function:RecordingTransport.handle_async_request",
+      "type": "symbol",
+      "name": "handle_async_request",
+      "qualifiedName": "RecordingTransport.handle_async_request",
+      "kind": "function",
+      "line": 401,
+      "label": "RecordingTransport.handle_async_request",
+      "path": "tests/test_golden_eval.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "e77480ff923eb31b8257f8b21596dd3721417bc372be88963d121716082049e1"
+    },
+    {
+      "id": "symbol:tests/test_golden_eval.py#function:run_scripted",
+      "type": "symbol",
+      "name": "run_scripted",
+      "qualifiedName": "run_scripted",
+      "kind": "function",
+      "line": 228,
+      "label": "run_scripted",
+      "path": "tests/test_golden_eval.py",
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "c743b8416ad305aab2d46e88a190ccfcd704fe7d1274bf67a624135d4b246169"
+    },
+    {
       "id": "symbol:tests/test_golden_eval.py#function:schema",
       "type": "symbol",
       "name": "schema",
       "qualifiedName": "schema",
       "kind": "function",
-      "line": 103,
+      "line": 129,
       "label": "schema",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6841,7 +6889,7 @@
       "name": "__init__",
       "qualifiedName": "ScriptedGolden.__init__",
       "kind": "function",
-      "line": 160,
+      "line": 197,
       "label": "ScriptedGolden.__init__",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6857,7 +6905,7 @@
       "name": "send",
       "qualifiedName": "ScriptedGolden.send",
       "kind": "function",
-      "line": 163,
+      "line": 201,
       "label": "ScriptedGolden.send",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6873,7 +6921,7 @@
       "name": "__call__",
       "qualifiedName": "Spy.__call__",
       "kind": "function",
-      "line": 116,
+      "line": 142,
       "label": "Spy.__call__",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6889,7 +6937,7 @@
       "name": "__init__",
       "qualifiedName": "Spy.__init__",
       "kind": "function",
-      "line": 112,
+      "line": 138,
       "label": "Spy.__init__",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6900,20 +6948,20 @@
       "contentHash": "fc6b975bff80a28637663b7cf8bb5c90cc64b018dc41cea74ab5c33d0a889b9e"
     },
     {
-      "id": "symbol:tests/test_golden_eval.py#function:test_a_denied_tool_fails_without_running_and_the_run_still_completes",
+      "id": "symbol:tests/test_golden_eval.py#function:test_a_denied_tool_is_refused_and_the_model_is_told",
       "type": "symbol",
-      "name": "test_a_denied_tool_fails_without_running_and_the_run_still_completes",
-      "qualifiedName": "test_a_denied_tool_fails_without_running_and_the_run_still_completes",
+      "name": "test_a_denied_tool_is_refused_and_the_model_is_told",
+      "qualifiedName": "test_a_denied_tool_is_refused_and_the_model_is_told",
       "kind": "function",
-      "line": 218,
-      "label": "test_a_denied_tool_fails_without_running_and_the_run_still_completes",
+      "line": 262,
+      "label": "test_a_denied_tool_is_refused_and_the_model_is_told",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
       "provenance": {
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "d9e13aee78f5dc36015d36259119842e5045271c7b520060cd5a7aba3b2103e2"
+      "contentHash": "9c08c17f097b3f1d9ddf9717a9ba931c00e1625f543f1bd6d7a14aae25256f51"
     },
     {
       "id": "symbol:tests/test_golden_eval.py#function:test_a_malformed_argument_fails_validation_before_the_tool_runs",
@@ -6921,7 +6969,7 @@
       "name": "test_a_malformed_argument_fails_validation_before_the_tool_runs",
       "qualifiedName": "test_a_malformed_argument_fails_validation_before_the_tool_runs",
       "kind": "function",
-      "line": 250,
+      "line": 286,
       "label": "test_a_malformed_argument_fails_validation_before_the_tool_runs",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6937,7 +6985,7 @@
       "name": "test_both_providers_are_reached_through_the_same_unchanged_spec",
       "qualifiedName": "test_both_providers_are_reached_through_the_same_unchanged_spec",
       "kind": "function",
-      "line": 448,
+      "line": 500,
       "label": "test_both_providers_are_reached_through_the_same_unchanged_spec",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6953,7 +7001,7 @@
       "name": "test_every_persisted_tool_result_carries_full_provenance",
       "qualifiedName": "test_every_persisted_tool_result_carries_full_provenance",
       "kind": "function",
-      "line": 271,
+      "line": 303,
       "label": "test_every_persisted_tool_result_carries_full_provenance",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6969,7 +7017,7 @@
       "name": "test_no_credential_reaches_any_row_or_payload_anywhere",
       "qualifiedName": "test_no_credential_reaches_any_row_or_payload_anywhere",
       "kind": "function",
-      "line": 324,
+      "line": 357,
       "label": "test_no_credential_reaches_any_row_or_payload_anywhere",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6985,7 +7033,7 @@
       "name": "test_phase_0_leaves_the_seams_empty_on_every_real_request",
       "qualifiedName": "test_phase_0_leaves_the_seams_empty_on_every_real_request",
       "kind": "function",
-      "line": 548,
+      "line": 551,
       "label": "test_phase_0_leaves_the_seams_empty_on_every_real_request",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -6996,36 +7044,20 @@
       "contentHash": "5df92e3faa11acafd9a520f4532c6794a23d1e5062603d7ac70fa15883d21f8f"
     },
     {
-      "id": "symbol:tests/test_golden_eval.py#function:test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording.send",
+      "id": "symbol:tests/test_golden_eval.py#function:test_the_credential_never_reaches_model_context_on_the_scripted_path",
       "type": "symbol",
-      "name": "send",
-      "qualifiedName": "test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording.send",
+      "name": "test_the_credential_never_reaches_model_context_on_the_scripted_path",
+      "qualifiedName": "test_the_credential_never_reaches_model_context_on_the_scripted_path",
       "kind": "function",
-      "line": 557,
-      "label": "test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording.send",
+      "line": 566,
+      "label": "test_the_credential_never_reaches_model_context_on_the_scripted_path",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
       "provenance": {
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "42a65eb7e06aaf594b11c2a513b8a64b5c701a4562b1a1f5b3befba7899b25f4"
-    },
-    {
-      "id": "symbol:tests/test_golden_eval.py#function:test_principal_context_is_carried_and_persisted_but_unread",
-      "type": "symbol",
-      "name": "test_principal_context_is_carried_and_persisted_but_unread",
-      "qualifiedName": "test_principal_context_is_carried_and_persisted_but_unread",
-      "kind": "function",
-      "line": 508,
-      "label": "test_principal_context_is_carried_and_persisted_but_unread",
-      "path": "tests/test_golden_eval.py",
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "9f020a07a5b164ba9d0480f71154c949fcbdd1ec0629c262f3b2645e9ef21e06"
+      "contentHash": "8bbc79dfa460bbf2232275066f4416d4f53c898a8445aab21c152fa269e5ca4f"
     },
     {
       "id": "symbol:tests/test_golden_eval.py#function:test_the_golden_eval_environment_is_configured",
@@ -7033,7 +7065,7 @@
       "name": "test_the_golden_eval_environment_is_configured",
       "qualifiedName": "test_the_golden_eval_environment_is_configured",
       "kind": "function",
-      "line": 77,
+      "line": 103,
       "label": "test_the_golden_eval_environment_is_configured",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -7049,7 +7081,7 @@
       "name": "test_the_golden_eval_runs_to_completed",
       "qualifiedName": "test_the_golden_eval_runs_to_completed",
       "kind": "function",
-      "line": 202,
+      "line": 251,
       "label": "test_the_golden_eval_runs_to_completed",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -7065,7 +7097,7 @@
       "name": "test_the_later_phase_seams_exist_and_are_inert",
       "qualifiedName": "test_the_later_phase_seams_exist_and_are_inert",
       "kind": "function",
-      "line": 469,
+      "line": 518,
       "label": "test_the_later_phase_seams_exist_and_are_inert",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -7076,36 +7108,20 @@
       "contentHash": "bfa5c68ad330e0ed5d01fcf940f18021c29a1a460bd0ed50d07dcacca38343fc"
     },
     {
-      "id": "symbol:tests/test_golden_eval.py#function:test_the_model_never_receives_the_credential",
+      "id": "symbol:tests/test_golden_eval.py#function:test_the_permission_decision_does_not_depend_on_the_principal",
       "type": "symbol",
-      "name": "test_the_model_never_receives_the_credential",
-      "qualifiedName": "test_the_model_never_receives_the_credential",
+      "name": "test_the_permission_decision_does_not_depend_on_the_principal",
+      "qualifiedName": "test_the_permission_decision_does_not_depend_on_the_principal",
       "kind": "function",
-      "line": 354,
-      "label": "test_the_model_never_receives_the_credential",
+      "line": 575,
+      "label": "test_the_permission_decision_does_not_depend_on_the_principal",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
       "provenance": {
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "494aff5789cedaff2ff13254d6405fd568b52de140585531285a787756f2a2ea"
-    },
-    {
-      "id": "symbol:tests/test_golden_eval.py#function:test_the_model_never_receives_the_credential.Recording.send",
-      "type": "symbol",
-      "name": "send",
-      "qualifiedName": "test_the_model_never_receives_the_credential.Recording.send",
-      "kind": "function",
-      "line": 362,
-      "label": "test_the_model_never_receives_the_credential.Recording.send",
-      "path": "tests/test_golden_eval.py",
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "74489ef72f8aa88785acd9940ad91b0df0553870f5d69815afc7663ee84674f4"
+      "contentHash": "81c792c0bb17975b722a0fe047cf5e66be6781ef645d5b7b675f5588fa443e7b"
     },
     {
       "id": "symbol:tests/test_golden_eval.py#function:test_the_run_reconstructs_from_state_plus_events",
@@ -7113,7 +7129,7 @@
       "name": "test_the_run_reconstructs_from_state_plus_events",
       "qualifiedName": "test_the_run_reconstructs_from_state_plus_events",
       "kind": "function",
-      "line": 299,
+      "line": 326,
       "label": "test_the_run_reconstructs_from_state_plus_events",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -7129,7 +7145,7 @@
       "name": "test_the_same_eval_passes_against_a_live_provider",
       "qualifiedName": "test_the_same_eval_passes_against_a_live_provider",
       "kind": "function",
-      "line": 387,
+      "line": 411,
       "label": "test_the_same_eval_passes_against_a_live_provider",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -7145,7 +7161,7 @@
       "name": "tool_events",
       "qualifiedName": "tool_events",
       "kind": "function",
-      "line": 149,
+      "line": 185,
       "label": "tool_events",
       "path": "tests/test_golden_eval.py",
       "confidence": 1,
@@ -17084,11 +17100,25 @@
       "contentHash": "7a4a4d0389f68b0fa5eb9201895c901a28ad691ef0852c17d827100d010cc4ea"
     },
     {
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#class:RecordingTransport:",
+      "type": "defines",
+      "source": "file:tests/test_golden_eval.py",
+      "target": "symbol:tests/test_golden_eval.py#class:RecordingTransport",
+      "line": 388,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "97deeaec0752bca907e6bf298100105863b6e1e259fcff3042e1453fa9796e2f"
+    },
+    {
       "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#class:ScriptedGolden:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#class:ScriptedGolden",
-      "line": 156,
+      "line": 193,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17102,7 +17132,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#class:Spy",
-      "line": 108,
+      "line": 134,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17112,39 +17142,11 @@
       "contentHash": "6c1a7f7e174ee4bba40c0a69f7d86b9e426310c52a8153788316a220d2e9c8b3"
     },
     {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#class:test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording:",
-      "type": "defines",
-      "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#class:test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording",
-      "line": 556,
-      "resolved": true,
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "84b76f80db37c9f6eb5400127a0668fdd7eb94cc94985be9a00eb63567919808"
-    },
-    {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#class:test_the_model_never_receives_the_credential.Recording:",
-      "type": "defines",
-      "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#class:test_the_model_never_receives_the_credential.Recording",
-      "line": 361,
-      "resolved": true,
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "f334ab9356b0071ea903be454ba34a048a3603cff441b8244f8c1e12510a4690"
-    },
-    {
       "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:_requires_environment:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:_requires_environment",
-      "line": 96,
+      "line": 122,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17154,10 +17156,24 @@
       "contentHash": "aa7358a2adac495787284a1339e610bc81784b7592120caf56093edd8ae9b1c8"
     },
     {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:golden_run:",
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:credential_needles:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#function:golden_run",
+      "target": "symbol:tests/test_golden_eval.py#function:credential_needles",
+      "line": 347,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "e7aa79c5d0a65c8ded916c75838c62245fa8ccbf6f62f7dc982ce96ebfc207e5"
+    },
+    {
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:errors_for:",
+      "type": "defines",
+      "source": "file:tests/test_golden_eval.py",
+      "target": "symbol:tests/test_golden_eval.py#function:errors_for",
       "line": 189,
       "resolved": true,
       "confidence": 1,
@@ -17165,14 +17181,14 @@
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "d60e7249a46f6d6c9d71a61b615e69e1c110a74ca89f2b48fbfa76e401e5da93"
+      "contentHash": "50ae0331aa3bafc4fa58e04e70fe419594c18126fc2249fc191a055b9d495e0f"
     },
     {
       "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:golden_tools:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:golden_tools",
-      "line": 121,
+      "line": 147,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17186,7 +17202,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:query",
-      "line": 144,
+      "line": 180,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17196,11 +17212,53 @@
       "contentHash": "ae8f7a597fbf92d4654205d0e432a92198d857e2d5cd42bc65a0102910e6a0a0"
     },
     {
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:RecordingTransport.__init__:",
+      "type": "defines",
+      "source": "file:tests/test_golden_eval.py",
+      "target": "symbol:tests/test_golden_eval.py#function:RecordingTransport.__init__",
+      "line": 396,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "a71850f12ff5cdddc48e897424801880b5d6c6a594b29cb0cd4cd8c690356b1a"
+    },
+    {
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:RecordingTransport.handle_async_request:",
+      "type": "defines",
+      "source": "file:tests/test_golden_eval.py",
+      "target": "symbol:tests/test_golden_eval.py#function:RecordingTransport.handle_async_request",
+      "line": 401,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "0ce8a9e51d12e4059805b21b4305c0353f1584ee4bb1bc6437bfd1e70d6172bf"
+    },
+    {
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:run_scripted:",
+      "type": "defines",
+      "source": "file:tests/test_golden_eval.py",
+      "target": "symbol:tests/test_golden_eval.py#function:run_scripted",
+      "line": 228,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-stdlib-ast",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "edaa7ea4402b4e2e2dd5486695c0bece1e511b47e78b48e847dc4e39bcc10784"
+    },
+    {
       "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:schema:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:schema",
-      "line": 103,
+      "line": 129,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17214,7 +17272,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:ScriptedGolden.__init__",
-      "line": 160,
+      "line": 197,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17228,7 +17286,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:ScriptedGolden.send",
-      "line": 163,
+      "line": 201,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17242,7 +17300,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:Spy.__call__",
-      "line": 116,
+      "line": 142,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17256,7 +17314,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:Spy.__init__",
-      "line": 112,
+      "line": 138,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17266,25 +17324,25 @@
       "contentHash": "45b0a4c8c94d92034f2d4d322472fb45789f131762a6d4ddf3a5bb8a4eb15400"
     },
     {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_a_denied_tool_fails_without_running_and_the_run_still_completes:",
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_a_denied_tool_is_refused_and_the_model_is_told:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#function:test_a_denied_tool_fails_without_running_and_the_run_still_completes",
-      "line": 218,
+      "target": "symbol:tests/test_golden_eval.py#function:test_a_denied_tool_is_refused_and_the_model_is_told",
+      "line": 262,
       "resolved": true,
       "confidence": 1,
       "provenance": {
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "016450faa225ef0e5a47e6cb946a2106c9288df851682bf94d194ba3a1a5ba9a"
+      "contentHash": "2c87c9587e14cf534ba5a13882fcebcdbe5e5e95d96542fec088fd7b75ae1979"
     },
     {
       "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_a_malformed_argument_fails_validation_before_the_tool_runs:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_a_malformed_argument_fails_validation_before_the_tool_runs",
-      "line": 250,
+      "line": 286,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17298,7 +17356,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_both_providers_are_reached_through_the_same_unchanged_spec",
-      "line": 448,
+      "line": 500,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17312,7 +17370,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_every_persisted_tool_result_carries_full_provenance",
-      "line": 271,
+      "line": 303,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17326,7 +17384,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_no_credential_reaches_any_row_or_payload_anywhere",
-      "line": 324,
+      "line": 357,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17340,7 +17398,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_phase_0_leaves_the_seams_empty_on_every_real_request",
-      "line": 548,
+      "line": 551,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17350,39 +17408,25 @@
       "contentHash": "fc956c1fb769d10f440270e4f48b7a101c184bde14c17359fa0d8fb5bb537af8"
     },
     {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording.send:",
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_the_credential_never_reaches_model_context_on_the_scripted_path:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#function:test_phase_0_leaves_the_seams_empty_on_every_real_request.Recording.send",
-      "line": 557,
+      "target": "symbol:tests/test_golden_eval.py#function:test_the_credential_never_reaches_model_context_on_the_scripted_path",
+      "line": 566,
       "resolved": true,
       "confidence": 1,
       "provenance": {
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "32ac18a65f1ea523f16d9da3b264e14c21cdbb0b66f95ebf11d2accf14b7a5c7"
-    },
-    {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_principal_context_is_carried_and_persisted_but_unread:",
-      "type": "defines",
-      "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#function:test_principal_context_is_carried_and_persisted_but_unread",
-      "line": 508,
-      "resolved": true,
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "5f8a36ec32023fc5e4ae24050c12cecbf98139e984a1863c5478835c93dd7214"
+      "contentHash": "84d7e4d0b82fcd9a5ad6f62b0c843b1537442c6849a2536fe94c0e13a3820c26"
     },
     {
       "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_the_golden_eval_environment_is_configured:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_the_golden_eval_environment_is_configured",
-      "line": 77,
+      "line": 103,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17396,7 +17440,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_the_golden_eval_runs_to_completed",
-      "line": 202,
+      "line": 251,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17410,7 +17454,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_the_later_phase_seams_exist_and_are_inert",
-      "line": 469,
+      "line": 518,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17420,39 +17464,25 @@
       "contentHash": "33730fc512bd8f1c86b6847bff6c2f1bfca85bb56b544d3a386bcaab971bc433"
     },
     {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_the_model_never_receives_the_credential:",
+      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_the_permission_decision_does_not_depend_on_the_principal:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#function:test_the_model_never_receives_the_credential",
-      "line": 354,
+      "target": "symbol:tests/test_golden_eval.py#function:test_the_permission_decision_does_not_depend_on_the_principal",
+      "line": 575,
       "resolved": true,
       "confidence": 1,
       "provenance": {
         "extractor": "python-stdlib-ast",
         "source": "tests/test_golden_eval.py"
       },
-      "contentHash": "02cfa1693651aa260d613ffe0a6f46cfd39551f1d62858755160841f7b9d8501"
-    },
-    {
-      "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_the_model_never_receives_the_credential.Recording.send:",
-      "type": "defines",
-      "source": "file:tests/test_golden_eval.py",
-      "target": "symbol:tests/test_golden_eval.py#function:test_the_model_never_receives_the_credential.Recording.send",
-      "line": 362,
-      "resolved": true,
-      "confidence": 1,
-      "provenance": {
-        "extractor": "python-stdlib-ast",
-        "source": "tests/test_golden_eval.py"
-      },
-      "contentHash": "347001f12c392fb5dbe437982783df3f57f09bd8a89c2c8f6d578f1908134e99"
+      "contentHash": "6b32d5268cc4720741ddecddcb6cb0821e1f2aa617380170aa5ec23df0c23c24"
     },
     {
       "id": "defines:file:tests/test_golden_eval.py->symbol:tests/test_golden_eval.py#function:test_the_run_reconstructs_from_state_plus_events:",
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_the_run_reconstructs_from_state_plus_events",
-      "line": 299,
+      "line": 326,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17466,7 +17496,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:test_the_same_eval_passes_against_a_live_provider",
-      "line": 387,
+      "line": 411,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -17480,7 +17510,7 @@
       "type": "defines",
       "source": "file:tests/test_golden_eval.py",
       "target": "symbol:tests/test_golden_eval.py#function:tool_events",
-      "line": 149,
+      "line": 185,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24071,7 +24101,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/__init__.py",
       "specifier": "agentsdk",
-      "line": 28,
+      "line": 43,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24086,7 +24116,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/config.py",
       "specifier": "agentsdk.config",
-      "line": 29,
+      "line": 44,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24101,7 +24131,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/events.py",
       "specifier": "agentsdk.events",
-      "line": 477,
+      "line": 524,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24116,7 +24146,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/identity.py",
       "specifier": "agentsdk.identity",
-      "line": 512,
+      "line": 581,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24131,7 +24161,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/model.py",
       "specifier": "agentsdk.model",
-      "line": 479,
+      "line": 526,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24146,7 +24176,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/outcomes.py",
       "specifier": "agentsdk.outcomes",
-      "line": 480,
+      "line": 527,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24161,7 +24191,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/postgres.py",
       "specifier": "agentsdk.postgres",
-      "line": 31,
+      "line": 46,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24176,7 +24206,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/primitives.py",
       "specifier": "agentsdk.primitives",
-      "line": 32,
+      "line": 47,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24191,7 +24221,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/providers/__init__.py",
       "specifier": "agentsdk.providers",
-      "line": 33,
+      "line": 48,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24206,7 +24236,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "file:agentsdk/tools.py",
       "specifier": "agentsdk.tools",
-      "line": 34,
+      "line": 49,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24221,7 +24251,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "package:pypi:dotenv",
       "specifier": "dotenv",
-      "line": 26,
+      "line": 41,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24231,12 +24261,27 @@
       "contentHash": "a226b434dff6bd82b68277e6356d88eba81e93fca6ab1d977a25769b45cf5367"
     },
     {
+      "id": "imports:file:tests/test_golden_eval.py->package:pypi:httpx:httpx",
+      "type": "imports",
+      "source": "file:tests/test_golden_eval.py",
+      "target": "package:pypi:httpx",
+      "specifier": "httpx",
+      "line": 38,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "ce2fc2d421e91d59c3efe6bf6c5623b71f96b989597751ab8a62a06707f18daa"
+    },
+    {
       "id": "imports:file:tests/test_golden_eval.py->package:pypi:psycopg:psycopg",
       "type": "imports",
       "source": "file:tests/test_golden_eval.py",
       "target": "package:pypi:psycopg",
       "specifier": "psycopg",
-      "line": 24,
+      "line": 39,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24251,7 +24296,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "package:pypi:pytest",
       "specifier": "pytest",
-      "line": 25,
+      "line": 40,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24266,7 +24311,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "runtime:python:dataclasses",
       "specifier": "dataclasses",
-      "line": 475,
+      "line": 522,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24276,12 +24321,27 @@
       "contentHash": "a117a1410022079afee9a94addfdc354f5d3279bf1b4c4985354a420e9275d6e"
     },
     {
+      "id": "imports:file:tests/test_golden_eval.py->runtime:python:json:json",
+      "type": "imports",
+      "source": "file:tests/test_golden_eval.py",
+      "target": "runtime:python:json",
+      "specifier": "json",
+      "line": 34,
+      "resolved": true,
+      "confidence": 1,
+      "provenance": {
+        "extractor": "python-imports",
+        "source": "tests/test_golden_eval.py"
+      },
+      "contentHash": "919378f7fcafd4ea9d5e7f3ecc85e2ba2d71c65dfcca9b78c9b3029214e3c7b3"
+    },
+    {
       "id": "imports:file:tests/test_golden_eval.py->runtime:python:os:os",
       "type": "imports",
       "source": "file:tests/test_golden_eval.py",
       "target": "runtime:python:os",
       "specifier": "os",
-      "line": 21,
+      "line": 35,
       "resolved": true,
       "confidence": 1,
       "provenance": {
@@ -24296,7 +24356,7 @@
       "source": "file:tests/test_golden_eval.py",
       "target": "runtime:python:uuid",
       "specifier": "uuid",
-      "line": 22,
+      "line": 36,
       "resolved": true,
       "confidence": 1,
       "provenance": {

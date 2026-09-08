@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-08T13:50:03.088Z"
+    "updated_at": "2026-09-08T15:13:52.881Z"
   },
   "policy": {
     "ponytail": "full",
@@ -541,6 +541,30 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-08T13:30:03.309Z"
+    },
+    {
+      "id": "KNOWLEDGE-2555720e",
+      "title": "Measure the class, not the one shape you tried",
+      "text": "M6 round 1 was rejected for not exercising AC-3 live, and my justification was that a validation failure cannot be driven by prompting -- measured twice per provider. The measurement was real but it covered ONE shape: a number where a string is declared, which openai rejects and claude coerces. The reviewer tested a different shape, a maxLength 8 constraint the instructed input cannot satisfy, and got ToolValidationError on both providers 4 runs out of 4 with the implementation never invoked. Reproduced here before believing it. A measurement justifying a design decision must cover the CLASS the decision is about, and the decision should name which shapes were tried. Same error as the guard defects in M5: generalising from the instance in front of me.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-08T15:13:23.200Z"
+    },
+    {
+      "id": "KNOWLEDGE-32f64034",
+      "title": "Assert the property the criterion names, not something adjacent",
+      "text": "The M6 reviewer found four tests, all passing, each asserting one step removed from its claim: AC-10 said 'no credential in any row' but scanned an enumerated column subset (it missed a canary in run_events.tool_call_id on 120 rows); AC-2 said 'surfaced to the model' but read the persisted history; NFR-4 said 'no credential in model context' but inspected the ModelRequest object rather than the wire body; NFR-7 said principal_context is never read but asserted an error type rather than the decision. In every case the SDK was correct, so these were gate defects -- tests passing for reasons weaker than the claims they underwrite. Fixes: whole-row scans over every table via {table}::text, assertions on the next request actually sent, a recording httpx transport for the wire body, and identical decisions across three different principals. When writing a test, say the criterion out loud and check the assertion is about that noun.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-08T15:13:23.336Z"
+    },
+    {
+      "id": "KNOWLEDGE-89dc189b",
+      "title": "Mutation debris makes later mutations look killed",
+      "text": "Re-running the M6 matrix, the first mutation wrote a canary into run_events.tool_call_id. My cleanup script only knew about runs.agent_spec_id, so 162 rows survived -- and then failed the AC-10 test on every SUBSEQUENT mutation, making all of them look killed by it. The matrix was worthless in a way that reads as success. Fixed by cleaning between mutations, not after the batch, and by making the cleanup find the canary in any column of any table rather than the one column that leaked first. Third distinct way this project has produced a meaningless mutation result: a SQL-error mutant counted as a kill, an unrecognised pytest flag exiting 4, and now cross-contamination. Check WHICH test killed each mutant, not just that something did.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-08T15:13:23.484Z"
     }
   ],
   "tasks": [
@@ -835,9 +859,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M6-golden-eval-unit.json",
-            "source_hash": "cb69a664ad174db3361f5a8fcebb1942c4611dfdad4c7f768016c03aadb3df08",
-            "hash": "19abfc008d2bf44035ecc39859181a673ba6bf33eb944b47e3b3100f5887c972",
-            "observed_at": "2026-09-08T13:50:03.009Z"
+            "source_hash": "0106599ab1376ccaf424e4d17c4675ddc87a14e2f34c144a3379e23c1f13251d",
+            "hash": "f2444e0ac2969a74262abe571159c183ea360cb6d5104827d29c083b3624fe44",
+            "observed_at": "2026-09-08T15:12:58.140Z"
           }
         },
         {
@@ -856,7 +880,7 @@
         "Carried from M5: concurrent appends to one run are safe but not available -- a losing writer raises UniqueViolation rather than serialising. Unreachable in Phase 0 (single writer per run); Phase 2 needs a retry loop or per-run advisory lock."
       ],
       "created_at": "2026-09-05T18:10:01.160Z",
-      "updated_at": "2026-09-08T13:50:03.088Z"
+      "updated_at": "2026-09-08T15:12:58.284Z"
     }
   ],
   "learning_proposals": [],
@@ -1131,15 +1155,33 @@
       "human": "Independent L4 Delta Reviewer (fresh session, owner account)",
       "reason": "Delta APPROVED. Verified exactly 6 files (+204/-17) changed since f2ab64b, nothing else outside .genesis/ bookkeeping; full suite 407 passed. All four changes individually mutation-tested with restores verified by SHA-256 (git status clean, orphan count unchanged at 979). (1) max_turns=True: deleted the column_rejection_reason bool guard alone -> 2 genuine FAILURES (not errors), 405 passed; restored, deleted the RunConfig bool guard alone -> 2 genuine FAILURES, 405 passed; restored. Both guards are independently pinned; JSONB still accepts a bool (column_rejection_reason(True,'JSONB') is None), so the refusal is INTEGER-specific, not a blanket ban. (2) Schema tests: confirmed pg_get_constraintdef/information_schema assertions run in a throwaway namespace that is dropped in a finally (verified 0 leftover m5_probe_ schemas after my runs); confirmed not brittle to reformatting (Postgres normalises the constraint text server-side, independent of schema.sql whitespace/comments/constraint naming). Independently mutated runs.max_turns INTEGER->BIGINT: new test dies (AssertionError: bigint != integer); swapped in the exact f2ab64b test file against the same mutated schema.sql and confirmed it passes (1 passed) -- the old test genuinely could not see this class of defect, the new one can. (3) _safe_finish: traced control flow in api.py -- the success-path finish_run call at line 328 has no enclosing try, so its exception propagates to Runner.run's outer except, which calls the swallowing _safe_finish a second time (itself wrapped in try/except pass) and returns FAILED with the real finish_run error as result.error; this matches both new tests exactly. The SimpleNamespace fake used for runner._persistence exposes exactly the RunRecorder/session_store_for/event_sink_for surface Runner.run actually calls (verified against Persistence's real attributes in persistence.py) -- a faithful duck-typed fake of the seam under test, not a fake proving only itself. The asymmetry (error path swallows, success path surfaces) is the right call: a completed run whose finish_run fails must not be reported as cleanly completed when its terminal state was never durably recorded. (4) _serialisation_reason extraction: read unstorable_reason/_named_unstorable_reason/_serialisation_reason together -- the extraction is a pure lift of the existing try/except body into a named function with an unchanged call chain, so unstorable_reason answers identically before and after and the named layer still wins (checked first). Mutation-verified both halves are now independently pinned: gutting the named layer's non-finite branch -> 1 genuine failure (the new diagnosis-string test), 406 passed; restored; neutering _serialisation_reason to always return None -> 12 genuine failures including the new backstop-specific test, 395 passed; restored. This closes the exact gap the round-9 approval flagged as caveat (3) (KNOWLEDGE-fd4720a4). Regression: all 5 test files (M1-M4 coverage in test_model_client/test_tool_executor/test_agent_loop/test_primitives, M5 in test_persistence) pass together at 407; no source outside the 6 files touched. JSONB float>=1e16 normalising to int on read: correctly recorded as a limitation rather than fixed -- it is Postgres's own jsonb numeric representation, precision-losing only above 1e16, no run fails, and there is no in-scope fix short of a bigger architectural change (e.g. NUMERIC storage) that this narrow delta should not attempt. Database left undamaged: orphan count still exactly 979 after all mutation runs; 0 leftover throwaway schemas. No new defects found in the four changes.",
       "revision": null
+    },
+    {
+      "id": "f270c662-8813-4fa3-aa2c-31d37c12b878",
+      "at": "2026-09-08T14:42:19.575Z",
+      "action": "reject",
+      "task": "M6-golden-eval",
+      "human": "Independent L4 reviewer (fresh session, M6)",
+      "reason": "Fresh L4 reviewer for M6. Verified: 421 passed (77/14/150/80/74/26); golden eval green on 4/4 clean runs plus 17 full-suite mutation runs with zero unexplained live failures; the gate goes red (1 failed, 13 skipped) without a credential and red on an unreachable gateway, never a vacuous pass; whole-row scan for MODEL_API_KEY is zero across all five tables; 15/17 mutants killed, 0 errored. REJECTED on two defects in the gate. (1) AC-3 is not exercised on the live golden eval. The task outcome says the live eval exercises the validation-failure path, and SPEC AC-3 ('in that same run') with AC-9 ('the same golden eval ... two providers') require it live; mutants M02 (validation skipped) and M16 (tool runs despite validation failure) were killed only by the scripted test and unit tests, never by either live test. The stated justification (cannot be driven by prompting) holds only for the number-42 shape, which I reproduced 2/2 per provider; a schema constraint the instructed input cannot satisfy (echo maxLength 8, a step asking for a 40-char text) produced ToolValidationError with the implementation never invoked and the run completing on 4/4 runs across both providers, so a deterministic live trigger exists. (2) The whole-database AC-10 test enumerates columns: mutant M07 wrote LEAK-CANARY-<4 chars> into run_events.tool_call_id on every ToolCalled event of a full-suite run (120 rows, 36 runs) and the suite passed 421/421. The {table}::text shape the live check uses 90 lines later closes it and also covers model_registry, which the test omits. Caveats, not blocking: M14 (an allowlist checker that reads principal_context.scopes) survives 421/421, so the 'unread' test cannot fail for it, and NFR-7's remaining assertions are existence checks; M12 shows the scripted half cannot tell whether tool results reach the model (carried by the live half and test_agent_loop); wire-level NFR-4 is killed only incidentally by a payload-shape unit test; AC-4 'fully populated' is asserted on 4 of 5 fields while source_uri_or_hash is null on every error result; the eval imports internals (PostgresTrace, RunScope, OpenAICompatibleModelClient, Tool, ToolSpec) because the public root exports no client or tool types; if a live model ever calls purge_records with malformed arguments the AC-2 live assertion fails on ToolValidationError (44/44 observed correct). Database left as found: orphans 994; removed only my rows (58 M05 orphans, 36 M07 canary runs, 1 failed t-live probe run); final whole-row key scan zero. Files restored, SHA-256 verified, git clean.",
+      "revision": null
+    },
+    {
+      "id": "f9c0b595-c75c-4a63-885e-475e730a357c",
+      "at": "2026-09-08T15:13:52.609Z",
+      "action": "retry",
+      "task": "M6-golden-eval",
+      "human": "Opus 5 (implementer)",
+      "reason": "Both defects fixed. AC-3 now runs live on both providers via a maxLength constraint the instructed input cannot satisfy -- the reviewer's trigger, reproduced 4/4 before being believed, and the validation mutants are now killed by the LIVE test. AC-10 scans whole rows across every table in the schema rather than an enumerated column subset, and the reviewer's M07 canary in run_events.tool_call_id is now caught. The synthesis was taken as a whole: 'surfaced to the model' asserts the next request actually sent, NFR-4 asserts the wire body through a recording transport, and NFR-7 asserts the decision is identical across three principals rather than checking an error type. 421 tests, 8/8 mutations killed with attribution checked per test.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-08T13:30:20.761Z",
+    "at": "2026-09-08T15:13:52.789Z",
     "revision": {
-      "commit": "d322bbb75977bcf73cdf8bd714cea84956182871",
+      "commit": "317318a922ecf2a8d4773b45a7b893d42ec0ab8c",
       "dirty": true,
-      "source_hash": "cb69a664ad174db3361f5a8fcebb1942c4611dfdad4c7f768016c03aadb3df08"
+      "source_hash": "0106599ab1376ccaf424e4d17c4675ddc87a14e2f34c144a3379e23c1f13251d"
     },
     "active_task": "M6-golden-eval",
     "next_action": "Run the task pre-flight."

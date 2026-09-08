@@ -1,26 +1,41 @@
 """M6 gate: the golden eval (AC-1..AC-4, AC-9, AC-10, NFR-3, NFR-4, NFR-7).
 
-Two halves, deliberately:
+One task, one tool set, one set of assertions -- run twice: once against a
+scripted ModelClient so every path is exercised on every run, and once against
+each live provider AC-9 names. Each acceptance criterion is asserted on its own
+terms rather than inferred from the final status, because SPEC.md names "a
+single golden eval carrying three assertions may pass for the wrong reason" as
+a risk of exactly this file.
 
-* A DETERMINISTIC golden run, driven by a scripted ModelClient, exercising
-  AC-1, AC-2 and AC-3 in one run. Each path is asserted independently rather
-  than inferred from the final status -- SPEC.md names "a single golden eval
-  carrying three assertions may pass for the wrong reason" as a risk.
-* LIVE runs against the real gateway on both providers AC-9 names, with no
-  source change between them.
+AC-3 IS exercised live. An earlier version of this file argued it could not be,
+on the grounds that a validation failure cannot be driven by prompting: asked
+to call echo with the number 42, openai.gpt-4o-mini sends 42 and trips
+validation while bedrock.anthropic.claude-haiku-4-5 coerces it to "42". That
+measurement was real but the conclusion generalised from a single shape. A
+constraint the instructed input CANNOT satisfy -- register_code advertises
+maxLength 8 and the task supplies 36 characters -- fails validation on both
+providers, 4 runs out of 4, with the implementation never invoked. Found by the
+M6 reviewer; reproduced here before being believed.
 
-Why AC-3 is not asserted on the live path: it cannot be driven by prompting.
-Asked to call echo with the number 42, `openai.gpt-4o-mini` sends 42 and trips
-validation, while `bedrock.anthropic.claude-haiku-4-5` coerces it to "42" and
-validates cleanly. Measured, not assumed -- twice per provider. An assertion
-that depends on which model happens to be strict is a flaky gate, and a flaky
-gate is worse than none, so the validation path is proven where it can be
-proven exactly and the live half asserts what it can prove.
+The assertions deliberately target the property each criterion names rather
+than something adjacent to it:
+
+  * AC-10 scans whole rows across every table, not an enumerated column list.
+  * "surfaced to the model" is asserted on what the model was actually SENT,
+    not on what was persisted afterwards.
+  * NFR-4 is asserted on the wire body, not on the ModelRequest object.
+  * NFR-7's "never read" is asserted by showing the decision does not change
+    with the principal, not by checking an error type.
+
+Every one of those was previously asserted one step removed from its claim, and
+the tests passed for reasons weaker than the claims they underwrote.
 """
 
+import json
 import os
 import uuid
 
+import httpx
 import psycopg
 import pytest
 from dotenv import load_dotenv
@@ -54,6 +69,15 @@ PURGE_SCHEMA = {
     "required": ["scope"],
     "additionalProperties": False,
 }
+# AC-3's live trigger: a limit the task's own input cannot satisfy, so the
+# failure does not depend on the model being careless.
+CODE_SCHEMA = {
+    "type": "object",
+    "properties": {"code": {"type": "string", "maxLength": 8}},
+    "required": ["code"],
+    "additionalProperties": False,
+}
+LONG_CODE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 TASK = (
     "Complete every step, using one tool call per turn:\n"
@@ -61,16 +85,18 @@ TASK = (
     "2. call echo with text 'beta'\n"
     "3. call echo with text 'gamma'\n"
     "4. call purge_records with scope 'all'\n"
+    f"5. call register_code with code '{LONG_CODE}' exactly as written, "
+    "all 36 characters\n"
     "Then summarise every result you received, including any errors."
 )
 
-# The spec under test is identical for the scripted and the live halves, and
-# identical between providers: AC-9 is "no source change between runs", so the
-# model id is the ONLY thing that varies.
+# Identical for the scripted and live halves, and between providers: AC-9 is
+# "no source change between runs", so the model id is the only thing that
+# varies anywhere in this file.
 GOLDEN_SPEC = dict(
     id="golden-eval",
     instructions="Follow the steps exactly, in order.",
-    tool_profile=("echo",),   # purge_records is registered but NOT allowed
+    tool_profile=("echo", "register_code"),  # purge_records is NOT allowed
 )
 
 
@@ -119,9 +145,11 @@ class Spy:
 
 
 def golden_tools():
+    """The one tool set. Returns the spies so 'never invoked' is checkable."""
     echo = Spy(lambda text: text)
     purge = Spy(lambda scope: "purged " + scope)
-    return echo, purge, [
+    register = Spy(lambda code: "registered " + code)
+    return echo, purge, register, [
         Tool(
             spec=ToolSpec(
                 name="echo",
@@ -138,6 +166,14 @@ def golden_tools():
             ),
             fn=purge,
         ),
+        Tool(
+            spec=ToolSpec(
+                name="register_code",
+                description="Register a short code. Maximum 8 characters.",
+                input_schema=CODE_SCHEMA,
+            ),
+            fn=register,
+        ),
     ]
 
 
@@ -150,31 +186,35 @@ def tool_events(result):
     return [e.payload for e in result.events if e.event_type.value == "ToolCalled"]
 
 
-# --- the deterministic golden run -------------------------------------------
+def errors_for(result, name):
+    return [p for p in tool_events(result) if p.get("name") == name and p.get("is_error")]
 
 
 class ScriptedGolden:
-    """Emits exactly the sequence AC-1..AC-3 require, so each path is exercised
-    on every run rather than when the model feels like it."""
+    """Emits exactly the sequence TASK describes, so the scripted half exercises
+    the same five steps the live half is asked for."""
 
     def __init__(self):
         self.turn = 0
+        self.requests = []
 
     async def send(self, request):
+        self.requests.append(request)
         self.turn += 1
         script = {
             1: ToolCall(id="c1", name="echo", arguments={"text": "alpha"}),
             2: ToolCall(id="c2", name="echo", arguments={"text": "beta"}),
             3: ToolCall(id="c3", name="echo", arguments={"text": "gamma"}),
-            # AC-2: outside the allowlist.
             4: ToolCall(id="c4", name="purge_records", arguments={"scope": "all"}),
-            # AC-3: right tool, wrong argument type.
-            5: ToolCall(id="c5", name="echo", arguments={"text": 42}),
+            5: ToolCall(id="c5", name="register_code", arguments={"code": LONG_CODE}),
         }
         call = script.get(self.turn)
         if call is None:
             return ModelResponse(
-                message=Message(role=Role.ASSISTANT, content="alpha, beta, gamma; two errors"),
+                message=Message(
+                    role=Role.ASSISTANT,
+                    content="alpha, beta, gamma echoed; purge denied; code rejected",
+                ),
                 stop_reason=StopReason.END_TURN,
                 usage=Usage(11, 7, 18),
             )
@@ -185,28 +225,32 @@ class ScriptedGolden:
         )
 
 
-@pytest.fixture
-def golden_run():
-    """One run, every path. Returns everything the assertions need so each AC
-    is checked on the same run without re-running it five times."""
-    echo, purge, tools = golden_tools()
-    scope = RunScope(
-        run_id="", tenant_id="t-golden-" + uuid.uuid4().hex[:8], project_id="p-golden"
-    )
-    runner = Runner(
-        {"gw": ScriptedGolden()}, tools=tools, persistence=Persistence.postgres(DSN)
-    )
-    return echo, purge, scope, runner
-
-
-async def test_the_golden_eval_runs_to_completed(golden_run):
-    """AC-1: three echo calls with different inputs, then a summary."""
-    echo, purge, scope, runner = golden_run
+async def run_scripted(tenant_suffix, *, principal_context=None):
+    """One scripted run, returning everything the assertions need."""
+    echo, purge, register, tools = golden_tools()
+    tenant = f"t-{tenant_suffix}-" + uuid.uuid4().hex[:8]
+    model = ScriptedGolden()
+    runner = Runner({"gw": model}, tools=tools, persistence=Persistence.postgres(DSN))
     result = await runner.run(
         AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
         TASK,
-        RunConfig(tenant_id=scope.tenant_id, project_id=scope.project_id, max_turns=8),
+        RunConfig(
+            tenant_id=tenant,
+            project_id="p-golden",
+            max_turns=10,
+            principal_context=principal_context,
+        ),
     )
+    scope = RunScope(run_id=result.run_id, tenant_id=tenant, project_id="p-golden")
+    return result, scope, echo, purge, register, model
+
+
+# --- AC-1, AC-2, AC-3: asserted on the scripted run ---------------------------
+
+
+async def test_the_golden_eval_runs_to_completed():
+    """AC-1: three echo calls with different inputs, then a summary."""
+    result, _scope, echo, _purge, _register, _model = await run_scripted("ac1")
 
     assert result.status is RunStatus.COMPLETED, result.error
     assert [c["text"] for c in echo.calls] == ["alpha", "beta", "gamma"], (
@@ -215,68 +259,51 @@ async def test_the_golden_eval_runs_to_completed(golden_run):
     assert result.output
 
 
-async def test_a_denied_tool_fails_without_running_and_the_run_still_completes(golden_run):
-    """AC-2, asserted on its own terms: the failure is a PermissionDenied, the
-    model is told, the implementation never runs, and the run still completes."""
-    echo, purge, scope, runner = golden_run
-    result = await runner.run(
-        AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
-        TASK,
-        RunConfig(tenant_id=scope.tenant_id, project_id=scope.project_id, max_turns=8),
-    )
+async def test_a_denied_tool_is_refused_and_the_model_is_told():
+    """AC-2, asserted on what the model was SENT.
 
-    denied = [
-        p for p in tool_events(result)
-        if p.get("name") == "purge_records" and p.get("is_error")
-    ]
+    The previous version read the error back out of the persisted history,
+    which proves the store recorded it -- not that the model ever saw it. The
+    criterion says "surfaced to the model", so the assertion belongs on the
+    next request that actually went out.
+    """
+    result, _scope, _echo, purge, _register, model = await run_scripted("ac2")
+
+    denied = errors_for(result, "purge_records")
     assert denied, "the call outside the allowlist was not refused"
     assert denied[0]["error_type"] == "ToolPermissionDenied"
     assert purge.calls == [], "a denied tool's implementation was executed"
     assert result.status is RunStatus.COMPLETED, "a denied tool ended the run"
 
-    # Surfaced TO THE MODEL, not merely recorded: the error has to come back as
-    # a tool result or the model cannot react to it.
-    store = Persistence.postgres(DSN).session_store_for(
-        RunScope(run_id=result.run_id, tenant_id=scope.tenant_id, project_id=scope.project_id)
-    )
-    errors = [
-        r for m in store.history(result.run_id) for r in m.tool_results if r.is_error
-    ]
-    assert any("PermissionDenied" in r.content for r in errors), (
-        "the denial never reached the model as a tool result"
-    )
+    # The turn after the denial must carry it back as a tool result.
+    after_denial = model.requests[4]
+    results = [r for m in after_denial.messages for r in m.tool_results]
+    assert any(
+        r.is_error and "PermissionDenied" in r.content for r in results
+    ), "the denial was never sent back to the model"
 
 
-async def test_a_malformed_argument_fails_validation_before_the_tool_runs(golden_run):
-    """AC-3. The interesting half is the second assertion: a validation error
-    that still ran the tool would be worthless, and no status code shows that."""
-    echo, purge, scope, runner = golden_run
-    result = await runner.run(
-        AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
-        TASK,
-        RunConfig(tenant_id=scope.tenant_id, project_id=scope.project_id, max_turns=8),
-    )
+async def test_a_malformed_argument_fails_validation_before_the_tool_runs():
+    """AC-3. The second assertion is the one that matters: a validation error
+    that still ran the tool would be worthless, and no status code shows it."""
+    result, _scope, _echo, _purge, register, model = await run_scripted("ac3")
 
-    invalid = [
-        p for p in tool_events(result) if p.get("name") == "echo" and p.get("is_error")
-    ]
-    assert invalid, "the malformed echo call was accepted"
+    invalid = errors_for(result, "register_code")
+    assert invalid, "the over-long code was accepted"
     assert invalid[0]["error_type"] == "ToolValidationError"
-    assert [c["text"] for c in echo.calls] == ["alpha", "beta", "gamma"], (
-        "the tool ran despite failing validation"
-    )
-    assert 42 not in [c["text"] for c in echo.calls]
+    assert register.calls == [], "the tool ran despite failing validation"
+
+    after_failure = model.requests[5]
+    results = [r for m in after_failure.messages for r in m.tool_results]
+    assert any(
+        r.is_error and "ValidationError" in r.content for r in results
+    ), "the validation failure was never sent back to the model"
 
 
-async def test_every_persisted_tool_result_carries_full_provenance(golden_run):
+async def test_every_persisted_tool_result_carries_full_provenance():
     """AC-4. Reads the ROWS, not the in-memory objects: the invariant that
     matters is the one that survives the write."""
-    echo, purge, scope, runner = golden_run
-    result = await runner.run(
-        AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
-        TASK,
-        RunConfig(tenant_id=scope.tenant_id, project_id=scope.project_id, max_turns=8),
-    )
+    result, _scope, _echo, _purge, _register, _model = await run_scripted("ac4")
 
     rows = query(
         "SELECT tool_results FROM messages WHERE run_id=%s AND tool_results IS NOT NULL",
@@ -290,25 +317,18 @@ async def test_every_persisted_tool_result_carries_full_provenance(golden_run):
         for field in ("origin", "instruction_authority", "trust_zone", "taint_flags"):
             assert provenance.get(field) is not None, f"provenance.{field} is null"
         assert provenance["origin"] == "internal_tool"
-    # Including the error results: a refusal is still content with a source.
     assert any(e.get("is_error") for e in stored), (
-        "the failed calls did not reach the store, so AC-4 was proven only on the easy path"
+        "the failed calls did not reach the store, so AC-4 was proven only on "
+        "the easy path"
     )
 
 
-async def test_the_run_reconstructs_from_state_plus_events(golden_run):
+async def test_the_run_reconstructs_from_state_plus_events():
     """NFR-3: runs + messages + run_events TOGETHER. Events alone are
     explicitly not the source of truth, so the trace has to read all three."""
-    echo, purge, scope, runner = golden_run
-    result = await runner.run(
-        AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
-        TASK,
-        RunConfig(tenant_id=scope.tenant_id, project_id=scope.project_id, max_turns=8),
-    )
+    result, scope, _echo, _purge, _register, _model = await run_scripted("nfr3")
 
-    trace = PostgresTrace(DSN).reconstruct(
-        RunScope(run_id=result.run_id, tenant_id=scope.tenant_id, project_id=scope.project_id)
-    )
+    trace = PostgresTrace(DSN).reconstruct(scope)
     assert trace["run"]["status"] == "completed"
     assert [m["sequence_no"] for m in trace["messages"]] == list(
         range(1, len(trace["messages"]) + 1)
@@ -321,108 +341,130 @@ async def test_the_run_reconstructs_from_state_plus_events(golden_run):
     assert trace["manifest"] is not None
 
 
+# --- AC-10 and NFR-4: credentials ---------------------------------------------
+
+
+def credential_needles():
+    """Whole key, a prefix, and the mutation canary.
+
+    The prefix matters: a mutation proving this assertion works should not have
+    to write the real secret into a database to be detectable. One did, once,
+    and the credential outlived the mutation by the length of the restore.
+    """
+    return [API_KEY, API_KEY[:8], "LEAK-CANARY-" + API_KEY[:4]]
+
+
 def test_no_credential_reaches_any_row_or_payload_anywhere():
-    """AC-10 and NFR-4, scanned across the WHOLE database rather than this
-    run's rows: a leak that lands on someone else's row is still a leak."""
+    """AC-10 says "no persisted row ... anywhere in the database", so the scan
+    is over WHOLE ROWS of EVERY table.
+
+    The previous version enumerated a column subset per table and searched only
+    for the full key. It missed a canary written into run_events.tool_call_id
+    on 120 rows -- the column list was the defect, the same shape that produced
+    five of M5's nine rejections. `{table}::text` renders every column of the
+    row, so a column added tomorrow is covered without anyone remembering.
+    """
     assert API_KEY, "cannot prove a negative about a key that is not set"
-    # A four-character prefix as well as the whole key. A mutation testing this
-    # assertion must not have to write the real secret into a database to be
-    # detectable -- I did exactly that once, and the credential outlived the
-    # mutation by the length of a restore. A prefix is enough to prove the
-    # value came from the key without the row ever holding it.
-    needles = [API_KEY, "LEAK-CANARY-" + API_KEY[:4]]
-    columns = {
-        "runs": ["agent_spec_id", "status", "model_id", "principal_context::text"],
-        "messages": ["content", "tool_calls::text", "tool_results::text"],
-        "run_events": ["event_type", "payload::text"],
-        "execution_manifests": [
-            "sdk_version", "agent_spec_hash", "instructions_hash",
-            "model_id", "model_version", "model_adapter_version",
-            "tool_spec_hashes::text", "policy_version",
-        ],
-    }
-    for table, cols in columns.items():
-        for needle in needles:
-            predicate = " OR ".join(f"{c} LIKE %s" for c in cols)
+    tables = [
+        t for t, in query(
+            "SELECT table_name FROM information_schema.tables"
+            " WHERE table_schema='public' AND table_type='BASE TABLE'"
+        )
+    ]
+    assert {"runs", "messages", "run_events", "execution_manifests"} <= set(tables), (
+        f"the scan is not seeing the tables it must cover: {tables}"
+    )
+    for table in tables:
+        for needle in credential_needles():
             hits = query(
-                f"SELECT count(*) FROM {table} WHERE {predicate}",
-                tuple(f"%{needle}%" for _ in cols),
+                f'SELECT count(*) FROM "{table}" WHERE "{table}"::text LIKE %s',
+                (f"%{needle}%",),
             )[0][0]
-            assert hits == 0, f"{table} contains credential material in {hits} row(s)"
+            assert hits == 0, (
+                f"{table} contains credential material in {hits} row(s)"
+            )
 
 
-async def test_the_model_never_receives_the_credential(golden_run):
-    """NFR-4's first clause. The key travels in a header; nothing that reaches
-    model context may carry it."""
-    echo, purge, scope, runner = golden_run
+class RecordingTransport(httpx.AsyncHTTPTransport):
+    """Forwards to the real gateway and keeps what actually went over the wire.
 
-    seen = []
+    NFR-4 is about what reaches model context. Asserting on the ModelRequest
+    object proves the SDK's own dataclass is clean, not that the bytes sent to
+    the provider are -- which is the thing the criterion is about.
+    """
 
-    class Recording(ScriptedGolden):
-        async def send(self, request):
-            seen.append(request)
-            return await super().send(request)
+    def __init__(self):
+        super().__init__()
+        self.bodies = []
+        self.auth_headers = []
 
-    runner = Runner(
-        {"gw": Recording()},
-        tools=golden_tools()[2],
-        persistence=Persistence.postgres(DSN),
-    )
-    await runner.run(
-        AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
-        TASK,
-        RunConfig(tenant_id=scope.tenant_id, project_id=scope.project_id, max_turns=8),
-    )
-
-    assert seen, "the model was never called"
-    for request in seen:
-        blob = repr(request)
-        assert API_KEY not in blob, "the credential reached model context"
+    async def handle_async_request(self, request):
+        self.bodies.append(request.content.decode("utf-8", "replace"))
+        self.auth_headers.append(request.headers.get("authorization", ""))
+        return await super().handle_async_request(request)
 
 
-# --- the live half: AC-9 ------------------------------------------------------
+# --- AC-9: the live half ------------------------------------------------------
 
 
 @pytest.mark.parametrize("model_id", LIVE_MODELS)
 async def test_the_same_eval_passes_against_a_live_provider(model_id):
-    """AC-9: the SAME eval, two upstream providers, no source change between
-    runs. `model_id` is the only thing that varies -- the AgentSpec, the task,
-    the tools and every assertion below are shared.
+    """AC-9: the SAME eval, two upstream providers, no source change. `model_id`
+    is the only thing that varies -- task, tools, spec and assertions are shared
+    with the scripted half above.
 
     Honest limit, recorded in SPEC.md's risks: both providers are reached
     through one gateway speaking one wire format, so this proves model
     agnosticism, not wire-format agnosticism.
     """
-    echo, purge, tools = golden_tools()
+    echo, purge, register, tools = golden_tools()
     tenant = "t-live-" + uuid.uuid4().hex[:8]
+    transport = RecordingTransport()
     client = OpenAICompatibleModelClient(
-        base_url=BASE_URL, api_key=API_KEY, model=model_id, timeout=60.0
+        base_url=BASE_URL,
+        api_key=API_KEY,
+        model=model_id,
+        client=httpx.AsyncClient(transport=transport, timeout=60.0),
+        timeout=60.0,
     )
     runner = Runner({"gw": client}, tools=tools, persistence=Persistence.postgres(DSN))
     try:
         result = await runner.run(
             AgentSpec(preferred_model=f"gw:{model_id}", **GOLDEN_SPEC),
             TASK,
-            RunConfig(tenant_id=tenant, project_id="p-live", max_turns=10),
+            RunConfig(tenant_id=tenant, project_id="p-live", max_turns=12),
         )
     finally:
         await client.aclose()
 
     # AC-1 against a real model.
     assert result.status is RunStatus.COMPLETED, result.error
-    assert result.output
     assert len(echo.calls) >= 3, f"expected at least three echo calls, got {echo.calls}"
     assert {"alpha", "beta", "gamma"} <= {str(c["text"]) for c in echo.calls}
+    # The summary is the MODEL's, unlike the scripted half where it is the
+    # script's own string, so it can be asserted to mention what happened.
+    assert result.output and any(
+        word in result.output.lower() for word in ("alpha", "echo")
+    ), f"the model produced no usable summary: {result.output!r}"
 
     # AC-2 against a real model: it chose to call the denied tool, and the
     # allowlist stopped it before the implementation ran.
-    events = tool_events(result)
-    denied = [p for p in events if p.get("name") == "purge_records" and p.get("is_error")]
-    assert denied, f"{model_id} never attempted the denied tool: {[p.get('name') for p in events]}"
+    denied = errors_for(result, "purge_records")
+    assert denied, (
+        f"{model_id} never attempted the denied tool: "
+        f"{[p.get('name') for p in tool_events(result)]}"
+    )
     assert denied[0]["error_type"] == "ToolPermissionDenied"
     assert purge.calls == [], "a denied tool ran against a live provider"
 
-    # AC-4 and NFR-3 on the live run's own rows.
+    # AC-3 against a real model. Deterministic because the constraint, not the
+    # model's care, is what fails: 8 characters allowed, 36 supplied.
+    invalid = errors_for(result, "register_code")
+    assert invalid, f"{model_id} did not produce a validation failure"
+    assert invalid[0]["error_type"] == "ToolValidationError"
+    assert register.calls == [], "a tool ran despite failing validation"
+
+    # AC-4 and NFR-3 on this run's own rows.
     scope = RunScope(run_id=result.run_id, tenant_id=tenant, project_id="p-live")
     trace = PostgresTrace(DSN).reconstruct(scope)
     assert trace["run"]["status"] == "completed"
@@ -437,27 +479,34 @@ async def test_the_same_eval_passes_against_a_live_provider(model_id):
     assert stored
     assert all(e.get("provenance", {}).get("origin") == "internal_tool" for e in stored)
 
-    # AC-10 on the rows this live run just wrote, where a real key was in play.
+    # NFR-4 on the WIRE, with a real key in play.
+    assert transport.bodies, "nothing was sent"
+    for body in transport.bodies:
+        assert API_KEY not in body, "the credential reached the request body"
+    assert any(API_KEY in h for h in transport.auth_headers), (
+        "the key never travelled in the Authorization header, so this test "
+        "would pass even if the client stopped authenticating"
+    )
+
+    # AC-10 on this run's rows, whole-row.
     for table in ("runs", "messages", "run_events", "execution_manifests"):
-        assert query(
-            f"SELECT count(*) FROM {table} WHERE run_id=%s AND {table}::text LIKE %s",
-            (result.run_id, f"%{API_KEY}%"),
-        )[0][0] == 0, f"{table} leaked the API key on a live run"
+        for needle in credential_needles():
+            assert query(
+                f"SELECT count(*) FROM {table} WHERE run_id=%s AND {table}::text LIKE %s",
+                (result.run_id, f"%{needle}%"),
+            )[0][0] == 0, f"{table} leaked credential material on a live run"
 
 
 async def test_both_providers_are_reached_through_the_same_unchanged_spec():
-    """AC-9's real claim is 'unchanged'. Asserting it structurally, because two
+    """AC-9's real claim is "unchanged". Asserted structurally, because two
     passing tests could each have quietly used a different spec."""
     specs = {
         model_id: AgentSpec(preferred_model=f"gw:{model_id}", **GOLDEN_SPEC)
         for model_id in LIVE_MODELS
     }
-    ids = {s.id for s in specs.values()}
-    instructions = {s.instructions for s in specs.values()}
-    profiles = {s.tool_profile for s in specs.values()}
-    assert ids == {"golden-eval"} and len(instructions) == 1 and len(profiles) == 1, (
-        "the two live runs did not use the same agent spec"
-    )
+    assert {s.id for s in specs.values()} == {"golden-eval"}
+    assert len({s.instructions for s in specs.values()}) == 1
+    assert len({s.tool_profile for s in specs.values()}) == 1
     assert {s.preferred_model for s in specs.values()} == {
         f"gw:{m}" for m in LIVE_MODELS
     }, "the model id is the only thing that may differ"
@@ -468,10 +517,8 @@ async def test_both_providers_are_reached_through_the_same_unchanged_spec():
 
 def test_the_later_phase_seams_exist_and_are_inert():
     """NFR-7: Phases 2-6 should ADD fields and implementations, not replace
-    contracts. The claim is only meaningful if the slots are actually present
-    and actually unused, so assert both -- a seam that is silently populated in
-    Phase 0 is a contract that will change, not one that will extend.
-    """
+    contracts. The claim is only meaningful if the slots are present AND
+    unused, so assert both."""
     import dataclasses
 
     from agentsdk.events import RunEvent
@@ -483,9 +530,6 @@ def test_the_later_phase_seams_exist_and_are_inert():
     assert {"output_schema", "provider_state", "metadata"} <= request_fields, (
         "the structured-output and provider-state slots are missing (FR-16)"
     )
-    request = ModelRequest(messages=())
-    assert request.output_schema is None, "Phase 0 must not populate output_schema"
-    assert request.provider_state is None
 
     event_fields = {f.name for f in dataclasses.fields(RunEvent)}
     assert {
@@ -493,7 +537,6 @@ def test_the_later_phase_seams_exist_and_are_inert():
         "parent_event_id", "correlation_id", "schema_version",
     } <= event_fields, "Phase 2/6 event columns are missing from the envelope"
 
-    # The interruption vocabulary exists as types, unreachable in Phase 0.
     assert {k.name for k in InterruptionKind} >= {
         "TOOL_APPROVAL", "ADDITIONAL_USER_INPUT", "CREDENTIAL_REQUIRED"
     }, "the Phase 4/6 interruption vocabulary is missing"
@@ -505,74 +548,65 @@ def test_the_later_phase_seams_exist_and_are_inert():
     ), "the Phase 4 delegation fields are missing (ADR-27)"
 
 
-async def test_principal_context_is_carried_and_persisted_but_unread():
-    """ADR-27: recorded now, read by nobody in Phase 0. If a Phase 0 checker
-    started reading it, Phase 4 would be changing a contract rather than
-    extending one."""
+async def test_phase_0_leaves_the_seams_empty_on_every_real_request():
+    """The default being None is not evidence about the code path that fills
+    it: populating output_schema in the assembler left the previous version of
+    this assertion green. Assert on the requests the loop really sends."""
+    _result, _scope, _echo, _purge, _register, model = await run_scripted("seams")
+
+    assert model.requests, "the model was never called"
+    for request in model.requests:
+        assert request.output_schema is None, (
+            "Phase 0 populated output_schema; Phase 2 would then be CHANGING a "
+            "contract rather than extending one (NFR-7)"
+        )
+        assert request.provider_state is None
+
+
+async def test_the_credential_never_reaches_model_context_on_the_scripted_path():
+    """NFR-4's first clause, where there is no wire to inspect."""
+    _result, _scope, _echo, _purge, _register, model = await run_scripted("nfr4")
+
+    assert model.requests
+    for request in model.requests:
+        assert API_KEY not in repr(request), "the credential reached model context"
+
+
+async def test_the_permission_decision_does_not_depend_on_the_principal():
+    """ADR-27: principal_context is carried and persisted but read by nobody in
+    Phase 0. Asserted by showing the DECISION does not move with the principal
+    -- the previous version checked an error type, which would be identical
+    whether or not the checker consulted it.
+    """
     from agentsdk.identity import PrincipalContext
 
-    echo, purge, tools = golden_tools()
-    tenant = "t-principal-" + uuid.uuid4().hex[:8]
-    runner = Runner(
-        {"gw": ScriptedGolden()}, tools=tools, persistence=Persistence.postgres(DSN)
-    )
-    result = await runner.run(
-        AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
-        TASK,
-        RunConfig(
-            tenant_id=tenant,
-            project_id="p-principal",
-            max_turns=8,
-            principal_context=PrincipalContext(
-                agent_principal="agent-7", scopes=("read",), delegation_id="d-1"
-            ),
-        ),
+    principals = [
+        None,
+        PrincipalContext(agent_principal="agent-7", scopes=("read",), delegation_id="d-1"),
+        PrincipalContext(agent_principal="agent-9", scopes=("admin", "purge_records")),
+    ]
+    reasons = []
+    for principal in principals:
+        result, _scope, _echo, purge, _register, _model = await run_scripted(
+            "principal", principal_context=principal
+        )
+        denied = errors_for(result, "purge_records")
+        assert denied, "the denial did not happen"
+        reasons.append((denied[0]["error_type"], purge.calls == []))
+
+    assert len(set(reasons)) == 1, (
+        f"the permission decision changed with the principal: {reasons} -- "
+        "a Phase 0 checker is reading principal_context, so Phase 4 would be "
+        "changing a contract rather than extending one"
     )
 
-    assert result.status is RunStatus.COMPLETED
+    # And it IS persisted, unread: recorded now so Phase 4 has a history.
+    result, _scope, _echo, _purge, _register, _model = await run_scripted(
+        "principal", principal_context=principals[1]
+    )
     stored = query(
         "SELECT principal_context FROM runs WHERE run_id=%s", (result.run_id,)
     )[0][0]
     assert stored["agent_principal"] == "agent-7"
     assert stored["scopes"] == ["read"]
     assert stored["delegation_id"] == "d-1"
-    # And the allowlist decision was made without consulting it: the denial
-    # happened for the same reason it does with no principal at all.
-    denied = [
-        p for p in tool_events(result)
-        if p.get("name") == "purge_records" and p.get("is_error")
-    ]
-    assert denied[0]["error_type"] == "ToolPermissionDenied"
-
-
-async def test_phase_0_leaves_the_seams_empty_on_every_real_request():
-    """The seam test above asserts the DEFAULT is None, which a freshly
-    constructed request will always satisfy -- populating output_schema in the
-    assembler left it passing. What NFR-7 actually claims is that Phase 0 does
-    not fill these slots, so assert it on the requests the loop really sends.
-    """
-    seen = []
-
-    class Recording(ScriptedGolden):
-        async def send(self, request):
-            seen.append(request)
-            return await super().send(request)
-
-    echo, purge, tools = golden_tools()
-    tenant = "t-seams-" + uuid.uuid4().hex[:8]
-    runner = Runner(
-        {"gw": Recording()}, tools=tools, persistence=Persistence.postgres(DSN)
-    )
-    await runner.run(
-        AgentSpec(preferred_model="gw:scripted", **GOLDEN_SPEC),
-        TASK,
-        RunConfig(tenant_id=tenant, project_id="p-seams", max_turns=8),
-    )
-
-    assert seen, "the model was never called"
-    for request in seen:
-        assert request.output_schema is None, (
-            "Phase 0 populated output_schema; Phase 2 would then be CHANGING a "
-            "contract rather than extending one (NFR-7)"
-        )
-        assert request.provider_state is None
