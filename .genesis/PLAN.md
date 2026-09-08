@@ -42,7 +42,7 @@
 
 ### M5-postgres — Postgres schema and stores persist runs, messages, run_events and exactly one execution manifest per run, every row tenant-scoped and the trace reconstructable in order
 
-- state/risk: active / medium
+- state/risk: done / medium
 - requirements: FR-9, FR-10, FR-11, NFR-2, AC-5, AC-6, AC-7
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q, independent-review: pass
@@ -50,7 +50,7 @@
 
 ### M6-golden-eval — The golden eval passes end to end against the live gateway on two upstream providers, exercising the permission-denial and validation-failure paths and leaking no credential into any row or event
 
-- state/risk: queued / medium
+- state/risk: active / medium
 - requirements: AC-1, AC-2, AC-3, AC-4, AC-9, AC-10, NFR-3, NFR-4, NFR-7
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_golden_eval.py -q, independent-review: pending
