@@ -590,6 +590,44 @@ async def _execute_live(model_id):
         )
 
 
+def test_the_live_retry_recognises_the_whole_model_error_family():
+    """The retry above is the one thing in this file that can turn a red gate
+    green, and no test can exercise it without a sick gateway -- so the
+    CONDITION is pinned here instead.
+
+    Written because the first version of it was wrong: it matched the string
+    "ModelError", and an unreachable gateway reports ModelProviderUnavailable,
+    so the retry never fired for the one condition it exists for. Measured
+    against a closed port, not supposed. A hand-written list cannot creep back
+    in without failing this.
+    """
+    from agentsdk.errors import (
+        MaxTurnsExceeded,
+        ModelProviderUnavailable,
+        ModelRateLimited,
+        ModelTimeout,
+        ToolNotFound,
+    )
+    from agentsdk.errors import describe_exception
+
+    for exc in (
+        ModelError("boom"),
+        ModelTimeout("boom"),
+        ModelRateLimited("boom"),
+        ModelProviderUnavailable("boom"),
+    ):
+        assert describe_exception(exc).startswith(_MODEL_BOUNDARY_ERRORS), (
+            f"{type(exc).__name__} is a model-boundary failure and would not "
+            "be retried"
+        )
+    # And it must not absorb a failure that is a fact about this SDK.
+    for exc in (ToolNotFound("boom"), MaxTurnsExceeded("boom")):
+        assert not describe_exception(exc).startswith(_MODEL_BOUNDARY_ERRORS), (
+            f"{type(exc).__name__} would be retried, so a real defect could "
+            "pass on the second attempt"
+        )
+
+
 @pytest.mark.parametrize("model_id", LIVE_MODELS)
 async def test_the_same_eval_passes_against_a_live_provider(model_id):
     """AC-9: the SAME eval, two upstream providers, no source change. `model_id`

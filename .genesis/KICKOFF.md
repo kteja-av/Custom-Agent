@@ -14,7 +14,7 @@ Load the official Ponytail skill at `full`. Verify repository state and baseline
 - owner: unassigned
 - blocker: none
 - next action: Run the task pre-flight.
-- source hash: 32e0dfc444a2cd6ca944cebaffb0f71d935f86504c8590b59135abef192fa182
+- source hash: 6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d
 - phase instruction: Implement only the active task and prove it against current sources.
 - specification: SPEC.md / approved
 - requirements: AC-1, AC-10, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, FR-1, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6, NFR-7

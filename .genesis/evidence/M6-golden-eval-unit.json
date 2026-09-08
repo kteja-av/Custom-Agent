@@ -2,21 +2,21 @@
   "task": "M6-golden-eval",
   "gate": "unit",
   "command": ".venv\\Scripts\\python.exe -m pytest tests/test_golden_eval.py -q",
-  "started_at": "2026-09-08T18:32:12.049Z",
-  "observed_at": "2026-09-08T18:33:12.420Z",
+  "started_at": "2026-09-08T18:46:22.043Z",
+  "observed_at": "2026-09-08T18:47:20.503Z",
   "exit_code": 0,
   "signal": null,
-  "stdout": "..............                                                           [100%]\r\n14 passed in 59.57s\r\n",
+  "stdout": "...............                                                          [100%]\r\n15 passed in 57.68s\r\n",
   "stderr": "",
   "revision": {
-    "commit": "cd65b48640dfb4a1417832d78dc83ee8f0b71d1a",
+    "commit": "598a2cf57c182617bcf15d256b2a60ef3621b81f",
     "dirty": true
   },
-  "source_hash": "32e0dfc444a2cd6ca944cebaffb0f71d935f86504c8590b59135abef192fa182",
+  "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
   "environment": {
     "node": "v20.10.0",
     "platform": "win32",
     "arch": "x64"
   },
-  "hash": "6b650f7367a55a5a576d2a4d8cf8ce31b4f100b54eca41bf969491642c8ab39f"
+  "hash": "8598c74ef87973b4904276ffda905a3c257980b2c0bb9405d389f2ee2b5f995f"
 }

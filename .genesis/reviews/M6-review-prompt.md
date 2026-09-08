@@ -57,7 +57,7 @@ milestone in Phase 0.
 
 ### Files in scope
 
-- `tests/test_golden_eval.py` (841 lines, the milestone itself).
+- `tests/test_golden_eval.py` (879 lines, the milestone itself).
 - `agentsdk/executor.py` and `agentsdk/primitives.py` — one round-2 defect was
   in the SDK, not the gate: see below.
 - `tests/test_model_client.py` — one backstop test added in round 2.
@@ -126,8 +126,14 @@ Round 2's two caveats were also addressed, and both are new surface for you:
   condition matched the string `"ModelError"` and — measured against a closed
   port — never fired at all, because an unreachable gateway reports
   `ModelProviderUnavailable`. It is now derived from `ModelError.__subclasses__()`
-  transitively. Is there a failure inside that family which should NOT be
-  retried?
+  transitively, and pinned by `test_the_live_retry_recognises_the_whole_model_error_family`.
+  Is there a failure inside that family which should NOT be retried?
+
+  **Known blind spot, stated rather than hidden**: the retry's EXECUTION is
+  covered by no test, because exercising it needs a sick gateway the suite does
+  not simulate. Only its condition is pinned. A mutant that makes the retry
+  loop forever, or never fire, survives a healthy-gateway run and is equivalent
+  under normal conditions.
 - **AC-9 proved nothing about two upstreams.** `trace["run"]["model_id"]` is
   only what was asked for, and the gateway echoes the alias back verbatim
   (measured: both come back exactly as sent, so the response's own `model`
@@ -143,14 +149,14 @@ Round 2's two caveats were also addressed, and both are new surface for you:
    knowledge and limitations in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest -q                             # 422
-   .venv\Scripts\python.exe -m pytest tests/test_golden_eval.py -q   # 14
+   .venv\Scripts\python.exe -m pytest -q                             # 423
+   .venv\Scripts\python.exe -m pytest tests/test_golden_eval.py -q   # 15
    ```
    Per file, so a mismatch is locatable rather than merely alarming:
-   `test_agent_loop 77` + `test_golden_eval 14` + `test_model_client 151` +
+   `test_agent_loop 77` + `test_golden_eval 15` + `test_model_client 151` +
    `test_persistence 80` + `test_primitives 74` + `test_tool_executor 26`
-   = **422**. A different number is itself a finding. (It was 421 in round 2;
-   the one added test is the adapter backstop above.)
+   = **423**. A different number is itself a finding. (It was 421 in round 2;
+   the two added tests are the adapter backstop and the retry-condition test.)
 3. **Mutation-test.** Round 2's matrix and the repairs' own:
    ```
    permission check always allows      allowlist allows everything
@@ -164,8 +170,9 @@ Round 2's two caveats were also addressed, and both are new surface for you:
    failure provenance left null / naming the tool that never ran
    success provenance drops the schema hash
    the live half diverges per provider (spec, tools, or task)
+   the retry condition reverts to matching the name "ModelError"
    ```
-   The author ran the last five plus two variants and killed 7/7, each restored
+   The author ran the last six plus two variants and killed 8/8, each restored
    in a `finally` with SHA-256 verified. **A mutant that errors out did not
    run.** This project has produced three meaningless matrices: a SQL error
    counted as a kill, an unrecognised `--timeout` flag that made pytest exit 4
