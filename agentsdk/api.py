@@ -108,6 +108,10 @@ class RunConfig:
     principal_context: PrincipalContext | None = None
 
     def __post_init__(self) -> None:
+        # Before the range checks: a bool passes every one of them (True >= 1,
+        # True <= the ceiling) and then fails the write as a SQL boolean.
+        if isinstance(self.max_turns, bool):
+            raise ValueError("max_turns must be an int, not a bool")
         if self.max_turns < 1:
             raise ValueError("max_turns must be at least 1")
         # And bounded above, because runs.max_turns is an INTEGER column.

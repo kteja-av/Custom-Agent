@@ -343,6 +343,17 @@ def unstorable_reason(value: Any) -> str | None:
     # see. It stays because the two layers are meant to overlap: the named one
     # exists for better messages, not as the only defence, and a future edit
     # there should not silently reopen this.
+    return _serialisation_reason(value)
+
+
+def _serialisation_reason(value: Any) -> str | None:
+    """The backstop, as its own function so it can be tested as its own layer.
+
+    It overlaps the named checks deliberately, and while it was inlined the
+    overlap made both halves individually deletable with the suite still green
+    -- the exact failure KNOWLEDGE-fd4720a4 records. A guard that cannot be
+    called on its own cannot be pinned on its own.
+    """
     try:
         json.dumps(value, allow_nan=False, ensure_ascii=False).encode("utf-8")
     except Exception as exc:  # noqa: BLE001 - total by intent

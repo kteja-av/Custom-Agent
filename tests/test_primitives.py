@@ -525,3 +525,40 @@ def test_every_configuration_field_is_covered_whatever_its_shape():
         bad = ("x" + NUL,) if f.name == "scopes" else "x" + NUL
         with pytest.raises(ValueError, match=f"PrincipalContext.{f.name} cannot be stored"):
             PrincipalContext(**{**base, f.name: bad})
+
+
+def test_the_named_layer_diagnoses_non_finite_by_itself():
+    """KNOWLEDGE-fd4720a4 says overlapping guards need a test at each layer.
+    The NUL branch is pinned by its diagnosis string; non-finite was not, so
+    either half could be deleted while green -- the project's own recorded
+    lesson, unenforced in the one place it applies.
+
+    The named layer's job is the DIAGNOSIS. Asserting the exact reason is what
+    distinguishes it from the backstop, which would report a generic
+    serialisation failure for the same value.
+    """
+    from agentsdk.primitives import _named_unstorable_reason
+
+    assert _named_unstorable_reason(float("inf")) == (
+        "inf cannot be stored: JSON has no representation for it"
+    )
+    assert _named_unstorable_reason(float("nan")) == (
+        "NaN cannot be stored: JSON has no representation for it"
+    )
+    assert _named_unstorable_reason({"a": [float("-inf")]}) == (
+        "-inf cannot be stored: JSON has no representation for it"
+    )
+    assert _named_unstorable_reason(1.5) is None
+
+
+@pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan")],
+                         ids=["inf", "-inf", "nan"])
+def test_the_backstop_catches_non_finite_by_itself(value):
+    """The other half, called directly. Through the public predicate the named
+    layer answers first, so both halves were individually deletable while the
+    suite stayed green -- which is the failure KNOWLEDGE-fd4720a4 records."""
+    from agentsdk.primitives import _serialisation_reason
+
+    assert _serialisation_reason(value) is not None
+    assert _serialisation_reason(1.5) is None
+    assert unstorable_reason(value) is not None

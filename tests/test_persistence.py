@@ -608,23 +608,62 @@ def test_schema_sql_itself_declares_the_constraints():
                 assert len(rows) == 2, f"{table} is missing a tenancy column"
                 assert all(n == "NO" for _, n in rows), f"{table} allows a null tenant"
 
-            # Ordering is a database guarantee, not a convention.
+            # Ordering is a database guarantee, not a convention -- and WHAT
+            # the constraint constrains, not merely that one exists. Asserting
+            # existence let UNIQUE (run_id, sequence_no) be rewritten to
+            # (run_id, message_id) with the suite still green: the same "a name
+            # in a list proves coverage, never fitness" shape as round 8, now
+            # in the schema tests. It matters more here, because schema.sql has
+            # no migration path and IS the deployment artefact, so the damage
+            # stays invisible until the next fresh database.
             for table in ("messages", "run_events"):
-                constraints = conn.execute(
-                    "SELECT constraint_type FROM information_schema.table_constraints"
-                    " WHERE table_schema=%s AND table_name=%s AND constraint_type='UNIQUE'",
-                    (namespace, table),
-                ).fetchall()
-                assert constraints, f"{table} has no UNIQUE (run_id, sequence_no)"
+                defs = [
+                    d for d, in conn.execute(
+                        "SELECT pg_get_constraintdef(c.oid) FROM pg_constraint c"
+                        " JOIN pg_class t ON t.oid = c.conrelid"
+                        " JOIN pg_namespace n ON n.oid = t.relnamespace"
+                        " WHERE n.nspname=%s AND t.relname=%s AND c.contype='u'",
+                        (namespace, table),
+                    ).fetchall()
+                ]
+                assert any(
+                    d.replace(" ", "").upper().startswith("UNIQUE(RUN_ID,SEQUENCE_NO)")
+                    for d in defs
+                ), f"{table} does not declare UNIQUE (run_id, sequence_no); found {defs}"
 
-            # AC-6: "exactly one manifest" is enforced by the key, not by care.
-            pk = conn.execute(
-                "SELECT constraint_type FROM information_schema.table_constraints"
-                " WHERE table_schema=%s AND table_name='execution_manifests'"
-                " AND constraint_type='PRIMARY KEY'",
-                (namespace,),
-            ).fetchall()
-            assert pk, "execution_manifests has no primary key on run_id"
+            # AC-6: "exactly one manifest" is enforced by the key, not by care,
+            # and specifically by a key on run_id.
+            pk_defs = [
+                d for d, in conn.execute(
+                    "SELECT pg_get_constraintdef(c.oid) FROM pg_constraint c"
+                    " JOIN pg_class t ON t.oid = c.conrelid"
+                    " JOIN pg_namespace n ON n.oid = t.relnamespace"
+                    " WHERE n.nspname=%s AND t.relname='execution_manifests'"
+                    " AND c.contype='p'",
+                    (namespace,),
+                ).fetchall()
+            ]
+            assert any(
+                d.replace(" ", "").upper() == "PRIMARYKEY(RUN_ID)" for d in pk_defs
+            ), f"execution_manifests has no PRIMARY KEY (run_id); found {pk_defs}"
+
+            # Round 8's whole fix rests on max_turns being INTEGER, and nothing
+            # asserted the type it depends on.
+            types = dict(
+                conn.execute(
+                    "SELECT column_name, data_type FROM information_schema.columns"
+                    " WHERE table_schema=%s AND table_name='runs'",
+                    (namespace,),
+                ).fetchall()
+            )
+            assert types.get("max_turns") == "integer", (
+                f"runs.max_turns is {types.get('max_turns')}, but the int32 range "
+                "check in column_rejection_reason assumes INTEGER"
+            )
+            assert types.get("principal_context") == "jsonb"
+            assert types.get("run_id") == "uuid"
+            for column in ("tenant_id", "project_id", "agent_spec_id", "status"):
+                assert types.get(column) == "text", f"runs.{column} is {types.get(column)}"
 
             # NFR-2: tenancy columns are indexed, not merely present.
             for table in TABLES:
@@ -1473,3 +1512,23 @@ def test_persistence_is_importable_from_the_package_root():
     from agentsdk.persistence import Persistence as FromModule
 
     assert FromRoot is FromModule
+
+
+@pytest.mark.parametrize("value", [True, False], ids=["True", "False"])
+def test_an_integer_column_refuses_a_bool_at_the_column_layer(value):
+    """Unit-level, because RunConfig also refuses a bool max_turns and the two
+    guards were hiding each other: deleting either left the suite green."""
+    from agentsdk.postgres import column_rejection_reason
+
+    assert column_rejection_reason(value, "INTEGER") is not None
+    # JSONB genuinely accepts a bool, so the refusal is the column's, not a
+    # blanket ban on bools.
+    assert column_rejection_reason(value, "JSONB") is None
+
+
+@pytest.mark.parametrize("value", [True, False], ids=["True", "False"])
+def test_run_config_refuses_a_bool_max_turns(value):
+    """The other layer. A bool passes every range check -- True >= 1, True <=
+    the ceiling -- and then fails the write as a SQL boolean."""
+    with pytest.raises(ValueError, match="max_turns must be an int, not a bool"):
+        RunConfig(tenant_id="t", project_id="p", max_turns=value)

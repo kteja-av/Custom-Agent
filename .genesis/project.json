@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-08T07:36:30.667Z"
+    "updated_at": "2026-09-08T10:51:20.170Z"
   },
   "policy": {
     "ponytail": "full",
@@ -355,6 +355,14 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-08T07:35:34.079Z"
+    },
+    {
+      "id": "DECISION-fcffed9a",
+      "title": "Schema tests assert constraint DEFINITIONS and column types",
+      "text": "test_schema_sql_itself_declares_the_constraints now reads pg_get_constraintdef and information_schema column types in the throwaway namespace, asserting UNIQUE (run_id, sequence_no), PRIMARY KEY (run_id) and runs.max_turns being INTEGER, rather than asserting that a constraint of some type exists. Rationale: rewriting UNIQUE (run_id, sequence_no) to (run_id, message_id) previously left the suite green -- the same coverage-not-fitness shape as M5 round 8, this time in the schema tests. It matters more than a normal blind spot because schema.sql has no migration path and IS the deployment artefact, so damage stays invisible until the next fresh database; and because round 8's int32 range check is justified entirely by max_turns being INTEGER, which nothing asserted.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-08T10:49:41.981Z"
     }
   ],
   "knowledge": [
@@ -509,6 +517,14 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-08T07:35:33.901Z"
+    },
+    {
+      "id": "KNOWLEDGE-2f959f40",
+      "title": "A carve-out copied between layers loses its reason",
+      "text": "column_rejection_reason excluded bools from the INTEGER range check with . That exclusion was copied from token_count, where it is right (a flag is not a token count) -- but in a column check its effect is the opposite: psycopg adapts a bool to SQL boolean, so True reaches an integer column as DatatypeMismatch after completing happily in memory. The exclusion looked harmless because True is trivially inside the int32 range, which is answering a different question again. When moving a guard between layers, re-derive why each exception exists rather than carrying it across.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-08T10:49:41.774Z"
     }
   ],
   "tasks": [
@@ -742,17 +758,22 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "aeb48f31ab02c4a77b74bf1926d94c13f9a099e161a8c0c8baaf74dcf2fac92e",
-            "hash": "285ab63e32fe497825026ffd8e43fb119f15fa9a7b7cc974eb30d23cda13adf8",
-            "observed_at": "2026-09-08T07:35:08.873Z"
+            "source_hash": "394b03f97d6134fc8c253c4d46f8758cec402d8d16f8cb0a7c709c8f5fa3bbf3",
+            "hash": "87f1f418c2de19b0bffd648fb3dd056576eda05f9bc3cc5a57ee5a55e0d81025",
+            "observed_at": "2026-09-08T10:51:20.027Z"
           }
         },
         {
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Independent L4 reviewer (fresh session, M5 round 9)",
+            "reason": "APPROVE. Re-derived FR-9/10/11, NFR-2/3/4, AC-5/6/7 from SPEC.md and audited every persisted column against the guard protecting it. Gate reproduced exactly: 397 full suite, 76 test_persistence, per-file 75/150/76/70/26. 169 mutations run across 5 batches, each with a full-suite (not -k) result, restored in a finally with SHA-256 verification; git status clean. All eight prior fixes confirmed completely closed: AC-6 atomicity holds under both an injected psycopg.OperationalError in the manifest write and os._exit mid-transaction (0 orphan runs rows both times); the round-8 column-fitness guard dies under 11 separate mutations including keying max_turns as JSONB; RunScope/PrincipalContext/ToolSpec/ToolCall/Message/ToolResult/ModelResponse walks all die; the round-6 carve-out reintroduction dies. Guard-vs-Postgres differential probe (28 scalar classes, both directions, throwaway schema) found no false negatives and no false positives. Concurrency re-measured: 12 barrier-synchronised writers -> 11 committed, sequence 1..11 unique and contiguous, 1 UniqueViolation; safety holds, availability as declared. No MODEL_API_KEY or DB password anywhere in the four tables. NO REACHABLE PHASE 0 CORRECTNESS DEFECT FOUND. Caveats, all evidenced, none blocking: (1) JSONB normalises floats of magnitude >=1e16 back to int on read (1e308 returns an int that compares unequal to the original), so a tool argument carrying a large float diverges between the in-memory and Postgres backends -- value-preserving below 1e16, inherent to jsonb's numeric representation, no run fails. (2) 12 schema.sql mutations survive the full suite: the throwaway-namespace test asserts only that A UNIQUE constraint and A PRIMARY KEY exist, not what they constrain, so UNIQUE(run_id,sequence_no) -> UNIQUE(run_id,message_id), the runs.status and messages.role CHECKs, all three foreign keys to runs, max_turns INTEGER->BIGINT, and the NOT NULLs on sdk_version/instructions_hash/payload/schema_version/max_turns are all unpinned -- the same 'proves the database, not the file' class as KNOWLEDGE-35f7ec28 and the same 'asserts a name is in a list' shape as KNOWLEDGE-41611bbf. (3) Deleting either the named non-finite check or the backstop's allow_nan=False leaves 397 green -- both halves of the declared overlap, contrary to KNOWLEDGE-fd4720a4. (4) Runner passing config.principal_context to start_run is unpinned (the runs-row copy can be replaced with None with the suite green); the store-level and RunStarted-payload copies are pinned. (5) The executor putting schema_hash() in ContentProvenance.source_uri_or_hash is unpinned (AC-4 'fully populated'). (6) PostgresSessionStore.append's bound-run-id check is masked by the rowcount check, so appending run B's message through a store bound to run A is untested. (7) _safe_finish's try/except and _replace_unstorable_text/_named_unstorable_reason's totality wrappers are unpinned. (8) write_manifest takes no column_rejection_reason pass unlike start_run; off the Runner path today. (9) Mistyped caller inputs (task=dict, AgentSpec.id=None/int, instructions=None, tenant_id=int, max_turns=True) complete in memory and fail with persistence -- all violate declared annotations except max_turns=True, which passes because bool is an int and the INTEGER guard carves bools out. Database left undamaged: orphan count back to exactly 979, all probe rows and the throwaway schema removed, five public tables intact.",
+            "source_hash": "190dd4df6e13c64bd2fb7d2c1a80dcd2a485a405e84f27d6f6a77bbad73e14e9",
+            "observed_at": "2026-09-08T08:41:27.317Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
@@ -765,10 +786,11 @@
         "No connection pool: every store method opens its own psycopg connection (~15 connect-auth-close cycles per short run), and the calls are synchronous psycopg made from inside the async AgentLoop, so they block the event loop thread. Correct for Phase 0's one-run-at-a-time profile, and the FIRST thing to change before real load -- connect latency would dominate and Postgres max_connections would cap concurrent runs. Fix: psycopg_pool.AsyncConnectionPool plus async store methods; the protocols do not change.",
         "Event sequence_no comes from an in-process counter (len(buffer)+1), so ordering is per SINK INSTANCE, not per run as stored. One process per run makes this correct in Phase 0. It breaks the moment a run resumes in a new process or a second sink observes it: numbering restarts at 1 and collides with UNIQUE (run_id, sequence_no). Phase 6 (durable interruptions, replay) cannot land without moving this into the insert, the way messages.sequence_no already is.",
         "Schema has no migration path: schema.sql is CREATE TABLE IF NOT EXISTS, so it can create a database but cannot evolve one. Any column change in production needs a real migration tool (Alembic or equivalent) before there is data worth keeping.",
-        "messages and run_events grow without bound: no retention policy, no partitioning, no archival. Fine at prototype volume; a production deployment needs a plan before the first long-running tenant."
+        "messages and run_events grow without bound: no retention policy, no partitioning, no archival. Fine at prototype volume; a production deployment needs a plan before the first long-running tenant.",
+        "JSONB normalises large floats: a value >= 1e16 written into a JSONB payload reads back as an int, and at 1e308 the returned value compares unequal to the original. Inherent to jsonb's numeric representation, no run fails and no AC is breached, but it is the one demonstrated place where postgres.py's header claim -- that the loop cannot tell whether it is talking to memory or Postgres -- is falsifiable. Found by the M5 round-9 reviewer."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-08T07:35:09.297Z"
+      "updated_at": "2026-09-08T10:51:20.170Z"
     },
     {
       "id": "M6-golden-eval",
@@ -1069,6 +1091,15 @@
       "task": "M5-postgres",
       "human": "Opus 5 (implementer)",
       "reason": "Round-8 defect fixed by making the check column-aware rather than adding a case: column_rejection_reason keys on the destination column's declared type, and RunConfig bounds max_turns so the run fails identically with and without persistence. Tool schemas are validated at construction, so a set in an enum no longer breaks only the persisted path. The coverage test that missed this is replaced by a fitness test that drives an unfit value through every parameter. Both caveats taken: run_events and execution_manifests now take tenancy from the run row (third round of that inconsistency), and Persistence is exported from the package root for M6. 397 tests, 10/10 mutations killed.",
+      "revision": null
+    },
+    {
+      "id": "03930d00-e6c7-4c90-8280-3233e2a42e42",
+      "at": "2026-09-08T08:41:27.317Z",
+      "action": "approve",
+      "task": "M5-postgres",
+      "human": "Independent L4 reviewer (fresh session, M5 round 9)",
+      "reason": "APPROVE. Re-derived FR-9/10/11, NFR-2/3/4, AC-5/6/7 from SPEC.md and audited every persisted column against the guard protecting it. Gate reproduced exactly: 397 full suite, 76 test_persistence, per-file 75/150/76/70/26. 169 mutations run across 5 batches, each with a full-suite (not -k) result, restored in a finally with SHA-256 verification; git status clean. All eight prior fixes confirmed completely closed: AC-6 atomicity holds under both an injected psycopg.OperationalError in the manifest write and os._exit mid-transaction (0 orphan runs rows both times); the round-8 column-fitness guard dies under 11 separate mutations including keying max_turns as JSONB; RunScope/PrincipalContext/ToolSpec/ToolCall/Message/ToolResult/ModelResponse walks all die; the round-6 carve-out reintroduction dies. Guard-vs-Postgres differential probe (28 scalar classes, both directions, throwaway schema) found no false negatives and no false positives. Concurrency re-measured: 12 barrier-synchronised writers -> 11 committed, sequence 1..11 unique and contiguous, 1 UniqueViolation; safety holds, availability as declared. No MODEL_API_KEY or DB password anywhere in the four tables. NO REACHABLE PHASE 0 CORRECTNESS DEFECT FOUND. Caveats, all evidenced, none blocking: (1) JSONB normalises floats of magnitude >=1e16 back to int on read (1e308 returns an int that compares unequal to the original), so a tool argument carrying a large float diverges between the in-memory and Postgres backends -- value-preserving below 1e16, inherent to jsonb's numeric representation, no run fails. (2) 12 schema.sql mutations survive the full suite: the throwaway-namespace test asserts only that A UNIQUE constraint and A PRIMARY KEY exist, not what they constrain, so UNIQUE(run_id,sequence_no) -> UNIQUE(run_id,message_id), the runs.status and messages.role CHECKs, all three foreign keys to runs, max_turns INTEGER->BIGINT, and the NOT NULLs on sdk_version/instructions_hash/payload/schema_version/max_turns are all unpinned -- the same 'proves the database, not the file' class as KNOWLEDGE-35f7ec28 and the same 'asserts a name is in a list' shape as KNOWLEDGE-41611bbf. (3) Deleting either the named non-finite check or the backstop's allow_nan=False leaves 397 green -- both halves of the declared overlap, contrary to KNOWLEDGE-fd4720a4. (4) Runner passing config.principal_context to start_run is unpinned (the runs-row copy can be replaced with None with the suite green); the store-level and RunStarted-payload copies are pinned. (5) The executor putting schema_hash() in ContentProvenance.source_uri_or_hash is unpinned (AC-4 'fully populated'). (6) PostgresSessionStore.append's bound-run-id check is masked by the rowcount check, so appending run B's message through a store bound to run A is untested. (7) _safe_finish's try/except and _replace_unstorable_text/_named_unstorable_reason's totality wrappers are unpinned. (8) write_manifest takes no column_rejection_reason pass unlike start_run; off the Runner path today. (9) Mistyped caller inputs (task=dict, AgentSpec.id=None/int, instructions=None, tenant_id=int, max_turns=True) complete in memory and fail with persistence -- all violate declared annotations except max_turns=True, which passes because bool is an int and the INTEGER guard carves bools out. Database left undamaged: orphan count back to exactly 979, all probe rows and the throwaway schema removed, five public tables intact.",
       "revision": null
     }
   ],

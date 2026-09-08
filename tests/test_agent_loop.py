@@ -9,6 +9,8 @@ provable with no network and no credentials.
 import ast
 import pathlib
 
+from types import SimpleNamespace
+
 import pytest
 
 from agentsdk import AgentSpec, RunConfig, Runner, RunResult, RunStatus
@@ -985,3 +987,68 @@ async def test_reconstructed_usage_still_reports_what_was_actually_spent():
     )
     assert result.status is RunStatus.FAILED
     assert result.usage == Usage(11, 4, 15)
+
+
+async def test_a_persistence_failure_on_the_error_path_cannot_escape():
+    """_safe_finish runs inside Runner.run's except block, so if it could
+    raise, a persistence failure would escape the total boundary on exactly the
+    path that exists to guarantee it never does -- the invariant this project
+    recorded by name. It had no test.
+    """
+
+    class ExplodingRecorder:
+        def start_run(self, scope, **fields):
+            return None
+
+        def finish_run(self, scope, status):
+            raise RuntimeError("the database went away mid-failure")
+
+    class Exploding:
+        async def send(self, request):
+            raise RuntimeError("model exploded")
+
+    runner = Runner({"gw": Exploding()}, tools=[echo_tool()])
+    # Reach past the constructor deliberately: this is the persistence seam,
+    # and a real Persistence needs a database this test must not require.
+    runner._persistence = SimpleNamespace(
+        runs=ExplodingRecorder(),
+        session_store_for=lambda scope: InMemorySessionStore(),
+        event_sink_for=lambda scope: InMemoryEventSink(
+            tenant_id=scope.tenant_id, project_id=scope.project_id,
+            run_id=scope.run_id
+        ),
+    )
+
+    result = await runner.run(spec(), "go", config())
+
+    assert result.status is RunStatus.FAILED
+    assert "model exploded" in result.error, (
+        "the persistence failure masked the real one"
+    )
+
+
+async def test_a_persistence_failure_on_the_success_path_is_not_swallowed():
+    """The mirror image, and deliberately different: on the SUCCESS path a
+    failed finish_run is not hidden, because a run recorded as still running is
+    a lie the caller should hear about."""
+
+    class ExplodingRecorder:
+        def start_run(self, scope, **fields):
+            return None
+
+        def finish_run(self, scope, status):
+            raise RuntimeError("could not close the run")
+
+    runner = Runner({"gw": ScriptedModel(text_response("done"))}, tools=[echo_tool()])
+    runner._persistence = SimpleNamespace(
+        runs=ExplodingRecorder(),
+        session_store_for=lambda scope: InMemorySessionStore(),
+        event_sink_for=lambda scope: InMemoryEventSink(
+            tenant_id=scope.tenant_id, project_id=scope.project_id,
+            run_id=scope.run_id
+        ),
+    )
+
+    result = await runner.run(spec(), "go", config())
+    assert result.status is RunStatus.FAILED
+    assert "could not close the run" in result.error

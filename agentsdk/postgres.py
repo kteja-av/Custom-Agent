@@ -164,8 +164,17 @@ def column_rejection_reason(value: Any, sql_type: str) -> str | None:
     reason = unstorable_reason(value)
     if reason is not None:
         return reason
-    if sql_type == "INTEGER" and isinstance(value, int) and not isinstance(value, bool):
-        if not (_INT32_MIN <= value <= _INT32_MAX):
+    if sql_type == "INTEGER":
+        if isinstance(value, bool):
+            # The carve-out this replaces was the last surviving instance of
+            # round 8's shape: a bool IS an int in Python, so it passed the
+            # `int` test, and excluding it from the range check looked
+            # harmless because True is trivially in range. But psycopg adapts
+            # it to SQL boolean, and the column is integer -- DatatypeMismatch
+            # at the write, after completing happily in memory. Copied from
+            # token_count without re-asking what the exclusion was FOR.
+            return "a bool is not an integer: an INTEGER column refuses it"
+        if isinstance(value, int) and not (_INT32_MIN <= value <= _INT32_MAX):
             return (
                 f"{value} is outside the range of an INTEGER column "
                 f"({_INT32_MIN}..{_INT32_MAX})"

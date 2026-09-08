@@ -45,7 +45,7 @@
 - state/risk: active / medium
 - requirements: FR-9, FR-10, FR-11, NFR-2, AC-5, AC-6, AC-7
 - scope: not bounded
-- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q, independent-review: pending
+- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q, independent-review: pass
 - next: Run the task pre-flight.
 
 ### M6-golden-eval — The golden eval passes end to end against the live gateway on two upstream providers, exercising the permission-denial and validation-failure paths and leaking no credential into any row or event
