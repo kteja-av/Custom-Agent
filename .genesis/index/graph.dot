@@ -53,6 +53,7 @@ digraph genesis {
   "runtime:python:re" [label="re",class="runtime"];
   "runtime:python:sys" [label="sys",class="runtime"];
   "runtime:python:threading" [label="threading",class="runtime"];
+  "runtime:python:types" [label="types",class="runtime"];
   "runtime:python:typing" [label="typing",class="runtime"];
   "runtime:python:urllib.parse" [label="urllib.parse",class="runtime"];
   "runtime:python:uuid" [label="uuid",class="runtime"];
@@ -227,6 +228,7 @@ digraph genesis {
   "symbol:agentsdk/primitives.py#class:TrustZone" [label="TrustZone",class="symbol"];
   "symbol:agentsdk/primitives.py#function:_named_unstorable_reason" [label="_named_unstorable_reason",class="symbol"];
   "symbol:agentsdk/primitives.py#function:_replace_unstorable_text" [label="_replace_unstorable_text",class="symbol"];
+  "symbol:agentsdk/primitives.py#function:_serialisation_reason" [label="_serialisation_reason",class="symbol"];
   "symbol:agentsdk/primitives.py#function:_unstorable_marker" [label="_unstorable_marker",class="symbol"];
   "symbol:agentsdk/primitives.py#function:ContentProvenance.__post_init__" [label="ContentProvenance.__post_init__",class="symbol"];
   "symbol:agentsdk/primitives.py#function:ContentProvenance.from_model" [label="ContentProvenance.from_model",class="symbol"];
@@ -302,6 +304,9 @@ digraph genesis {
   "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting" [label="test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting" [label="test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting" [label="test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting",class="symbol"];
+  "symbol:tests/test_agent_loop.py#class:test_a_persistence_failure_on_the_error_path_cannot_escape.Exploding" [label="test_a_persistence_failure_on_the_error_path_cannot_escape.Exploding",class="symbol"];
+  "symbol:tests/test_agent_loop.py#class:test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder" [label="test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder",class="symbol"];
+  "symbol:tests/test_agent_loop.py#class:test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder" [label="test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler" [label="test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_a_raising_event_sink_does_not_break_the_failure_path.Exploding" [label="test_a_raising_event_sink_does_not_break_the_failure_path.Exploding",class="symbol"];
   "symbol:tests/test_agent_loop.py#class:test_a_raising_session_store_fails_the_run_without_escaping.BrokenStore" [label="test_a_raising_session_store_fails_the_run_without_escaping.BrokenStore",class="symbol"];
@@ -348,6 +353,13 @@ digraph genesis {
   "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution" [label="test_a_hook_can_rewrite_a_tool_call_before_execution",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool" [label="test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_a_malformed_tool_schema_does_not_crash_the_run" [label="test_a_malformed_tool_schema_does_not_crash_the_run",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape" [label="test_a_persistence_failure_on_the_error_path_cannot_escape",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape.Exploding.send" [label="test_a_persistence_failure_on_the_error_path_cannot_escape.Exploding.send",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder.finish_run" [label="test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder.finish_run",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder.start_run" [label="test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder.start_run",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_success_path_is_not_swallowed" [label="test_a_persistence_failure_on_the_success_path_is_not_swallowed",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder.finish_run" [label="test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder.finish_run",class="symbol"];
+  "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder.start_run" [label="test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder.start_run",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_a_raising_assembler_fails_the_run_without_escaping" [label="test_a_raising_assembler_fails_the_run_without_escaping",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler.build" [label="test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler.build",class="symbol"];
   "symbol:tests/test_agent_loop.py#function:test_a_raising_event_sink_does_not_break_the_failure_path" [label="test_a_raising_event_sink_does_not_break_the_failure_path",class="symbol"];
@@ -564,6 +576,7 @@ digraph genesis {
   "symbol:tests/test_persistence.py#function:test_a_whole_run_persists_and_reconstructs" [label="test_a_whole_run_persists_and_reconstructs",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_event_cannot_be_filed_under_another_tenant" [label="test_an_event_cannot_be_filed_under_another_tenant",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_event_payload_that_cannot_be_stored_is_marked_not_dropped" [label="test_an_event_payload_that_cannot_be_stored_is_marked_not_dropped",class="symbol"];
+  "symbol:tests/test_persistence.py#function:test_an_integer_column_refuses_a_bool_at_the_column_layer" [label="test_an_integer_column_refuses_a_bool_at_the_column_layer",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_integer_column_rejects_what_json_would_happily_accept" [label="test_an_integer_column_rejects_what_json_would_happily_accept",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_unregistered_model_is_recorded_as_such_not_as_null" [label="test_an_unregistered_model_is_recorded_as_such_not_as_null",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_an_unstorable_agent_spec_id_is_refused" [label="test_an_unstorable_agent_spec_id_is_refused",class="symbol"];
@@ -604,6 +617,7 @@ digraph genesis {
   "symbol:tests/test_persistence.py#function:test_persistence_is_importable_from_the_package_root" [label="test_persistence_is_importable_from_the_package_root",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_provenance_survives_the_round_trip" [label="test_provenance_survives_the_round_trip",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_reading_history_without_a_bound_scope_is_refused" [label="test_reading_history_without_a_bound_scope_is_refused",class="symbol"];
+  "symbol:tests/test_persistence.py#function:test_run_config_refuses_a_bool_max_turns" [label="test_run_config_refuses_a_bool_max_turns",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_runs_are_isolated" [label="test_runs_are_isolated",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_schema_sql_itself_declares_the_constraints" [label="test_schema_sql_itself_declares_the_constraints",class="symbol"];
   "symbol:tests/test_persistence.py#function:test_sequence_no_is_assigned_by_the_store_not_the_caller" [label="test_sequence_no_is_assigned_by_the_store_not_the_caller",class="symbol"];
@@ -663,6 +677,8 @@ digraph genesis {
   "symbol:tests/test_primitives.py#function:test_run_interruption_type_exists_without_persistence" [label="test_run_interruption_type_exists_without_persistence",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_storable_values_pass" [label="test_storable_values_pass",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_surrogate_content_is_refused" [label="test_surrogate_content_is_refused",class="symbol"];
+  "symbol:tests/test_primitives.py#function:test_the_backstop_catches_non_finite_by_itself" [label="test_the_backstop_catches_non_finite_by_itself",class="symbol"];
+  "symbol:tests/test_primitives.py#function:test_the_named_layer_diagnoses_non_finite_by_itself" [label="test_the_named_layer_diagnoses_non_finite_by_itself",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_the_reason_channel_is_itself_storable" [label="test_the_reason_channel_is_itself_storable",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_tool_result_rejects_non_provenance" [label="test_tool_result_rejects_non_provenance",class="symbol"];
   "symbol:tests/test_primitives.py#function:test_tool_result_requires_provenance" [label="test_tool_result_requires_provenance",class="symbol"];
@@ -879,6 +895,7 @@ digraph genesis {
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#class:TrustZone" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:_named_unstorable_reason" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:_replace_unstorable_text" [label="defines"];
+  "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:_serialisation_reason" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:_unstorable_marker" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:ContentProvenance.__post_init__" [label="defines"];
   "file:agentsdk/primitives.py" -> "symbol:agentsdk/primitives.py#function:ContentProvenance.from_model" [label="defines"];
@@ -954,6 +971,9 @@ digraph genesis {
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_request_before_the_model_sees_it.Rewriting" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_hook_can_modify_the_response_after_the_model_returns.Rewriting" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_persistence_failure_on_the_error_path_cannot_escape.Exploding" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_raising_event_sink_does_not_break_the_failure_path.Exploding" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#class:test_a_raising_session_store_fails_the_run_without_escaping.BrokenStore" [label="defines"];
@@ -1000,6 +1020,13 @@ digraph genesis {
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_hook_can_rewrite_a_tool_call_before_execution.Rewriting.before_tool" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_malformed_tool_schema_does_not_crash_the_run" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape.Exploding.send" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder.finish_run" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_error_path_cannot_escape.ExplodingRecorder.start_run" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_success_path_is_not_swallowed" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder.finish_run" [label="defines"];
+  "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_persistence_failure_on_the_success_path_is_not_swallowed.ExplodingRecorder.start_run" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_raising_assembler_fails_the_run_without_escaping" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_raising_assembler_fails_the_run_without_escaping.BrokenAssembler.build" [label="defines"];
   "file:tests/test_agent_loop.py" -> "symbol:tests/test_agent_loop.py#function:test_a_raising_event_sink_does_not_break_the_failure_path" [label="defines"];
@@ -1216,6 +1243,7 @@ digraph genesis {
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_a_whole_run_persists_and_reconstructs" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_event_cannot_be_filed_under_another_tenant" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_event_payload_that_cannot_be_stored_is_marked_not_dropped" [label="defines"];
+  "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_integer_column_refuses_a_bool_at_the_column_layer" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_integer_column_rejects_what_json_would_happily_accept" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unregistered_model_is_recorded_as_such_not_as_null" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_an_unstorable_agent_spec_id_is_refused" [label="defines"];
@@ -1256,6 +1284,7 @@ digraph genesis {
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_persistence_is_importable_from_the_package_root" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_provenance_survives_the_round_trip" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_reading_history_without_a_bound_scope_is_refused" [label="defines"];
+  "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_run_config_refuses_a_bool_max_turns" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_runs_are_isolated" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_schema_sql_itself_declares_the_constraints" [label="defines"];
   "file:tests/test_persistence.py" -> "symbol:tests/test_persistence.py#function:test_sequence_no_is_assigned_by_the_store_not_the_caller" [label="defines"];
@@ -1315,6 +1344,8 @@ digraph genesis {
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_run_interruption_type_exists_without_persistence" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_storable_values_pass" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_surrogate_content_is_refused" [label="defines"];
+  "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_the_backstop_catches_non_finite_by_itself" [label="defines"];
+  "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_the_named_layer_diagnoses_non_finite_by_itself" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_the_reason_channel_is_itself_storable" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_tool_result_rejects_non_provenance" [label="defines"];
   "file:tests/test_primitives.py" -> "symbol:tests/test_primitives.py#function:test_tool_result_requires_provenance" [label="defines"];
@@ -1523,6 +1554,7 @@ digraph genesis {
   "file:tests/test_agent_loop.py" -> "runtime:python:ast" [label="imports"];
   "file:tests/test_agent_loop.py" -> "runtime:python:asyncio" [label="imports"];
   "file:tests/test_agent_loop.py" -> "runtime:python:pathlib" [label="imports"];
+  "file:tests/test_agent_loop.py" -> "runtime:python:types" [label="imports"];
   "file:tests/test_model_client.py" -> "file:agentsdk/config.py" [label="imports"];
   "file:tests/test_model_client.py" -> "file:agentsdk/errors.py" [label="imports"];
   "file:tests/test_model_client.py" -> "file:agentsdk/executor.py" [label="imports"];

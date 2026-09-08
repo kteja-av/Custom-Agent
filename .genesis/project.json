@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-08T10:51:20.170Z"
+    "updated_at": "2026-09-08T10:57:33.909Z"
   },
   "policy": {
     "ponytail": "full",
@@ -758,9 +758,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "394b03f97d6134fc8c253c4d46f8758cec402d8d16f8cb0a7c709c8f5fa3bbf3",
-            "hash": "87f1f418c2de19b0bffd648fb3dd056576eda05f9bc3cc5a57ee5a55e0d81025",
-            "observed_at": "2026-09-08T10:51:20.027Z"
+            "source_hash": "7063d5aa001a274535c4dda7bf73c6ad01c9982c807e4de10c0696cafd9fa4fc",
+            "hash": "eafa8c68753f40009143282493c252837114ecb23a5a52b06869fa5fee1aa728",
+            "observed_at": "2026-09-08T10:57:33.328Z"
           }
         },
         {
@@ -790,7 +790,7 @@
         "JSONB normalises large floats: a value >= 1e16 written into a JSONB payload reads back as an int, and at 1e308 the returned value compares unequal to the original. Inherent to jsonb's numeric representation, no run fails and no AC is breached, but it is the one demonstrated place where postgres.py's header claim -- that the loop cannot tell whether it is talking to memory or Postgres -- is falsifiable. Found by the M5 round-9 reviewer."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-08T10:51:20.170Z"
+      "updated_at": "2026-09-08T10:57:33.497Z"
     },
     {
       "id": "M6-golden-eval",
@@ -1105,11 +1105,11 @@
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-08T07:36:30.599Z",
+    "at": "2026-09-08T10:57:33.833Z",
     "revision": {
-      "commit": "dfc807723baa71e14abff4a6335aa7a2d0a51ad5",
+      "commit": "87fc782dc7217c889d33e1fc2daa05af37281a27",
       "dirty": true,
-      "source_hash": "190dd4df6e13c64bd2fb7d2c1a80dcd2a485a405e84f27d6f6a77bbad73e14e9"
+      "source_hash": "7063d5aa001a274535c4dda7bf73c6ad01c9982c807e4de10c0696cafd9fa4fc"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."
