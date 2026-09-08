@@ -2,7 +2,7 @@ You are the independent L4 reviewer for a bounded task in a Genesis-governed rep
 
 **Use a fresh model.** M3 took five rounds: one reviewer found exactly one defect per round for three rounds, all in the same region; swapping models found one immediately in a region the first never examined; a third found none. M4 took two rounds with a fresh reviewer each time. Reviewer rotation, not reviewer effort, is what moves these. If you have reviewed M5 before, say so and ask for a different session.
 
-## Rounds 1-7 -- what was rejected, and what changed
+## Rounds 1-8 -- what was rejected, and what changed
 
 A previous reviewer rejected this milestone and was right to. Their finding, and the response:
 
@@ -69,6 +69,14 @@ The consequence was worse than a failed run: `start_run` raised before `RunStart
 
 **One thing the review prompted that no round asked for.** The hygiene note about a DSN in a traceback led to testing NFR-4 on the connection-failure path for the first time: a wrong-password connection does not render the password into an exception message, on either `psycopg.connect` or `Persistence.postgres`. Now a test. The repo, its full git history and the scratchpad were checked for the real password: no occurrences, and `.env` is gitignored.
 
+Round 8 found a shape the previous three did not. Rounds 5-7 were all "the guard was not applied to X". This one was applied, named and tested -- and **answered the wrong question**: `max_turns` was validated with `unstorable_reason`, a JSON-serialisability predicate, while `runs.max_turns` is `INTEGER`. `2**31` is an ordinary int that passes `RunConfig`'s own lower bound, completed in memory, and failed the write.
+
+And the round-7 test that was supposed to prevent exactly this asserted only that each parameter *name appeared in a set of checked names*. A check that returns the wrong answer passes that trivially; deleting the `max_turns` check left all 389 tests green. **Coverage tests ask whether a check runs; only fitness tests can fail.** (`KNOWLEDGE-41611bbf`.) The replacement drives a genuinely unfit value through every parameter and requires a refusal.
+
+The fix keys the check on the destination column's declared type (`column_rejection_reason`), and `RunConfig` bounds `max_turns` so the run fails identically with and without persistence -- the divergence was the defect, not the error type. `ToolSpec` now refuses an unserialisable `input_schema` at construction, because `schema_hash()` is reached only through `build_manifest` and therefore only when persistence is on, which turned a developer's `set`-in-an-enum into a database-dependent failure of an unrelated run.
+
+Both caveats were taken: `run_events` and `execution_manifests` now take tenancy from the run row (the third round of that same inconsistency), and `Persistence` is exported from the package root, which M6 needs.
+
 **Declared limitations -- known, recorded, and NOT findings.** Do not spend the round rediscovering these; they are on the task record and accepted for the Phase 0 prototype profile. Report them only if you can show one is reachable as a *correctness* failure in Phase 0, which is a different claim:
 
 - **No connection pool.** Every store method opens and closes its own psycopg connection, and the calls are synchronous psycopg made from inside the async loop, so they block the event loop thread. First thing to change before real load; not a Phase 0 correctness bug.
@@ -81,6 +89,7 @@ The consequence was worse than a failed run: `start_run` raised before `RunStart
 **Attack these first.** They are where the last two defects were, and where a fix is most likely to have introduced a new one:
 - `unstorable_reason` decides what every primitive will accept, and has now been wrong twice. Find a value Postgres refuses that it passes, or one it rejects that would have stored fine. Probe the DATABASE for the answer rather than reasoning about it -- both previous holes were found that way, and the helper's verdicts are only worth what a live comparison says.
 - The backstop calls `json.dumps` on every tool-call argument dict. Measured at 0.1-8ms for 10k keys, a 1MB string and a 50k-element list, with no false positives -- confirm or refute, and find a shape that is pathological.
+- **Ask whether each guard answers its column's question**, not merely whether it exists. Round 8's guard ran, was named and was tested, and compared a value against the wrong predicate. Check the tests too: one that asserts a name appears in a list proves nothing about the answer.
 - **Look for the next unchecked value, not the next unchecked FIELD.** Rounds 5, 6 and 7 were all the same shape: a guard applied to what someone enumerated. Ask what reaches a column, then check the guard covers all of it -- including containers, and including values that never pass through a primitive at all.
 - **Look for the next exemption.** Round 6's defect was a `skip=` argument; round 5's was a field nobody listed. Grep for `skip=` and for any conditional inside a guard or its test, then check each is load-bearing by deleting it and running the suite.
 - **The field walk is the new single point of failure.** It covers `str` fields on dataclasses. What about a string inside a tuple field, a nested dataclass, or a field added as `list[str]`? Find a persisted string it does not reach.
@@ -155,12 +164,12 @@ Modified by the review rounds, and in scope for that reason: `agentsdk/api.py`
 1. Read the files, `SPEC.md`, and the decisions/invariants/knowledge in `.genesis/project.json`.
 2. Re-run the gate:
    ```bash
-   .venv\Scripts\python.exe -m pytest -q                             # 389
-   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # 70
+   .venv\Scripts\python.exe -m pytest -q                             # 397
+   .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q   # 76
    ```
    Per file, so a mismatch is locatable rather than merely alarming:
-   `test_agent_loop 75` + `test_model_client 150` + `test_persistence 70` +
-   `test_primitives 70` + `test_tool_executor 24` = **389**.
+   `test_agent_loop 75` + `test_model_client 150` + `test_persistence 76` +
+   `test_primitives 70` + `test_tool_executor 26` = **397**.
    A different number is itself a finding. Round 6 lost time on a stale count
    in this document; these were regenerated after the round-6 fixes and are
    the only counts in this file.

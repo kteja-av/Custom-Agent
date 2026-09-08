@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-07T18:23:42.700Z"
+    "updated_at": "2026-09-08T07:36:30.667Z"
   },
   "policy": {
     "ponytail": "full",
@@ -347,6 +347,14 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-07T16:37:51.545Z"
+    },
+    {
+      "id": "DECISION-ef9e3b15",
+      "title": "Storability checks are keyed by the destination column's type",
+      "text": "postgres.column_rejection_reason(value, sql_type) replaces bare unstorable_reason at the write sites: it keeps the serialisability answer for TEXT and JSONB and adds the int32 range for INTEGER. Rationale: 'can this be serialised' and 'does this fit this column' are different questions, and conflating them was M5 round 8's defect. RunConfig also bounds max_turns above, so the run fails identically with and without persistence -- the divergence was the defect, not the error type. Related: ToolSpec now refuses an input_schema that cannot be serialised at construction, because schema_hash() is reached only through build_manifest and therefore only when persistence is configured, which turned a developer error into a database-dependent failure of an unrelated run.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-08T07:35:34.079Z"
     }
   ],
   "knowledge": [
@@ -493,6 +501,14 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-07T16:37:51.404Z"
+    },
+    {
+      "id": "KNOWLEDGE-41611bbf",
+      "title": "Test that a guard is RIGHT, not that it runs",
+      "text": "Rounds 5-7 were all 'the guard was not applied to X'. Round 8 was different and worse: the guard was applied, named, and tested -- and answered the wrong question. max_turns was validated with unstorable_reason, a JSON serialisability predicate, while runs.max_turns is INTEGER, so 2**31 passed the guard and failed at the write. The round-7 test asserted only that each parameter name appeared in a set of checked names, which a check returning the wrong answer passes trivially. Removing the max_turns check entirely left all 389 tests green. Coverage tests answer 'does a check run'; fitness tests answer 'does it refuse what the column refuses'. Only the second kind can fail. The replacement drives a genuinely unfit value through every parameter and requires a refusal.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-08T07:35:33.901Z"
     }
   ],
   "tasks": [
@@ -726,9 +742,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "e32d17055eede4087b5e10f4af2c9f35aea3e23f0342437c71741f053c72ab00",
-            "hash": "568d3ed9a1cad10527acbf36d0b11e697b64efef8dd6e11312e6704ca445544e",
-            "observed_at": "2026-09-07T16:37:30.881Z"
+            "source_hash": "aeb48f31ab02c4a77b74bf1926d94c13f9a099e161a8c0c8baaf74dcf2fac92e",
+            "hash": "285ab63e32fe497825026ffd8e43fb119f15fa9a7b7cc974eb30d23cda13adf8",
+            "observed_at": "2026-09-08T07:35:08.873Z"
           }
         },
         {
@@ -752,7 +768,7 @@
         "messages and run_events grow without bound: no retention policy, no partitioning, no archival. Fine at prototype volume; a production deployment needs a plan before the first long-running tenant."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-07T18:23:28.437Z"
+      "updated_at": "2026-09-08T07:35:09.297Z"
     },
     {
       "id": "M6-golden-eval",
@@ -1036,15 +1052,33 @@
       "human": "Opus 5 (implementer)",
       "reason": "Round-7 defect fixed at the class, not the field: refuse_unstorable_fields walks dataclasses.fields() and covers values of any shape, applied to PrincipalContext (including scopes, the tuple that got through) and RunScope; start_run checks every value it writes, with a signature-derived test so a new parameter fails until covered. The ToolResult blind spot the reviewer self-corrected on is now pinned -- removing that skip fails the suite. NFR-4 tested for the first time on the connection-failure path: no DSN password reaches an exception message. 389 tests, 9/9 mutations killed.",
       "revision": null
+    },
+    {
+      "id": "d0b3b8f9-9aee-43ac-8db4-2f18b90bc7b0",
+      "at": "2026-09-08T06:52:45.199Z",
+      "action": "reject",
+      "task": "M5-postgres",
+      "human": "Fresh independent L4 reviewer, M5 round 8 (Claude, new session)",
+      "reason": "REJECT on one class, reproduced through Runner.run() against the live database. Runner._run computes build_manifest() from caller configuration BEFORE start_run and outside any storability check, with non-total functions (str.join, _sha256(text.encode), ToolSpec.schema_hash()/json.dumps). AgentSpec(instructions=None) -- the plainest no-system-prompt config -- completes in memory but with Persistence.postgres returns FAILED 'TypeError: sequence item 1: expected str instance, NoneType found', 0 rows in runs/messages/run_events/execution_manifests and 0 events on the RunResult. Same for AgentSpec(id=None) and for ANY registered tool whose input_schema is not JSON-serialisable (e.g. enum given as a set): every persisted run fails at start even when the model never calls that tool, while in memory the same tool is contained as an ordinary ToolValidationError when called. Second instance of the same class: start_run checks max_turns with the JSON predicate but runs.max_turns is INTEGER; RunConfig(max_turns=2**31 / sys.maxsize / True) completes in memory and fails against Postgres with an opaque 'NumericValueOutOfRange: integer out of range' / DatatypeMismatch, nothing recorded, field unnamed. test_every_value_start_run_writes_is_checked asserts the parameter NAME is in a set, not that the predicate fits the column: the mutation removing the max_turns check survives the full suite (389 passed). This is the round-3 contract (postgres.py header: the loop cannot tell which store it is talking to) broken again by caller config, with the round-7 consequence (no RunStarted, RunFailed swallowed on FK, nothing left) and the pre-round-7 symptom (opaque error naming neither field nor tool). Fix belongs upstream: make the manifest builder total or validate AgentSpec/ToolSpec at registration (FR-4 spirit), and make the typed-column check column-aware or validate max_turns range in RunConfig. Verified sound: gate 389/70 exact; helper vs live Postgres verdicts agree on 33 of 36 probes, the 3 disagreements being the declared depth band (600/980 deep) and a two-lone-surrogate string JSONB only accepts by rewriting; concurrency 12 writers x3: 0 dupes, contiguous, 3/0/1 losers; AC-6 atomicity holds; event sequence_no and single-writer are enforced by Runner-generated run_id (declarations honest); 14 of 16 mutations killed. Caveats: run_events.emit and write_manifest take tenancy from the caller not the run row (DECISION-aed7e4d8 gap, unreachable via Runner); a finish_run blip on the success path returns FAILED/output=None though the answer is persisted; a swallowed ToolCalled insert leaves a COMPLETED run silently missing the event; Persistence is not exported from the package root so opting in requires an internal import (NFR-5 tension for M6). All files restored (git diff HEAD clean), probe rows deleted, orphan count still 979, no throwaway schema left.",
+      "revision": null
+    },
+    {
+      "id": "13ddad9c-56aa-4e7b-bea3-385b7f0f47c4",
+      "at": "2026-09-08T07:35:34.214Z",
+      "action": "retry",
+      "task": "M5-postgres",
+      "human": "Opus 5 (implementer)",
+      "reason": "Round-8 defect fixed by making the check column-aware rather than adding a case: column_rejection_reason keys on the destination column's declared type, and RunConfig bounds max_turns so the run fails identically with and without persistence. Tool schemas are validated at construction, so a set in an enum no longer breaks only the persisted path. The coverage test that missed this is replaced by a fitness test that drives an unfit value through every parameter. Both caveats taken: run_events and execution_manifests now take tenancy from the run row (third round of that inconsistency), and Persistence is exported from the package root for M6. 397 tests, 10/10 mutations killed.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-07T18:23:42.189Z",
+    "at": "2026-09-08T07:36:30.599Z",
     "revision": {
-      "commit": "f76e472f3c2b7a0e18281696cbf4dc3b0c31a2bf",
+      "commit": "dfc807723baa71e14abff4a6335aa7a2d0a51ad5",
       "dirty": true,
-      "source_hash": "64dba17a5e8f452b5fe0400d82abd4286362de0c0c93c808f4a3879a6080312a"
+      "source_hash": "190dd4df6e13c64bd2fb7d2c1a80dcd2a485a405e84f27d6f6a77bbad73e14e9"
     },
     "active_task": "M5-postgres",
     "next_action": "Run the task pre-flight."

@@ -16,6 +16,7 @@ from enum import Enum
 from typing import Any
 
 from .errors import ToolError, ToolNotFound
+from .primitives import unstorable_reason
 
 
 class RiskClass(str, Enum):
@@ -42,6 +43,26 @@ class ToolSpec:
     # ponytail: one flat timeout per tool; per-call deadlines land with
     # cancellation in Phase 2 if a tool ever needs its own budget.
     timeout_seconds: float | None = 30.0
+
+    def __post_init__(self) -> None:
+        """A schema that cannot be serialised is refused at REGISTRATION.
+
+        Round 8: a schema containing a `set` -- a natural mistake when writing
+        an enum -- broke every persisted run, while the same code completed
+        happily in memory. `schema_hash()` is only reached when persistence is
+        configured, because that is the only caller of `build_manifest`, so a
+        developer error surfaced as a database-dependent runtime failure of an
+        unrelated run. It did not even need the tool to be called: the manifest
+        hashes every REGISTERED tool.
+
+        Failing here makes the behaviour identical with and without a database,
+        and puts the error where the mistake is.
+        """
+        reason = unstorable_reason(self.input_schema)
+        if reason is not None:
+            raise ToolError(
+                f"tool {self.name!r} has an input_schema that cannot be stored: {reason}"
+            )
 
     def schema_hash(self) -> str:
         """Feeds ExecutionManifest.tool_spec_hashes (FR-11)."""

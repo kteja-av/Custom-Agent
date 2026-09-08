@@ -95,6 +95,10 @@ class AgentSpec:
         return AllowlistPermissionChecker(set(self.tool_profile))
 
 
+# The INTEGER column's ceiling, named once (see RunConfig.__post_init__).
+_MAX_TURNS_CEILING = 2**31 - 1
+
+
 @dataclass(frozen=True)
 class RunConfig:
     tenant_id: str
@@ -106,6 +110,18 @@ class RunConfig:
     def __post_init__(self) -> None:
         if self.max_turns < 1:
             raise ValueError("max_turns must be at least 1")
+        # And bounded above, because runs.max_turns is an INTEGER column.
+        # Refused HERE rather than at the write so the run fails the same way
+        # with and without persistence: 2**31 is an ordinary Python int that
+        # passed the lower bound, completed in memory, and failed against
+        # Postgres with NumericValueOutOfRange (M5 round 8). A ceiling this
+        # high is not a real constraint on anyone -- it is the point at which
+        # "more turns" stops being a number the store can hold.
+        if self.max_turns > _MAX_TURNS_CEILING:
+            raise ValueError(
+                f"max_turns must be at most {_MAX_TURNS_CEILING} "
+                "(runs.max_turns is an INTEGER column)"
+            )
         if not self.tenant_id or not self.project_id:
             raise ValueError("tenant_id and project_id are mandatory on every run (ADR-11)")
 

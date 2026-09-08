@@ -6,6 +6,7 @@ the public surface is AgentSpec / RunConfig / Runner / RunResult (NFR-5).
 """
 
 from .api import AgentSpec, RunConfig, Runner, RunResult, RunStatus
+from .persistence import Persistence
 from .errors import (
     AgentSDKError,
     BudgetExceeded,
@@ -49,6 +50,11 @@ __all__ = [
     "RunConfig",
     "Runner",
     "RunResult",
+    # Opting into persistence is part of driving a run, so it belongs on the
+    # public surface. Requiring `import agentsdk.persistence` for it made
+    # NFR-5's "application code calls Runner.run() and nothing else" false in
+    # the one place every real caller has to go.
+    "Persistence",
     "RunStatus",
     "ContentProvenance",
     "InstructionAuthority",

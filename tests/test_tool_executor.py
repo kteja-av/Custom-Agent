@@ -346,3 +346,30 @@ async def test_a_tool_returning_ordinary_text_is_unaffected():
     assert isinstance(outcome, Completed)
     assert outcome.result.content == "ordinary"
     assert outcome.result.is_error is False
+
+
+def test_a_tool_schema_that_cannot_be_serialised_is_refused_at_registration():
+    """M5 round 8: a schema containing a set -- a natural mistake when writing
+    an enum -- broke every PERSISTED run while the same code completed in
+    memory, because schema_hash() is only reached via build_manifest, which
+    only runs when persistence is configured. It did not even need the tool to
+    be called: the manifest hashes every registered tool.
+
+    Refusing at construction makes the behaviour identical either way and puts
+    the error where the mistake is.
+    """
+    with pytest.raises(ToolError, match="input_schema that cannot be stored"):
+        ToolSpec(
+            name="enum_tool",
+            description="a set is not JSON",
+            input_schema={"type": "object", "properties": {"mode": {"enum": {"a", "b"}}}},
+        )
+
+
+def test_an_ordinary_tool_schema_is_unaffected():
+    spec = ToolSpec(
+        name="fine",
+        description="ok",
+        input_schema={"type": "object", "properties": {"mode": {"enum": ["a", "b"]}}},
+    )
+    assert spec.schema_hash()

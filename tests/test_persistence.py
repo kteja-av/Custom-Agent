@@ -1312,22 +1312,74 @@ async def test_an_unstorable_principal_context_leaves_nothing_behind(scope):
     assert query("SELECT 1 FROM runs WHERE run_id=%s", (scope.run_id,)) == []
 
 
-def test_every_value_start_run_writes_is_checked():
-    """Structural guard on the guard. Round 6's caveat listed four fields, the
-    repair implemented that list, and round 7 rejected on the fifth. Derived
-    from the signature so a parameter added later fails here until it is
-    covered."""
+def test_every_value_start_run_writes_is_actually_REFUSED_when_unfit(scope):
+    """Fitness, not coverage. The previous version of this test asserted that
+    each parameter name appeared in a set of "checked" names -- and round 8's
+    defect was a check that ran, was named, and asked the wrong question:
+    max_turns was validated for JSON serialisability while runs.max_turns is
+    INTEGER, so 2**31 passed the guard and failed at the write.
+
+    A check that returns the wrong answer is invisible to a test that only asks
+    whether a check runs. So this drives a genuinely unfit value through each
+    parameter and requires a refusal, which the old assertion could not tell
+    apart from a no-op.
+    """
     import inspect
 
-    checked = {"agent_spec_id", "model_id", "max_turns", "principal_context", "manifest"}
+    ok = dict(
+        agent_spec_id="spec-1",
+        max_turns=5,
+        model_id="m",
+        principal_context=None,
+        manifest=a_manifest(),
+    )
+    unfit = {
+        "agent_spec_id": "spec" + chr(0),
+        "model_id": "m" + chr(0),
+        "max_turns": 2**31,            # a valid int the INTEGER column refuses
+        "principal_context": {"k": float("inf")},
+        "manifest": a_manifest(model_id="m" + chr(0)),
+    }
     parameters = {
         name
-        for name, p in inspect.signature(PostgresRunStore.start_run).parameters.items()
+        for name in inspect.signature(PostgresRunStore.start_run).parameters
         if name not in ("self", "scope")
     }
-    assert parameters <= checked, (
-        f"start_run writes {parameters - checked} without a storability check"
+    assert parameters == set(unfit), (
+        f"start_run writes {parameters - set(unfit)} with no unfit value exercised here"
     )
+
+    for name, bad in unfit.items():
+        fresh = RunScope(
+            run_id=str(uuid.uuid4()), tenant_id=scope.tenant_id, project_id=scope.project_id
+        )
+        with pytest.raises(ValueError, match=f"{name} cannot be stored"):
+            PostgresRunStore(DSN).start_run(fresh, **{**ok, name: bad})
+        assert query("SELECT 1 FROM runs WHERE run_id=%s", (fresh.run_id,)) == [], (
+            f"a run was written despite an unfit {name}"
+        )
+
+
+def test_an_integer_column_rejects_what_json_would_happily_accept():
+    """The two questions the round-8 defect conflated, side by side."""
+    from agentsdk.postgres import column_rejection_reason
+
+    assert unstorable_reason(2**31) is None, "JSON has no problem with this"
+    assert column_rejection_reason(2**31, "INTEGER") is not None
+    assert column_rejection_reason(2**31 - 1, "INTEGER") is None
+    assert column_rejection_reason(-(2**31), "INTEGER") is None
+    assert column_rejection_reason(-(2**31) - 1, "INTEGER") is not None
+    # TEXT and JSONB keep the serialisability answer.
+    assert column_rejection_reason(2**31, "JSONB") is None
+    assert column_rejection_reason("a" + chr(0), "TEXT") is not None
+
+
+def test_max_turns_is_bounded_where_the_run_is_configured():
+    """Refused at RunConfig, so the run fails identically with and without
+    persistence -- the divergence was the defect, not the error type."""
+    with pytest.raises(ValueError, match="max_turns must be at most"):
+        RunConfig(tenant_id="t", project_id="p", max_turns=2**31)
+    assert RunConfig(tenant_id="t", project_id="p", max_turns=2**31 - 1).max_turns == 2**31 - 1
 
 
 async def test_an_unstorable_manifest_leaves_nothing_behind(scope):
@@ -1375,3 +1427,49 @@ def test_a_connection_failure_never_renders_the_password(monkeypatch):
     rendered = f"{type(excinfo.value).__name__}: {excinfo.value}"
     assert canary not in rendered, "the DSN password reached an exception message"
     assert canary not in repr(excinfo.value)
+
+
+def test_an_event_cannot_be_filed_under_another_tenant(started):
+    """DECISION-aed7e4d8 applied to run_events, three rounds after messages.
+    An event written under the wrong tenant is invisible in the right tenant's
+    trace -- the audit trail silently missing an entry."""
+    sink = PostgresEventStore(DSN, "t-impostor", "p-impostor", started.run_id)
+    with pytest.raises(ValueError, match="belongs to someone else"):
+        sink.emit(EventType.RUN_STARTED, {"note": "not mine"})
+    assert query(
+        "SELECT 1 FROM run_events WHERE run_id=%s AND tenant_id=%s",
+        (started.run_id, "t-impostor"),
+    ) == []
+
+
+def test_a_manifest_cannot_be_filed_under_another_tenant(started):
+    impostor = RunScope(
+        run_id=started.run_id, tenant_id="t-impostor", project_id="p-impostor"
+    )
+    PostgresRunStore(DSN).write_manifest(impostor, a_manifest())
+    assert query(
+        "SELECT tenant_id FROM execution_manifests WHERE run_id=%s", (started.run_id,)
+    ) == [(started.tenant_id,)], "a manifest was filed under the wrong tenant"
+
+
+def test_events_and_manifests_take_tenancy_from_the_run_row(started):
+    sink = PostgresEventStore(DSN, started.tenant_id, started.project_id, started.run_id)
+    sink.emit(EventType.RUN_STARTED, {"ok": True})
+    assert query(
+        "SELECT tenant_id, project_id FROM run_events WHERE run_id=%s", (started.run_id,)
+    ) == [(started.tenant_id, started.project_id)]
+
+
+def test_persistence_is_importable_from_the_package_root():
+    """NFR-5: application code drives a run through the package's public
+    surface. Opting into persistence is part of driving a run, and requiring
+    `import agentsdk.persistence` made that false in the one place every real
+    caller has to go -- which the M6 golden eval would have hit directly."""
+    import agentsdk
+
+    assert hasattr(agentsdk, "Persistence")
+    assert "Persistence" in agentsdk.__all__
+    from agentsdk import Persistence as FromRoot
+    from agentsdk.persistence import Persistence as FromModule
+
+    assert FromRoot is FromModule

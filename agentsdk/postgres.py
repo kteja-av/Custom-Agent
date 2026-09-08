@@ -144,6 +144,35 @@ class RunScope:
         refuse_unstorable_fields(self)
 
 
+# --- column fitness (M5 round 8) --------------------------------------------
+#
+# `unstorable_reason` answers "can this be serialised". That is not the same
+# question as "does this fit the column it is going to", and round 8 rejected
+# on the difference: max_turns was checked with the serialisability predicate
+# while runs.max_turns is INTEGER, so 2**31 -- an ordinary int that passes
+# RunConfig's own validation -- passed the guard and blew up at the write.
+#
+# A check that runs and returns the wrong answer is invisible to a test that
+# only asks whether a check runs, which is exactly what the round-7 test did.
+# So the checks below are keyed by the COLUMN TYPE each value is headed for.
+
+_INT32_MIN, _INT32_MAX = -(2**31), 2**31 - 1
+
+
+def column_rejection_reason(value: Any, sql_type: str) -> str | None:
+    """Why `value` cannot go into a column of this declared type."""
+    reason = unstorable_reason(value)
+    if reason is not None:
+        return reason
+    if sql_type == "INTEGER" and isinstance(value, int) and not isinstance(value, bool):
+        if not (_INT32_MIN <= value <= _INT32_MAX):
+            return (
+                f"{value} is outside the range of an INTEGER column "
+                f"({_INT32_MIN}..{_INT32_MAX})"
+            )
+    return None
+
+
 class PostgresSessionStore:
     """FR-9. Insert-only; no update, no delete."""
 
@@ -263,23 +292,29 @@ class PostgresEventStore:
             **identifiers,
         )
         with psycopg.connect(self._dsn) as conn:
-            conn.execute(
+            cursor = conn.execute(
                 """
                 INSERT INTO run_events (
                     event_id, schema_version, sequence_no, event_type,
                     tenant_id, project_id, run_id,
                     agent_id, task_id, tool_call_id, attempt_id,
                     parent_event_id, correlation_id, timestamp, payload
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                )
+                -- Tenancy from the RUN ROW, as messages already does
+                -- (DECISION-aed7e4d8). Taking it from the caller let an event
+                -- for tenant A's run be filed as tenant B, where it is
+                -- invisible in A's trace -- the same decision made
+                -- inconsistently one function over, for three rounds.
+                SELECT %s,%s,%s,%s, r.tenant_id, r.project_id, r.run_id,
+                       %s,%s,%s,%s,%s,%s,%s,%s
+                FROM runs r
+                WHERE r.run_id = %s AND r.tenant_id = %s AND r.project_id = %s
                 """,
                 (
                     event.event_id,
                     event.schema_version,
                     event.sequence_no,
                     event.event_type.value,
-                    event.tenant_id,
-                    event.project_id,
-                    event.run_id,
                     event.agent_id,
                     event.task_id,
                     event.tool_call_id,
@@ -288,8 +323,21 @@ class PostgresEventStore:
                     event.correlation_id,
                     event.timestamp,
                     Jsonb(_json_safe(event.payload)),
+                    event.run_id,
+                    self._tenant_id,
+                    self._project_id,
                 ),
             )
+            if cursor.rowcount != 1:
+                # Zero rows means the run does not exist or belongs to another
+                # tenant. Raising rather than returning quietly: an event that
+                # was not written is an entry the audit trail silently lacks,
+                # which is the failure mode this whole milestone is about.
+                raise ValueError(
+                    f"no run {event.run_id!r} for tenant {self._tenant_id!r} / project "
+                    f"{self._project_id!r}: an event cannot be filed against a run that "
+                    "does not exist or belongs to someone else"
+                )
         self._buffer.append(event)
         return event
 
@@ -358,14 +406,16 @@ class PostgresRunStore:
         # round 7 rejected on principal_context -- the one caller-supplied
         # value the caveat had not enumerated. Keyed by column so a new column
         # is added here in the same edit that adds it to the INSERT.
-        for name, value in {
-            "agent_spec_id": agent_spec_id,
-            "model_id": model_id,
-            "max_turns": max_turns,
-            "principal_context": principal_context,
-            "manifest": manifest,
-        }.items():
-            reason = unstorable_reason(value)
+        # Keyed by the column's declared type, not by one predicate for
+        # everything: see column_rejection_reason.
+        for name, value, sql_type in (
+            ("agent_spec_id", agent_spec_id, "TEXT"),
+            ("model_id", model_id, "TEXT"),
+            ("max_turns", max_turns, "INTEGER"),
+            ("principal_context", principal_context, "JSONB"),
+            ("manifest", manifest, "JSONB"),
+        ):
+            reason = column_rejection_reason(value, sql_type)
             if reason is not None:
                 raise ValueError(f"{name} cannot be stored: {reason}")
         with psycopg.connect(self._dsn) as conn:
@@ -432,12 +482,15 @@ class PostgresRunStore:
                     run_id, tenant_id, project_id, sdk_version, agent_spec_hash,
                     instructions_hash, model_id, model_version,
                     model_adapter_version, tool_spec_hashes, policy_version
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                )
+                -- Tenancy from the run row, as everywhere else. Inside
+                -- start_run the row is written in this same transaction, so
+                -- the SELECT sees it.
+                SELECT r.run_id, r.tenant_id, r.project_id, %s,%s,%s,%s,%s,%s,%s,%s
+                FROM runs r
+                WHERE r.run_id = %s AND r.tenant_id = %s AND r.project_id = %s
             """,
             (
-                scope.run_id,
-                scope.tenant_id,
-                scope.project_id,
                 manifest["sdk_version"],
                 manifest["agent_spec_hash"],
                 manifest["instructions_hash"],
@@ -446,6 +499,9 @@ class PostgresRunStore:
                 manifest.get("model_adapter_version"),
                 Jsonb(manifest.get("tool_spec_hashes") or []),
                 manifest.get("policy_version"),
+                scope.run_id,
+                scope.tenant_id,
+                scope.project_id,
             ),
         )
 
