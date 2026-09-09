@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-09T07:11:44.552Z"
+    "updated_at": "2026-09-09T13:04:19.667Z"
   },
   "policy": {
     "ponytail": "full",
@@ -613,6 +613,22 @@
       "source": "M6 round 3 approval residual",
       "tags": [],
       "recorded_at": "2026-09-09T06:10:57.328Z"
+    },
+    {
+      "id": "KNOWLEDGE-54523a58",
+      "title": "The gateway already serves the Anthropic Messages wire format, so Phase 0/1 needs no new credential",
+      "text": "Probed 2026-09-09: POST BASE_URL + /v1/messages with the EXISTING MODEL_API_KEY returns 200 in the Anthropic native shape. Accepts either x-api-key or Authorization bearer, plus anthropic-version 2023-06-01. A full tool round trip works: stop_reason tool_use with a tool_use block carrying a toolu_bdrk_ id, a tool_result block accepted back, then stop_reason end_turn and a final answer. Usage comes back Anthropic-shaped (input_tokens/output_tokens plus cache_creation and cache_read fields), not OpenAI-shaped. The /messages path without the /v1 prefix is 404. This removes the credential blocker that made a second wire format look expensive.",
+      "source": "Phase 0/1 pre-flight probe",
+      "tags": [],
+      "recorded_at": "2026-09-09T13:04:19.520Z"
+    },
+    {
+      "id": "KNOWLEDGE-538c045b",
+      "title": "Hold the model constant and vary only the wire format",
+      "text": "The gateway /v1/messages endpoint accepts openai.gpt-4o-mini as well as the anthropic models, translating between shapes. So the Phase 0/1 eval can send the SAME model id over two different wire formats, instead of changing model and wire format together. AC-9 varied the model and held the wire format; varying only the wire format is the mirror of it and the sharper test, because any behavioural difference can then be attributed to the adapter rather than to the model. Both directions together are what actually proves ModelClient is the only place provider shape is known.",
+      "source": "Phase 0/1 pre-flight probe",
+      "tags": [],
+      "recorded_at": "2026-09-09T13:04:19.666Z"
     }
   ],
   "tasks": [
