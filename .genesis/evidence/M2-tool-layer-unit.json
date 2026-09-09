@@ -2,21 +2,21 @@
   "task": "M2-tool-layer",
   "gate": "unit",
   "command": ".venv\\Scripts\\python.exe -m pytest tests/test_tool_executor.py -q",
-  "started_at": "2026-09-05T18:31:17.417Z",
-  "observed_at": "2026-09-05T18:31:18.262Z",
+  "started_at": "2026-09-09T07:10:39.640Z",
+  "observed_at": "2026-09-09T07:10:40.539Z",
   "exit_code": 0,
   "signal": null,
-  "stdout": "......................                                                   [100%]\r\n22 passed in 0.24s\r\n",
+  "stdout": "..........................                                               [100%]\r\n26 passed in 0.41s\r\n",
   "stderr": "",
   "revision": {
-    "commit": null,
-    "dirty": null
+    "commit": "e5e2c00560712d64606e1d6e8197ffc21ae61ce4",
+    "dirty": true
   },
-  "source_hash": "69ab8c8df208c9cad7d2586e1a5c2a5860429b0f38910c1e31afea0cfb92c581",
+  "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
   "environment": {
     "node": "v20.10.0",
     "platform": "win32",
     "arch": "x64"
   },
-  "hash": "7165e53d173ac2cf2402390b385cb124f3f807ae0954e66ec4c00942adad294c"
+  "hash": "303d74c458d91caf33cbf97654fa802a235c1b5df4cfc4d84f8c1ab69073a563"
 }

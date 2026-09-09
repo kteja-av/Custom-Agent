@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-09T06:43:37.457Z"
+    "updated_at": "2026-09-09T07:11:44.552Z"
   },
   "policy": {
     "ponytail": "full",
@@ -670,9 +670,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M1-primitives-unit.json",
-            "source_hash": "4fddfd732e28ece0595cbfa0c4707bad52f3633aa93b98b138ece4adc283709d",
-            "hash": "95b58b479a10d310d89028db3df833df5c4aa6199113b3c50f12a3f6d96a1daa",
-            "observed_at": "2026-09-05T18:27:58.873Z"
+            "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
+            "hash": "4d85661ec0630cf5fdca9c94e93ebc096458a1f09598114ee0ae92707bb04e71",
+            "observed_at": "2026-09-09T07:10:39.480Z"
           }
         }
       ],
@@ -682,7 +682,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T18:09:41.567Z",
-      "updated_at": "2026-09-05T18:28:05.085Z"
+      "updated_at": "2026-09-09T07:10:39.545Z"
     },
     {
       "id": "M2-tool-layer",
@@ -706,9 +706,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M2-tool-layer-unit.json",
-            "source_hash": "69ab8c8df208c9cad7d2586e1a5c2a5860429b0f38910c1e31afea0cfb92c581",
-            "hash": "7165e53d173ac2cf2402390b385cb124f3f807ae0954e66ec4c00942adad294c",
-            "observed_at": "2026-09-05T18:31:18.262Z"
+            "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
+            "hash": "303d74c458d91caf33cbf97654fa802a235c1b5df4cfc4d84f8c1ab69073a563",
+            "observed_at": "2026-09-09T07:10:40.539Z"
           }
         }
       ],
@@ -718,7 +718,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T18:09:51.587Z",
-      "updated_at": "2026-09-05T18:31:24.618Z"
+      "updated_at": "2026-09-09T07:10:40.601Z"
     },
     {
       "id": "M3-model-client",
@@ -742,9 +742,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M3-model-client-unit.json",
-            "source_hash": "9d4b66334d32ef3438750858a2eba98e944b0a15aae9f3ad0b2483faacf53337",
-            "hash": "b4788de9314c4011ff2d33025489ad0a83cdbd291189aed24255906e70ede7ad",
-            "observed_at": "2026-09-06T10:59:59.155Z"
+            "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
+            "hash": "2b012cdf7e962d7b5c789df61b93a951663ef1938282a9b8a51184c8cb449ad1",
+            "observed_at": "2026-09-09T07:10:41.659Z"
           }
         },
         {
@@ -769,7 +769,7 @@
         "_redact uses literal replacement, so a URL-encoded, base64 or line-wrapped rendering of the credential in a provider error body is not caught. Documented in the method, not silently assumed away."
       ],
       "created_at": "2026-09-05T18:09:51.718Z",
-      "updated_at": "2026-09-06T11:16:52.792Z"
+      "updated_at": "2026-09-09T07:10:41.723Z"
     },
     {
       "id": "M4-loop-and-api",
@@ -795,9 +795,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M4-loop-and-api-unit.json",
-            "source_hash": "f42e54ec6df53740e168636e6af6ea377bdf1ae304943d418a8ef5038a54231f",
-            "hash": "92eefc278230a84d8016e0c5cfb323334c298589e3f4ef9ccf72949794322e04",
-            "observed_at": "2026-09-06T13:11:17.637Z"
+            "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
+            "hash": "27dfd8da349c9c60cdfaa77ce848555238a98beef9f8deba747cad5023f67b61",
+            "observed_at": "2026-09-09T07:10:43.399Z"
           }
         },
         {
@@ -819,7 +819,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T18:09:51.849Z",
-      "updated_at": "2026-09-06T13:11:17.706Z"
+      "updated_at": "2026-09-09T07:10:43.461Z"
     },
     {
       "id": "M5-postgres",
@@ -846,9 +846,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M5-postgres-unit.json",
-            "source_hash": "7063d5aa001a274535c4dda7bf73c6ad01c9982c807e4de10c0696cafd9fa4fc",
-            "hash": "eafa8c68753f40009143282493c252837114ecb23a5a52b06869fa5fee1aa728",
-            "observed_at": "2026-09-08T10:57:33.328Z"
+            "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
+            "hash": "89e79be0d486f19bfe0ddecc165c789e96dd42f32683c11f1e5b748c53322b48",
+            "observed_at": "2026-09-09T07:10:58.544Z"
           }
         },
         {
@@ -878,7 +878,7 @@
         "JSONB normalises large floats: a value >= 1e16 written into a JSONB payload reads back as an int, and at 1e308 the returned value compares unequal to the original. Inherent to jsonb's numeric representation, no run fails and no AC is breached, but it is the one demonstrated place where postgres.py's header claim -- that the loop cannot tell whether it is talking to memory or Postgres -- is falsifiable. Found by the M5 round-9 reviewer."
       ],
       "created_at": "2026-09-05T18:10:01.041Z",
-      "updated_at": "2026-09-08T13:03:33.534Z"
+      "updated_at": "2026-09-09T07:10:58.661Z"
     },
     {
       "id": "M6-golden-eval",
@@ -908,8 +908,8 @@
           "evidence": {
             "path": ".genesis/evidence/M6-golden-eval-unit.json",
             "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
-            "hash": "185aafbd232d10f02e3781b3c1b39640c14143fd75151b84005fa3fe5b4c270f",
-            "observed_at": "2026-09-09T06:43:37.373Z"
+            "hash": "60b2b536403f50facc0af4d4419ce54bb36eca3bf3c091eb2575982c773a3ad0",
+            "observed_at": "2026-09-09T07:11:44.491Z"
           }
         },
         {
@@ -933,7 +933,7 @@
         "Carried from M5: concurrent appends to one run are safe but not available -- a losing writer raises UniqueViolation rather than serialising. Unreachable in Phase 0 (single writer per run); Phase 2 needs a retry loop or per-run advisory lock."
       ],
       "created_at": "2026-09-05T18:10:01.160Z",
-      "updated_at": "2026-09-09T06:43:37.457Z"
+      "updated_at": "2026-09-09T07:11:44.552Z"
     }
   ],
   "learning_proposals": [],

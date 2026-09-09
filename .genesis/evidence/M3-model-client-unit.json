@@ -2,21 +2,21 @@
   "task": "M3-model-client",
   "gate": "unit",
   "command": ".venv\\Scripts\\python.exe -m pytest tests/test_model_client.py -q",
-  "started_at": "2026-09-06T10:59:57.791Z",
-  "observed_at": "2026-09-06T10:59:59.155Z",
+  "started_at": "2026-09-09T07:10:40.708Z",
+  "observed_at": "2026-09-09T07:10:41.659Z",
   "exit_code": 0,
   "signal": null,
-  "stdout": "........................................................................ [ 59%]\r\n.................................................                        [100%]\r\n121 passed in 0.73s\r\n",
+  "stdout": "........................................................................ [ 47%]\r\n........................................................................ [ 95%]\r\n.......                                                                  [100%]\r\n151 passed in 0.48s\r\n",
   "stderr": "",
   "revision": {
-    "commit": null,
-    "dirty": null
+    "commit": "e5e2c00560712d64606e1d6e8197ffc21ae61ce4",
+    "dirty": true
   },
-  "source_hash": "9d4b66334d32ef3438750858a2eba98e944b0a15aae9f3ad0b2483faacf53337",
+  "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
   "environment": {
     "node": "v20.10.0",
     "platform": "win32",
     "arch": "x64"
   },
-  "hash": "b4788de9314c4011ff2d33025489ad0a83cdbd291189aed24255906e70ede7ad"
+  "hash": "2b012cdf7e962d7b5c789df61b93a951663ef1938282a9b8a51184c8cb449ad1"
 }
