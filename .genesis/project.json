@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-09T15:25:55.462Z"
+    "updated_at": "2026-09-09T16:00:55.771Z"
   },
   "policy": {
     "ponytail": "full",
@@ -1018,9 +1018,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M7-store-hardening-unit.json",
-            "source_hash": "1c9356a3abe7e6a26554659d917bdbea785b62bea162c33d4b7a78e01f2d232e",
-            "hash": "d6a47f7b46b97c0384b72149231c755bc0e846724d44f83fbfe08cf71cd35646",
-            "observed_at": "2026-09-09T15:25:13.427Z"
+            "source_hash": "61eb6f69d78850e680b07cb9ef1456feef1aafcc8e7b83f62c080c9be64db5c6",
+            "hash": "79ef43d6b01ddae0a0e11027eea937df1fbd0ffaf616070a78da79c97977ab5b",
+            "observed_at": "2026-09-09T16:00:01.962Z"
           }
         },
         {
@@ -1030,9 +1030,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M7-store-hardening-regression.json",
-            "source_hash": "1c9356a3abe7e6a26554659d917bdbea785b62bea162c33d4b7a78e01f2d232e",
-            "hash": "fda7beeaa85b3b8e876b456dd54768eafba3dc67049ce183e551c7482fe7087f",
-            "observed_at": "2026-09-09T15:25:55.377Z"
+            "source_hash": "61eb6f69d78850e680b07cb9ef1456feef1aafcc8e7b83f62c080c9be64db5c6",
+            "hash": "7671b57810b6acf787787d13ccaffbd5a69c6aebd3b53f61c6992462a2ee0c7e",
+            "observed_at": "2026-09-09T16:00:55.684Z"
           }
         },
         {
@@ -1049,7 +1049,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-09T14:16:43.750Z",
-      "updated_at": "2026-09-09T15:25:55.462Z"
+      "updated_at": "2026-09-09T16:00:55.771Z"
     }
   ],
   "learning_proposals": [],

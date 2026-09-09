@@ -14,7 +14,9 @@
 <tr><td>M5-postgres</td><td>Postgres schema and stores persist runs, messages, run_events and exactly one execution manifest per run, every row tenant-scoped and the trace reconstructable in order</td><td>done</td><td>medium</td><td>unit: stale<br>independent-review: stale</td><td>Run the task pre-flight.</td></tr>
 <tr><td>M6-golden-eval</td><td>The golden eval passes end to end against the live gateway on two upstream providers, exercising the permission-denial and validation-failure paths and leaking no credential into any row or event</td><td>done</td><td>medium</td><td>unit: stale<br>independent-review: stale</td><td>Run the task pre-flight.</td></tr>
 <tr><td>M7-store-hardening</td><td>Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it</td><td>active</td><td>medium</td><td>unit: pass<br>regression: pass<br>independent-review: pending</td><td>Run the task pre-flight.</td></tr></tbody></table>
-<h2>Recent local traces</h2><table><thead><tr><th>At</th><th>Event</th><th>Redacted data</th></tr></thead><tbody><tr><td>2026-09-09T15:25:55.470Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M7-store-hardening&quot;,&quot;failed&quot;:false}</code></td></tr>
+<h2>Recent local traces</h2><table><thead><tr><th>At</th><th>Event</th><th>Redacted data</th></tr></thead><tbody><tr><td>2026-09-09T16:00:55.785Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M7-store-hardening&quot;,&quot;failed&quot;:false}</code></td></tr>
+<tr><td>2026-09-09T15:38:35.441Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M7-store-hardening&quot;,&quot;failed&quot;:false}</code></td></tr>
+<tr><td>2026-09-09T15:25:55.470Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M7-store-hardening&quot;,&quot;failed&quot;:false}</code></td></tr>
 <tr><td>2026-09-09T15:09:57.018Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M7-store-hardening&quot;,&quot;failed&quot;:false}</code></td></tr>
 <tr><td>2026-09-09T14:50:28.122Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M7-store-hardening&quot;,&quot;failed&quot;:false}</code></td></tr>
 <tr><td>2026-09-09T14:30:14.907Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M7-store-hardening&quot;,&quot;failed&quot;:false}</code></td></tr>
@@ -61,7 +63,5 @@
 <tr><td>2026-09-08T13:30:03.315Z</td><td>knowledge.recorded</td><td><code>{&quot;id&quot;:&quot;KNOWLEDGE-3c80bed2&quot;}</code></td></tr>
 <tr><td>2026-09-08T13:30:03.185Z</td><td>knowledge.recorded</td><td><code>{&quot;id&quot;:&quot;KNOWLEDGE-668aed12&quot;}</code></td></tr>
 <tr><td>2026-09-08T13:29:46.557Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M6-golden-eval&quot;,&quot;failed&quot;:false}</code></td></tr>
-<tr><td>2026-09-08T13:27:13.129Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M6-golden-eval&quot;,&quot;failed&quot;:true}</code></td></tr>
-<tr><td>2026-09-08T13:22:40.640Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M6-golden-eval&quot;,&quot;failed&quot;:true}</code></td></tr>
-<tr><td>2026-09-08T13:03:33.540Z</td><td>task.completed</td><td><code>{&quot;id&quot;:&quot;M5-postgres&quot;}</code></td></tr></tbody></table>
-<h2>Source</h2><code>1c9356a3abe7e6a26554659d917bdbea785b62bea162c33d4b7a78e01f2d232e</code><p class="muted">Raw traces: local/events.jsonl (local only)</p></main></body></html>
+<tr><td>2026-09-08T13:27:13.129Z</td><td>gate.ran</td><td><code>{&quot;task&quot;:&quot;M6-golden-eval&quot;,&quot;failed&quot;:true}</code></td></tr></tbody></table>
+<h2>Source</h2><code>61eb6f69d78850e680b07cb9ef1456feef1aafcc8e7b83f62c080c9be64db5c6</code><p class="muted">Raw traces: local/events.jsonl (local only)</p></main></body></html>
