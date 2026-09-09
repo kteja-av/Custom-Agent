@@ -17,6 +17,7 @@ runs.
 
 import asyncio
 import os
+import statistics
 import time
 import uuid
 
@@ -523,22 +524,48 @@ def _drop_runs(tenant):
         conn.execute("DELETE FROM runs WHERE tenant_id=%s", (tenant,))
 
 
+ATTEMPTS = 3
+
+
 async def _assert_within_nfr8(concurrent_runs, tag):
+    """Assert NFR-8 on the MEDIAN of several attempts, not on one.
+
+    A single sample makes this a flaky gate in both directions, which was not
+    a prediction: at 24 runs it measured 15.6 ms standalone and then 50.5 ms
+    against a 50 ms bound with no code change between, purely from what else
+    the suite had been doing. Tuning the bound to make that pass would be
+    fitting the requirement to the code.
+
+    The median distinguishes the two things that produce a big number. One
+    unlucky stall -- a GC pause, the pool opening a connection -- moves a
+    single attempt. Systematic blocking moves every attempt: measured against
+    the pool-only build, six runs stalled 51, 53, 55, 55 and 57 ms on five
+    consecutive tries, so a median is just as red as a maximum there.
+    """
     tenant = "SYN-m7-" + tag
+    samples = []
     try:
-        # Both halves in the SAME process, so the bound is about this code and
-        # not about how fast the machine happens to be today.
-        memory_wall, _ = await _measure(concurrent_runs, None, tenant)
-        pg_wall, worst_stall = await _measure(
-            concurrent_runs, Persistence.postgres(DSN), tenant
-        )
+        for _ in range(ATTEMPTS):
+            # Both halves in the SAME process, so the bound is about this code
+            # and not about how fast the machine happens to be today.
+            memory_wall, _ = await _measure(concurrent_runs, None, tenant)
+            pg_wall, worst_stall = await _measure(
+                concurrent_runs, Persistence.postgres(DSN), tenant
+            )
+            samples.append((worst_stall, pg_wall, memory_wall))
+            _drop_runs(tenant)
     finally:
         _drop_runs(tenant)
 
+    worst_stall = statistics.median(sample[0] for sample in samples)
+    pg_wall = statistics.median(sample[1] for sample in samples)
+    memory_wall = statistics.median(sample[2] for sample in samples)
     ratio = pg_wall / memory_wall if memory_wall else float("inf")
     assert worst_stall < MAX_STALL_SECONDS, (
         f"{concurrent_runs} concurrent runs stalled the event loop for "
-        f"{worst_stall * 1000:.1f} ms (NFR-8 allows {MAX_STALL_SECONDS * 1000:.0f} ms). "
+        f"{worst_stall * 1000:.1f} ms, the median of {ATTEMPTS} attempts "
+        f"({[round(x[0] * 1000, 1) for x in samples]} ms), against NFR-8's "
+        f"{MAX_STALL_SECONDS * 1000:.0f} ms. "
         "Persistence is blocking the loop, which also starves any progress "
         "surface built on it."
     )
@@ -598,3 +625,176 @@ def test_the_store_uses_one_pool_per_dsn_rather_than_a_connection_per_call():
     postgres._POOLS.pop(
         DSN + ("&" if "?" in DSN else "?") + "application_name=m7probe", None
     )
+
+
+# --- AC-15: a run may record the run that spawned it ---------------------------
+
+
+def _start(scope, parent_run_id=None):
+    Persistence.postgres(DSN).runs.start_run(
+        scope,
+        agent_spec_id="m7",
+        max_turns=4,
+        model_id="m7",
+        principal_context=None,
+        parent_run_id=parent_run_id,
+        manifest=build_manifest(
+            sdk_version="m7", agent_spec_id="m7", instructions="m7",
+            tool_profile=(), tool_spec_hashes=[], model_id="m7",
+        ),
+    )
+
+
+def test_a_child_run_records_its_parent_and_both_reconstruct():
+    """AC-15. Phase 2's subagents are runs, and a subagent whose trace cannot
+    be tied to its parent's leaves NFR-3 true of one run and useless for the
+    tree that actually did the work."""
+    from agentsdk.postgres import PostgresTrace
+
+    with Run("ac15") as parent:
+        child = RunScope(
+            run_id=str(uuid.uuid4()),
+            tenant_id=parent.tenant_id,
+            project_id=parent.project_id,
+        )
+        try:
+            _start(child, parent_run_id=parent.run_id)
+
+            trace = PostgresTrace(DSN).reconstruct(child)
+            assert str(trace["run"]["parent_run_id"]) == parent.run_id, (
+                "the child's trace does not name its parent"
+            )
+            assert PostgresTrace(DSN).reconstruct(parent)["run"]["parent_run_id"] is None, (
+                "a top-level run was given a parent"
+            )
+
+            # The read pattern the column exists for.
+            children = query(
+                "SELECT run_id FROM runs WHERE parent_run_id=%s", (parent.run_id,)
+            )
+            assert [str(row[0]) for row in children] == [child.run_id]
+        finally:
+            with psycopg.connect(DSN, autocommit=True) as conn:
+                conn.execute("DELETE FROM execution_manifests WHERE run_id=%s", (child.run_id,))
+                conn.execute("DELETE FROM runs WHERE run_id=%s", (child.run_id,))
+
+
+def test_a_child_carries_its_own_tenancy_rather_than_inheriting_it():
+    """AC-15's second half. ADR-11 is not relaxed for child runs: the parent
+    link is a lineage fact, never a substitute for tenancy."""
+    from agentsdk.postgres import PostgresTrace
+
+    with Run("ac15t") as parent:
+        child = RunScope(
+            run_id=str(uuid.uuid4()),
+            tenant_id=parent.tenant_id,
+            project_id=parent.project_id,
+        )
+        try:
+            _start(child, parent_run_id=parent.run_id)
+            row = query(
+                "SELECT tenant_id, project_id FROM runs WHERE run_id=%s", (child.run_id,)
+            )[0]
+            assert row == (child.tenant_id, child.project_id), (
+                "the child row does not carry its own tenancy"
+            )
+            # And it is invisible to anyone else, parent link or not.
+            stranger = RunScope(
+                run_id=child.run_id, tenant_id="SYN-m7-stranger", project_id="p-stranger"
+            )
+            assert PostgresTrace(DSN)._runs.get_run(stranger) is None
+        finally:
+            with psycopg.connect(DSN, autocommit=True) as conn:
+                conn.execute("DELETE FROM execution_manifests WHERE run_id=%s", (child.run_id,))
+                conn.execute("DELETE FROM runs WHERE run_id=%s", (child.run_id,))
+
+
+def test_a_parent_in_another_tenant_is_refused():
+    """The foreign key alone is not enough, and this is the assertion that says
+    so. `runs.parent_run_id REFERENCES runs (run_id)` is satisfied by ANY
+    existing run, so without the tenancy check a run in tenant B could name a
+    parent in tenant A -- putting one tenant's run id inside another tenant's
+    row and making A's lineage readable from B. Refused in the same statement
+    as the insert, so there is no window between the check and the write.
+    """
+    with Run("ac15a") as parent:
+        intruder = RunScope(
+            run_id=str(uuid.uuid4()),
+            tenant_id="SYN-m7-other-tenant",
+            project_id="p-other",
+        )
+        with pytest.raises(ValueError, match="may only descend from one its own tenant"):
+            _start(intruder, parent_run_id=parent.run_id)
+
+        assert query("SELECT 1 FROM runs WHERE run_id=%s", (intruder.run_id,)) == [], (
+            "the run was written despite naming a parent it cannot see"
+        )
+        assert query(
+            "SELECT 1 FROM execution_manifests WHERE run_id=%s", (intruder.run_id,)
+        ) == [], "the manifest survived a refused run, so the two are not one transaction"
+
+
+def test_a_parent_that_does_not_exist_is_refused():
+    """A dangling link is worse than no link: it claims a lineage that cannot
+    be followed."""
+    ghost = RunScope(
+        run_id=str(uuid.uuid4()), tenant_id="SYN-m7-ghost", project_id="p-ghost"
+    )
+    with pytest.raises(ValueError, match="does not exist in tenant"):
+        _start(ghost, parent_run_id=str(uuid.uuid4()))
+    assert query("SELECT 1 FROM runs WHERE run_id=%s", (ghost.run_id,)) == []
+
+
+async def test_the_public_api_carries_a_parent_run_id_through_to_the_row():
+    """FR-21 through the front door. RunConfig gains a field rather than the
+    store gaining a private one, so Phase 2 adds a caller and not a migration
+    to a table that by then holds production rows (NFR-7).
+    """
+    tenant = "SYN-m7-api"
+    persistence = Persistence.postgres(DSN)
+    try:
+        parent = await Runner(
+            {"m": NoNetworkModel()}, tools=NOOP_TOOLS, persistence=persistence
+        ).run(
+            AgentSpec(id="parent", instructions="go", tool_profile=("noop",)),
+            "do it",
+            RunConfig(tenant_id=tenant, project_id="p-api", max_turns=6),
+        )
+        assert parent.status is RunStatus.COMPLETED
+
+        child = await Runner(
+            {"m": NoNetworkModel()}, tools=NOOP_TOOLS, persistence=persistence
+        ).run(
+            AgentSpec(id="child", instructions="go", tool_profile=("noop",)),
+            "do it",
+            RunConfig(
+                tenant_id=tenant,
+                project_id="p-api",
+                max_turns=6,
+                parent_run_id=parent.run_id,
+            ),
+        )
+        assert child.status is RunStatus.COMPLETED, child.error
+
+        stored = query(
+            "SELECT parent_run_id FROM runs WHERE run_id=%s", (child.run_id,)
+        )[0][0]
+        assert str(stored) == parent.run_id
+        assert query(
+            "SELECT parent_run_id FROM runs WHERE run_id=%s", (parent.run_id,)
+        )[0][0] is None
+    finally:
+        _drop_runs(tenant)
+
+
+def test_run_config_refuses_a_malformed_parent_run_id():
+    """Configuration refuses by name. A malformed id completes in memory and
+    fails against Postgres with a DataError several frames from the caller that
+    supplied it -- the shape M5 round 8 was rejected for, on max_turns.
+    """
+    ghost = RunScope(
+        run_id=str(uuid.uuid4()), tenant_id="SYN-m7-bad", project_id="p-bad"
+    )
+    with pytest.raises(ValueError, match="parent_run_id cannot be stored"):
+        _start(ghost, parent_run_id="not-a-uuid")
+    assert query("SELECT 1 FROM runs WHERE run_id=%s", (ghost.run_id,)) == []

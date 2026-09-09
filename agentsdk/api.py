@@ -109,6 +109,11 @@ class RunConfig:
     max_turns: int = 10
     model_override: str | None = None
     principal_context: PrincipalContext | None = None
+    # The run that spawned this one (FR-21). None for a top-level run, which
+    # is the common case. Phase 2's subagents are what populate it; the column
+    # and the tenancy rule exist now so that phase adds a caller rather than a
+    # migration to a table that already holds production rows.
+    parent_run_id: str | None = None
 
     def __post_init__(self) -> None:
         # Before the range checks: a bool passes every one of them (True >= 1,
@@ -269,6 +274,7 @@ class Runner:
                 principal_context=(
                     config.principal_context.to_json() if config.principal_context else None
                 ),
+                parent_run_id=config.parent_run_id,
                 manifest=build_manifest(
                     sdk_version=__version__,
                     agent_spec_id=spec.id,

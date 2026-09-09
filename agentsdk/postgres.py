@@ -233,6 +233,19 @@ def column_rejection_reason(value: Any, sql_type: str) -> str | None:
     reason = unstorable_reason(value)
     if reason is not None:
         return reason
+    if sql_type == "UUID":
+        # Refused HERE rather than at the write, for the same reason max_turns
+        # is: a malformed id completes in memory and fails against Postgres
+        # with a DataError several frames away from the caller that supplied
+        # it. None is allowed -- a top-level run has no parent, which is the
+        # common case rather than an exception.
+        if value is not None:
+            if not isinstance(value, str):
+                return f"a {type(value).__name__} is not a UUID"
+            try:
+                uuid.UUID(value)
+            except ValueError:
+                return f"{value!r} is not a well-formed UUID"
     if sql_type == "INTEGER":
         if isinstance(value, bool):
             # The carve-out this replaces was the last surviving instance of
@@ -526,6 +539,7 @@ class PostgresRunStore:
         model_id: str | None,
         principal_context: dict[str, Any] | None,
         manifest: dict[str, Any],
+        parent_run_id: str | None = None,
     ) -> None:
         """The run row and its manifest are one transaction, not two.
 
@@ -553,18 +567,34 @@ class PostgresRunStore:
             ("max_turns", max_turns, "INTEGER"),
             ("principal_context", principal_context, "JSONB"),
             ("manifest", manifest, "JSONB"),
+            ("parent_run_id", parent_run_id, "UUID"),
         ):
             reason = column_rejection_reason(value, sql_type)
             if reason is not None:
                 raise ValueError(f"{name} cannot be stored: {reason}")
         with _pool(self._dsn).connection() as conn:
             with conn.transaction():
-                conn.execute(
+                cursor = conn.execute(
                     """
                     INSERT INTO runs (
                         run_id, tenant_id, project_id, agent_spec_id, status,
-                        principal_context, max_turns, model_id
-                    ) VALUES (%s,%s,%s,%s,'running',%s,%s,%s)
+                        principal_context, max_turns, model_id, parent_run_id
+                    )
+                    SELECT %s,%s,%s,%s,'running',%s,%s,%s,%s
+                    -- A parent link may only point INSIDE the child's own
+                    -- tenant and project (FR-21, ADR-11). The foreign key
+                    -- alone would happily let a run in tenant B name a parent
+                    -- in tenant A, which puts one tenant's run id in another
+                    -- tenant's row and makes A's lineage readable from B.
+                    -- Checked in the same statement as the insert, so there is
+                    -- no window between the check and the write.
+                    WHERE %s::uuid IS NULL
+                       OR EXISTS (
+                            SELECT 1 FROM runs parent
+                            WHERE parent.run_id = %s::uuid
+                              AND parent.tenant_id = %s
+                              AND parent.project_id = %s
+                          )
                     """,
                     (
                         scope.run_id,
@@ -574,8 +604,19 @@ class PostgresRunStore:
                         Jsonb(principal_context) if principal_context else None,
                         max_turns,
                         model_id,
+                        parent_run_id,
+                        parent_run_id,
+                        parent_run_id,
+                        scope.tenant_id,
+                        scope.project_id,
                     ),
                 )
+                if cursor.rowcount != 1:
+                    raise ValueError(
+                        f"parent run {parent_run_id!r} does not exist in tenant "
+                        f"{scope.tenant_id!r} / project {scope.project_id!r}: a run "
+                        "may only descend from one its own tenant can see"
+                    )
                 self._insert_manifest(conn, scope, manifest)
 
     def finish_run(self, scope: RunScope, status: str) -> None:
@@ -649,7 +690,8 @@ class PostgresRunStore:
             row = conn.execute(
                 """
                 SELECT run_id, tenant_id, project_id, agent_spec_id, status,
-                       principal_context, max_turns, model_id, started_at, completed_at
+                       principal_context, max_turns, model_id, started_at,
+                       completed_at, parent_run_id
                 FROM runs
                 WHERE run_id = %s AND tenant_id = %s AND project_id = %s
                 """,
@@ -659,7 +701,8 @@ class PostgresRunStore:
             return None
         keys = (
             "run_id", "tenant_id", "project_id", "agent_spec_id", "status",
-            "principal_context", "max_turns", "model_id", "started_at", "completed_at",
+            "principal_context", "max_turns", "model_id", "started_at",
+            "completed_at", "parent_run_id",
         )
         return dict(zip(keys, row))
 

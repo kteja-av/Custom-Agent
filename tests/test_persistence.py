@@ -1378,6 +1378,13 @@ def test_every_value_start_run_writes_is_actually_REFUSED_when_unfit(scope):
         "max_turns": 2**31,            # a valid int the INTEGER column refuses
         "principal_context": {"k": float("inf")},
         "manifest": a_manifest(model_id="m" + chr(0)),
+        # A string the UUID column cannot take. Added when FR-21 gave
+        # start_run a new caller-supplied value: this test asserts on
+        # inspect.signature, so a parameter added without an unfit case fails
+        # it by construction -- which is the test doing its job, not the test
+        # being in the way. Round 7 rejected M5 for exactly the gap this
+        # closes, a written value with no unfit case behind it.
+        "parent_run_id": "not-a-uuid",
     }
     parameters = {
         name
