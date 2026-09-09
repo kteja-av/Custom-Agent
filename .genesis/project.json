@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-09T06:11:08.153Z"
+    "updated_at": "2026-09-09T06:43:37.457Z"
   },
   "policy": {
     "ponytail": "full",
@@ -908,8 +908,8 @@
           "evidence": {
             "path": ".genesis/evidence/M6-golden-eval-unit.json",
             "source_hash": "6870aaa9422287e3869f4288c5e74e026f6f4c7624d654c14e525ca5158d5d2d",
-            "hash": "955435b6876413c381d3815bae72348148b021d39a03151bb8b8fb1a70d5cda0",
-            "observed_at": "2026-09-09T06:10:21.133Z"
+            "hash": "185aafbd232d10f02e3781b3c1b39640c14143fd75151b84005fa3fe5b4c270f",
+            "observed_at": "2026-09-09T06:43:37.373Z"
           }
         },
         {
@@ -933,7 +933,7 @@
         "Carried from M5: concurrent appends to one run are safe but not available -- a losing writer raises UniqueViolation rather than serialising. Unreachable in Phase 0 (single writer per run); Phase 2 needs a retry loop or per-run advisory lock."
       ],
       "created_at": "2026-09-05T18:10:01.160Z",
-      "updated_at": "2026-09-09T06:11:08.152Z"
+      "updated_at": "2026-09-09T06:43:37.457Z"
     }
   ],
   "learning_proposals": [],
