@@ -177,3 +177,119 @@ def test_a_badly_named_migration_is_refused_rather_than_skipped():
     finally:
         stray.unlink()
     assert discover(), "discover() did not recover after the stray file was removed"
+
+
+# --- AC-12: event sequence numbers come from the database ----------------------
+
+
+class Run:
+    """A real run row to write against, removed afterwards."""
+
+    def __init__(self, tag):
+        self.scope = RunScope(
+            run_id=str(uuid.uuid4()), tenant_id="SYN-m7-" + tag,
+            project_id="p-" + tag,
+        )
+
+    def __enter__(self):
+        Persistence.postgres(DSN).runs.start_run(
+            self.scope,
+            agent_spec_id="m7",
+            max_turns=4,
+            model_id="m7",
+            principal_context=None,
+            manifest=build_manifest(
+                sdk_version="m7", agent_spec_id="m7", instructions="m7",
+                tool_profile=(), tool_spec_hashes=[], model_id="m7",
+            ),
+        )
+        return self.scope
+
+    def __exit__(self, *exc):
+        with psycopg.connect(DSN, autocommit=True) as conn:
+            for table in ("run_events", "messages", "execution_manifests"):
+                conn.execute(f"DELETE FROM {table} WHERE run_id=%s", (self.scope.run_id,))
+            conn.execute("DELETE FROM runs WHERE run_id=%s", (self.scope.run_id,))
+        return False
+
+
+def sinks_for(scope, count):
+    from agentsdk.postgres import PostgresEventStore
+
+    return [
+        PostgresEventStore(DSN, scope.tenant_id, scope.project_id, scope.run_id)
+        for _ in range(count)
+    ]
+
+
+def test_a_second_event_sink_continues_the_sequence_instead_of_restarting_it():
+    """AC-12. This is the subagent case, and also every resumed run.
+
+    Before FR-18 each sink counted with len(self._buffer) + 1, so a second sink
+    for one run started at 1 again and collided with rows already stored:
+    measured as UniqueViolation on the second emit, with one of the two events
+    lost. A sequence number that is only correct while one process owns the run
+    is not a sequence number, it is a local variable.
+    """
+    from agentsdk.events import EventType
+
+    with Run("ac12") as scope:
+        first, second = sinks_for(scope, 2)
+
+        a = first.emit(EventType.RUN_STARTED, {"who": "parent"})
+        b = second.emit(EventType.MODEL_CALLED, {"who": "child"})
+        c = first.emit(EventType.RUN_COMPLETED, {"who": "parent"})
+
+        stored = [
+            row[0] for row in query(
+                "SELECT sequence_no FROM run_events WHERE run_id=%s ORDER BY sequence_no",
+                (scope.run_id,),
+            )
+        ]
+        assert stored == [1, 2, 3], f"sequences are not unique and contiguous: {stored}"
+        assert [a.sequence_no, b.sequence_no, c.sequence_no] == [1, 2, 3], (
+            "the returned events disagree with the stored rows, so an in-memory "
+            "trace and a reconstructed one would order differently (NFR-3)"
+        )
+
+
+def test_a_fresh_sink_resumes_from_the_stored_maximum():
+    """The resumed-run case, and the reason the first version of this test was
+    worthless.
+
+    Written first as "the returned number equals the stored number" with a
+    single sink from scratch -- which passed against the UNFIXED code, because
+    a lone sink counting from 1 agrees with the database by coincidence. A test
+    that cannot fail for the defect it names is a coverage test
+    (KNOWLEDGE-41611bbf). The property only has teeth when the process's own
+    count and the stored maximum DISAGREE, so this seeds rows from one sink and
+    then makes a brand-new one continue them, exactly as a resumed run does.
+    """
+    from agentsdk.events import EventType
+
+    with Run("ac12b") as scope:
+        (writer,) = sinks_for(scope, 1)
+        for i in range(3):
+            writer.emit(EventType.MODEL_CALLED, {"i": i})
+
+        # A new sink: empty buffer, three rows already stored.
+        (resumed,) = sinks_for(scope, 1)
+        fourth = resumed.emit(EventType.TOOL_CALLED, {"i": 3})
+        fifth = resumed.emit(EventType.RUN_COMPLETED, {"i": 4})
+
+        assert [fourth.sequence_no, fifth.sequence_no] == [4, 5], (
+            "a fresh sink restarted the sequence instead of continuing it"
+        )
+        stored = {
+            row[0]: str(row[1]) for row in query(
+                "SELECT sequence_no, event_id FROM run_events WHERE run_id=%s",
+                (scope.run_id,),
+            )
+        }
+        assert sorted(stored) == [1, 2, 3, 4, 5]
+        for event in (fourth, fifth):
+            assert stored[event.sequence_no] == str(event.event_id), (
+                "the returned event disagrees with the row it created, so an "
+                "in-memory trace and a reconstructed one would order "
+                "differently (NFR-3)"
+            )

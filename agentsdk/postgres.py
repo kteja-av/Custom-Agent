@@ -14,6 +14,7 @@ belongs to fails at the database rather than being caught by review.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import uuid
 from dataclasses import dataclass
@@ -300,12 +301,19 @@ class PostgresEventStore:
     def emit(
         self, event_type: EventType, payload: dict[str, Any] | None = None, **identifiers: Any
     ) -> RunEvent:
+        # sequence_no is assigned by the DATABASE below, not here (FR-18).
+        # This process's own count is only ever right when this process is the
+        # only writer, which stops being true the moment a run has a subagent
+        # or is resumed: a second sink starts counting at 1 again and collides
+        # with rows already stored. Measured before the fix -- two sinks on one
+        # run, the second died with UniqueViolation and one of the two events
+        # was lost. Zero is a placeholder that never reaches the database.
         event = RunEvent(
             event_type=event_type,
             tenant_id=self._tenant_id,
             project_id=self._project_id,
             run_id=self._run_id,
-            sequence_no=len(self._buffer) + 1,
+            sequence_no=0,
             payload=payload or {},
             **identifiers,
         )
@@ -323,15 +331,24 @@ class PostgresEventStore:
                 -- for tenant A's run be filed as tenant B, where it is
                 -- invisible in A's trace -- the same decision made
                 -- inconsistently one function over, for three rounds.
-                SELECT %s,%s,%s,%s, r.tenant_id, r.project_id, r.run_id,
+                --
+                -- And the sequence number from the STORED maximum, computed
+                -- inside this insert's transaction, exactly as
+                -- PostgresSessionStore.append already does (FR-18). Two
+                -- concurrent emits cannot both read the same max, and a second
+                -- sink continues the sequence instead of restarting it.
+                SELECT %s,%s,
+                       COALESCE(MAX(e.sequence_no), 0) + 1,
+                       %s, r.tenant_id, r.project_id, r.run_id,
                        %s,%s,%s,%s,%s,%s,%s,%s
-                FROM runs r
+                FROM runs r LEFT JOIN run_events e ON e.run_id = r.run_id
                 WHERE r.run_id = %s AND r.tenant_id = %s AND r.project_id = %s
+                GROUP BY r.run_id, r.tenant_id, r.project_id
+                RETURNING sequence_no
                 """,
                 (
                     event.event_id,
                     event.schema_version,
-                    event.sequence_no,
                     event.event_type.value,
                     event.agent_id,
                     event.task_id,
@@ -346,7 +363,8 @@ class PostgresEventStore:
                     self._project_id,
                 ),
             )
-            if cursor.rowcount != 1:
+            row = cursor.fetchone()
+            if row is None:
                 # Zero rows means the run does not exist or belongs to another
                 # tenant. Raising rather than returning quietly: an event that
                 # was not written is an entry the audit trail silently lacks,
@@ -356,6 +374,11 @@ class PostgresEventStore:
                     f"{self._project_id!r}: an event cannot be filed against a run that "
                     "does not exist or belongs to someone else"
                 )
+        # The stored number, not the one this process guessed. events() and the
+        # returned RunEvent must agree with the row, or an in-memory trace and
+        # a reconstructed one disagree about order -- which is the thing NFR-3
+        # exists to prevent.
+        event = dataclasses.replace(event, sequence_no=row[0])
         self._buffer.append(event)
         return event
 
