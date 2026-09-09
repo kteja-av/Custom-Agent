@@ -9,6 +9,9 @@ orchestrator without any caller noticing.
 
 from __future__ import annotations
 
+import asyncio
+from functools import partial
+
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
@@ -206,8 +209,8 @@ class Runner:
             return await self._run(spec, task, config, scope, events, client_key, model_id)
         except Exception as exc:  # noqa: BLE001
             reason = describe_exception(exc)
-            self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason})
-            self._safe_finish(scope, RunStatus.FAILED)
+            await self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason})
+            await self._safe_finish(scope, RunStatus.FAILED)
             return RunResult(
                 status=RunStatus.FAILED,
                 output=None,
@@ -220,19 +223,23 @@ class Runner:
                 error=reason,
             )
 
-    def _safe_finish(self, scope: RunScope, status: RunStatus) -> None:
+    async def _safe_finish(self, scope: RunScope, status: RunStatus) -> None:
+        # Threaded like every other store call (FR-20). This one runs once, on
+        # the failure path, so it is not what NFR-8 measures -- but a store
+        # call that blocks the loop only when a run is already failing is the
+        # kind of inconsistency that gets read as an oversight later.
         if self._persistence is None:
             return
         try:
-            self._persistence.runs.finish_run(scope, status.value)
+            await asyncio.to_thread(self._persistence.runs.finish_run, scope, status.value)
         except Exception:  # noqa: BLE001 - persistence must not mask the real failure
             pass
 
     @staticmethod
-    def _safe_emit(events: EventSink, event_type: EventType, payload: dict) -> None:
+    async def _safe_emit(events: EventSink, event_type: EventType, payload: dict) -> None:
         """Telemetry must not be able to fail the failure path."""
         try:
-            events.emit(event_type, payload)
+            await asyncio.to_thread(events.emit, event_type, payload)
         except Exception:  # noqa: BLE001
             pass
 
@@ -254,8 +261,8 @@ class Runner:
             # transaction as the run row, so no failure between the two can
             # leave a run that nothing can explain. The primary key guarantees
             # "at most one"; passing it here guarantees "at least one".
-            self._persistence.runs.start_run(
-                scope,
+            await asyncio.to_thread(
+                partial(self._persistence.runs.start_run, scope),
                 agent_spec_id=spec.id,
                 max_turns=config.max_turns,
                 model_id=model_id,
@@ -325,7 +332,7 @@ class Runner:
             {"status": status.value, "turns": outcome.turns, "reason": error},
         )
         if self._persistence is not None:
-            self._persistence.runs.finish_run(scope, status.value)
+            await asyncio.to_thread(self._persistence.runs.finish_run, scope, status.value)
         return RunResult(
             status=status,
             output=outcome.output,

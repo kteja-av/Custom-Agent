@@ -423,3 +423,178 @@ async def test_a_write_for_someone_elses_run_still_fails():
         assert query(
             "SELECT count(*) FROM messages WHERE run_id=%s", (scope.run_id,)
         )[0][0] == 0
+
+
+# --- AC-14 / NFR-8: persistence is not the concurrency ceiling -----------------
+
+
+MAX_STALL_SECONDS = 0.050   # NFR-8
+MAX_WALL_RATIO = 3.0        # NFR-8
+
+
+class NoNetworkModel:
+    """A model client that sleeps instead of calling anything.
+
+    The point is to make the STORE the only thing that can be slow. With a real
+    provider on the other end, a 1 ms store call hides inside a 900 ms round
+    trip and no measurement means anything.
+    """
+
+    async def send(self, request):
+        await asyncio.sleep(0.05)
+        assistant_turns = sum(1 for m in request.messages if m.role is Role.ASSISTANT)
+        if assistant_turns >= 2:
+            return ModelResponse(
+                message=Message(role=Role.ASSISTANT, content="done"),
+                stop_reason=StopReason.END_TURN,
+                usage=Usage(1, 1, 2),
+            )
+        return ModelResponse(
+            message=Message(
+                role=Role.ASSISTANT,
+                tool_calls=(ToolCall(id=f"c{assistant_turns}", name="noop", arguments={}),),
+            ),
+            stop_reason=StopReason.TOOL_CALLS,
+            usage=Usage(1, 1, 2),
+        )
+
+
+NOOP_TOOLS = [
+    Tool(
+        spec=ToolSpec(
+            name="noop",
+            description="Does nothing.",
+            input_schema={"type": "object", "properties": {}, "additionalProperties": False},
+        ),
+        fn=lambda: "ok",
+    )
+]
+
+
+async def _measure(concurrent_runs, persistence, tenant):
+    """Wall time and the worst event-loop stall while `concurrent_runs` run.
+
+    The heartbeat is an ordinary well-behaved coroutine asking to be woken every
+    10 ms. However late it actually wakes is how long something else held the
+    loop, which is the thing NFR-8 is about -- wall time alone cannot tell a
+    slow store from a blocked one.
+    """
+    lags = []
+    stop = False
+
+    async def heartbeat():
+        last = time.perf_counter()
+        while not stop:
+            await asyncio.sleep(0.01)
+            now = time.perf_counter()
+            lags.append(now - last - 0.01)
+            last = now
+
+    async def one():
+        runner = Runner({"m": NoNetworkModel()}, tools=NOOP_TOOLS, persistence=persistence)
+        return await runner.run(
+            AgentSpec(id="nfr8", instructions="go", tool_profile=("noop",)),
+            "do it",
+            RunConfig(tenant_id=tenant, project_id="p-nfr8", max_turns=6),
+        )
+
+    beat = asyncio.create_task(heartbeat())
+    started = time.perf_counter()
+    results = await asyncio.gather(*(one() for _ in range(concurrent_runs)))
+    wall = time.perf_counter() - started
+    stop = True
+    await beat
+
+    assert all(r.status is RunStatus.COMPLETED for r in results), (
+        "a run failed, so the timing below measures the wrong thing"
+    )
+    return wall, max(lags) if lags else 0.0
+
+
+def _drop_runs(tenant):
+    with psycopg.connect(DSN, autocommit=True) as conn:
+        ids = [
+            row[0] for row in conn.execute(
+                "SELECT run_id FROM runs WHERE tenant_id=%s", (tenant,)
+            ).fetchall()
+        ]
+        for table in ("run_events", "messages", "execution_manifests"):
+            conn.execute(f"DELETE FROM {table} WHERE run_id = ANY(%s)", (ids,))
+        conn.execute("DELETE FROM runs WHERE tenant_id=%s", (tenant,))
+
+
+async def _assert_within_nfr8(concurrent_runs, tag):
+    tenant = "SYN-m7-" + tag
+    try:
+        # Both halves in the SAME process, so the bound is about this code and
+        # not about how fast the machine happens to be today.
+        memory_wall, _ = await _measure(concurrent_runs, None, tenant)
+        pg_wall, worst_stall = await _measure(
+            concurrent_runs, Persistence.postgres(DSN), tenant
+        )
+    finally:
+        _drop_runs(tenant)
+
+    ratio = pg_wall / memory_wall if memory_wall else float("inf")
+    assert worst_stall < MAX_STALL_SECONDS, (
+        f"{concurrent_runs} concurrent runs stalled the event loop for "
+        f"{worst_stall * 1000:.1f} ms (NFR-8 allows {MAX_STALL_SECONDS * 1000:.0f} ms). "
+        "Persistence is blocking the loop, which also starves any progress "
+        "surface built on it."
+    )
+    assert ratio <= MAX_WALL_RATIO, (
+        f"{concurrent_runs} concurrent runs took {pg_wall:.2f}s against "
+        f"{memory_wall:.2f}s in memory ({ratio:.1f}x, NFR-8 allows "
+        f"{MAX_WALL_RATIO:.0f}x)"
+    )
+
+
+async def test_six_concurrent_runs_stay_within_nfr8():
+    """AC-14 exactly as specified, and the reliable detector of the two.
+
+    Measured before any of FR-20: 4.73s against 0.16s in memory, worst stall
+    1008 ms. Measured against a build with the connection pool but the store
+    still called ON the loop: 51-57 ms across 5 runs, failing every time.
+    After the offload: 13-16 ms, so roughly a 3x margin rather than a squeak.
+    """
+    await _assert_within_nfr8(6, "nfr8a")
+
+
+async def test_twenty_four_concurrent_runs_stay_within_nfr8():
+    """The same bound at four times the fan-out.
+
+    Kept for the ceiling it explores rather than for its detection rate, and
+    the honest numbers are worth recording because they surprised me. Run
+    STANDALONE against the pool-only build, six runs stalled 16 ms (pass) and
+    twenty-four stalled 79 ms (fail) -- which is what motivated writing this
+    test at all. Run INSIDE this suite against the same build, the ordering
+    reversed: six runs failed 5 times out of 5 and twenty-four failed only 1
+    time in 5.
+
+    I do not have a confirmed explanation for the reversal, so it is written
+    down rather than explained away. What follows from it is only this: do not
+    treat this test as the safety net for the six-run one. They cover the same
+    property at different fan-out, and the six-run test is the one that has
+    actually caught a regression.
+    """
+    await _assert_within_nfr8(24, "nfr8b")
+
+
+def test_the_store_uses_one_pool_per_dsn_rather_than_a_connection_per_call():
+    """FR-20's other half. A short run cost 40 connect / authenticate / close
+    cycles before this; pooling is what makes a per-call connection affordable
+    enough to stop being the thing that dominates."""
+    from agentsdk import postgres
+
+    first = postgres._pool(DSN)
+    second = postgres._pool(DSN)
+    assert first is second, "a second store built its own pool for the same DSN"
+    assert first.max_size == postgres.POOL_MAX_SIZE
+    # Distinct databases must not share one: the pool is keyed by DSN, and a
+    # pool that ignored the key would hand out connections to the wrong server.
+    other = postgres._pool(DSN + ("&" if "?" in DSN else "?") + "application_name=m7probe")
+    assert other is not first
+    other.close()
+    postgres._POOLS.pop(
+        DSN + ("&" if "?" in DSN else "?") + "application_name=m7probe", None
+    )

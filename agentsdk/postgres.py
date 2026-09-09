@@ -16,11 +16,14 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from psycopg_pool import ConnectionPool
 
 import psycopg
 from psycopg.types.json import Jsonb
@@ -43,6 +46,62 @@ from .primitives import (
 )
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
+
+
+# One pool per DSN, shared by every store built on it (FR-20).
+#
+# Before this, every store method opened its own connection: a short run cost
+# 40 separate connect / authenticate / close cycles, each a TCP handshake and
+# an authentication round trip to do a single INSERT. That is affordable when
+# one run happens at a time and is the first thing to collapse under Phase 2's
+# fan-out.
+#
+# Keyed by DSN string rather than held on the store, because PostgresRunStore,
+# PostgresSessionStore and PostgresEventStore are constructed separately for
+# the same database and would otherwise each hold their own pool.
+_POOLS: dict[str, ConnectionPool] = {}
+_POOLS_LOCK = threading.Lock()
+
+# Sized against the thread pool that will be calling in: asyncio.to_thread uses
+# min(32, cpu_count + 4) workers by default, so a smaller pool would simply
+# move the queue from one place to another.
+POOL_MAX_SIZE = 32
+
+
+def _pool(dsn: str) -> ConnectionPool:
+    """The pool for this DSN, created once.
+
+    Double-checked under a lock: two threads racing to create the pool for the
+    same DSN would otherwise both build one, and whichever lost would leak its
+    connections with nothing holding a reference to close them.
+    """
+    pool = _POOLS.get(dsn)
+    if pool is not None:
+        return pool
+    with _POOLS_LOCK:
+        pool = _POOLS.get(dsn)
+        if pool is None:
+            pool = ConnectionPool(
+                dsn,
+                min_size=1,
+                max_size=POOL_MAX_SIZE,
+                # A caller that waits forever for a connection is a hang with
+                # no error; one that waits 30 seconds is a slow request with a
+                # message naming the pool.
+                timeout=30.0,
+                open=True,
+            )
+            _POOLS[dsn] = pool
+    return pool
+
+
+def close_pools() -> None:
+    """Close every pool. For process shutdown and for tests that count
+    connections; not needed during normal operation."""
+    with _POOLS_LOCK:
+        while _POOLS:
+            _, pool = _POOLS.popitem()
+            pool.close()
 
 
 def apply_schema(dsn: str) -> None:
@@ -211,7 +270,7 @@ class PostgresSessionStore:
                 "tenant_id and project_id are mandatory on every row (ADR-11)"
             )
         tool_calls, tool_results = _message_to_columns(message)
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             with conn.transaction():
                 _serialise_writers(conn, run_id, _LOCK_MESSAGES)
                 # sequence_no is computed INSIDE the insert's transaction, so
@@ -276,7 +335,7 @@ class PostgresSessionStore:
                 "PostgresSessionStore must be bound to the run's scope before reading; "
                 "tenancy is enforced on read as well as write (NFR-2)"
             )
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             rows = conn.execute(
                 """
                 SELECT role, content, tool_calls, tool_results
@@ -355,7 +414,7 @@ class PostgresEventStore:
             payload=payload or {},
             **identifiers,
         )
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             _serialise_writers(conn, event.run_id, _LOCK_EVENTS)
             cursor = conn.execute(
                 """
@@ -498,7 +557,7 @@ class PostgresRunStore:
             reason = column_rejection_reason(value, sql_type)
             if reason is not None:
                 raise ValueError(f"{name} cannot be stored: {reason}")
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             with conn.transaction():
                 conn.execute(
                     """
@@ -527,7 +586,7 @@ class PostgresRunStore:
         and the trace unscoped answered the same question the other way one
         function over, which is worse than either answer consistently applied.
         """
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             conn.execute(
                 "UPDATE runs SET status = %s, completed_at = %s"
                 " WHERE run_id = %s AND tenant_id = %s AND project_id = %s",
@@ -548,7 +607,7 @@ class PostgresRunStore:
         adds a manifest, so it cannot leave a run without one. A second call
         for the same run is refused by the primary key, not by care.
         """
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             self._insert_manifest(conn, scope, manifest)
 
     @staticmethod
@@ -586,7 +645,7 @@ class PostgresRunStore:
         )
 
     def get_run(self, scope: RunScope) -> dict[str, Any] | None:
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             row = conn.execute(
                 """
                 SELECT run_id, tenant_id, project_id, agent_spec_id, status,
@@ -621,7 +680,7 @@ class PostgresTrace:
         differently from the store it reads beside."""
         run = self._runs.get_run(scope)
         tenancy = (scope.run_id, scope.tenant_id, scope.project_id)
-        with psycopg.connect(self._dsn) as conn:
+        with _pool(self._dsn).connection() as conn:
             messages = conn.execute(
                 "SELECT sequence_no, role, content, tool_calls, tool_results"
                 " FROM messages WHERE run_id = %s AND tenant_id = %s AND project_id = %s"

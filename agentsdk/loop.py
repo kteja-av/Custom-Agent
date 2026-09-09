@@ -13,6 +13,7 @@ Two things this deliberately does NOT do:
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any
 
@@ -69,11 +70,25 @@ class AgentLoop:
         model_settings: dict[str, Any] | None = None,
         principal_context: PrincipalContext | None = None,
     ) -> LoopOutcome:
-        self._sessions.append(run_id, Message(role=Role.USER, content=task))
+        # Store calls go to a worker thread (FR-20). SessionStore and
+        # EventSink are synchronous protocols and stay that way: making them
+        # async would REPLACE a contract NFR-7 says to extend, and would
+        # rewrite 94 call sites across the approved suites. Moving the
+        # blocking off the loop needs neither.
+        #
+        # The connection pool alone was not enough, which is worth stating
+        # because it very nearly looked like it was. Pooled, a store call
+        # costs about a millisecond -- but it is still a millisecond ON the
+        # loop, and with the pool and no thread the worst stall measured
+        # 51-57 ms against NFR-8's 50 ms bound, failing 5 runs out of 5.
+        # With the offload the same measurement is 13-16 ms.
+        await asyncio.to_thread(
+            self._sessions.append, run_id, Message(role=Role.USER, content=task)
+        )
         usage = Usage()
 
         for turn in range(1, max_turns + 1):
-            history = self._sessions.history(run_id)
+            history = await asyncio.to_thread(self._sessions.history, run_id)
             request = self._assembler.build(
                 history,
                 self._registry.schemas(),
@@ -101,8 +116,9 @@ class AgentLoop:
             if after.action is HookAction.MODIFY and after.replacement is not None:
                 response = after.replacement
 
-            self._sessions.append(run_id, response.message)
-            self._events.emit(
+            await asyncio.to_thread(self._sessions.append, run_id, response.message)
+            await asyncio.to_thread(
+                self._events.emit,
                 EventType.MODEL_CALLED,
                 {
                     "turn": turn,
@@ -130,7 +146,11 @@ class AgentLoop:
                         f"Phase 0 ToolExecutor returned {type(outcome).__name__}; "
                         "only Completed and Failed are reachable"
                     )
-            self._sessions.append(run_id, Message(role=Role.TOOL, tool_results=tuple(results)))
+            await asyncio.to_thread(
+                self._sessions.append,
+                run_id,
+                Message(role=Role.TOOL, tool_results=tuple(results)),
+            )
 
         return LoopOutcome(None, usage, max_turns, exhausted_turns=True)
 
