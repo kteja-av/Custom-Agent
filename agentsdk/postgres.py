@@ -25,6 +25,7 @@ import psycopg
 from psycopg.types.json import Jsonb
 
 from .events import SCHEMA_VERSION, EventType, RunEvent
+from .migrate import apply_migrations
 from .primitives import (
     UNSTORABLE,
     refuse_unstorable_fields,
@@ -44,9 +45,17 @@ SCHEMA_PATH = Path(__file__).with_name("schema.sql")
 
 
 def apply_schema(dsn: str) -> None:
-    """Idempotent: every statement is CREATE ... IF NOT EXISTS."""
+    """Create the baseline, then bring it forward (FR-17).
+
+    schema.sql alone can only ever CREATE. On a database that already exists it
+    is a no-op for anything new, so a column added to it would be silently
+    absent and the code would fail later at insert time. Migrations run here,
+    behind the same call, so every existing call site gets them without
+    knowing they exist.
+    """
     with psycopg.connect(dsn, autocommit=True) as conn:
         conn.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
+    apply_migrations(dsn)
 
 
 # --- serialisation ----------------------------------------------------------

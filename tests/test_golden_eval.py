@@ -489,6 +489,11 @@ class LiveRun:
     purge: Spy
     register: Spy
     attempts: int
+    # Why the first attempt failed, when it did. The first version of this
+    # retry discarded it, and the first time the gate went red for a retry the
+    # reason was simply gone -- a gate that cannot say why it failed sends you
+    # to the gateway with nothing to go on.
+    first_error: str | None = None
 
 
 _LIVE_RUNS: dict[str, LiveRun] = {}
@@ -544,6 +549,7 @@ async def _execute_live(model_id):
     cannot pass unnoticed -- the gate stays honest about a sick gateway.
     """
     attempts = 0
+    first_error = None
     while True:
         attempts += 1
         echo, purge, register, tools = golden_tools()
@@ -574,6 +580,7 @@ async def _execute_live(model_id):
             result.error or ""
         ).startswith(_MODEL_BOUNDARY_ERRORS)
         if gateway_fault and attempts == 1:
+            first_error = result.error
             continue
         return LiveRun(
             model_id=model_id,
@@ -587,6 +594,7 @@ async def _execute_live(model_id):
             purge=purge,
             register=register,
             attempts=attempts,
+            first_error=first_error,
         )
 
 
@@ -712,8 +720,8 @@ async def test_the_same_eval_passes_against_a_live_provider(model_id):
 
     # A retry is legitimate but must never be silent.
     assert run.attempts == 1, (
-        f"{model_id} needed {run.attempts} attempts: the first failed at the "
-        "model boundary. The gate passed, but the gateway was not healthy."
+        f"{model_id} needed {run.attempts} attempts. The run itself passed, but "
+        f"the first attempt failed at the model boundary with: {run.first_error!r}"
     )
 
     # AC-10 on this run's rows, whole-row.

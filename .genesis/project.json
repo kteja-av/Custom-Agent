@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-09T13:04:19.667Z"
+    "updated_at": "2026-09-09T14:30:14.902Z"
   },
   "policy": {
     "ponytail": "full",
@@ -23,22 +23,27 @@
     }
   },
   "lifecycle": {
-    "phase": "verify",
-    "status": "ready",
-    "active_task": null,
+    "phase": "build",
+    "status": "active",
+    "active_task": "M7-store-hardening",
     "blocker": null,
-    "next_action": "Review completed work and choose the next bounded outcome."
+    "next_action": "Run the task pre-flight."
   },
   "commands": {},
   "workflow": {
     "type": "new-product",
     "started_at": "2026-09-05T14:48:57.897Z",
     "spec_check": {
-      "at": "2026-09-05T15:07:00.359Z",
-      "source_hash": "bfd6e50a82529f0b3ced5e178c132d4d6f818609d468bb94cf0f8107a85031aa",
+      "at": "2026-09-09T14:09:31.451Z",
+      "source_hash": "7d9541cdffcafa8c98e1abbf5b8e6647cb281d26edf23de7c56806815e7d9316",
       "requirements": [
         "AC-1",
         "AC-10",
+        "AC-11",
+        "AC-12",
+        "AC-13",
+        "AC-14",
+        "AC-15",
         "AC-2",
         "AC-3",
         "AC-4",
@@ -55,7 +60,12 @@
         "FR-14",
         "FR-15",
         "FR-16",
+        "FR-17",
+        "FR-18",
+        "FR-19",
         "FR-2",
+        "FR-20",
+        "FR-21",
         "FR-3",
         "FR-4",
         "FR-5",
@@ -69,18 +79,19 @@
         "NFR-4",
         "NFR-5",
         "NFR-6",
-        "NFR-7"
+        "NFR-7",
+        "NFR-8"
       ]
     },
     "plan_check": {
-      "at": "2026-09-05T18:10:01.294Z",
-      "source_hash": "06058b50234e1ee81af76ed7f39c02e0b352faa551b60fd7bddd7dee1f82ab6c"
+      "at": "2026-09-09T14:16:49.611Z",
+      "source_hash": "a59e5db360dd2c5dc1c760b6057a70aa3d3a9b7a9f694ff43338bb1bf88474ca"
     },
     "plan_approval": {
       "human": "owner",
-      "reason": "Six bounded milestones cover all 33 requirements; every task carries an executable pytest gate and each medium-risk task carries an independent-review gate. Approved to implement M1 first.",
-      "at": "2026-09-05T18:23:24.521Z",
-      "source_hash": "06058b50234e1ee81af76ed7f39c02e0b352faa551b60fd7bddd7dee1f82ab6c"
+      "reason": "M7-store-hardening carries all eleven new requirements, two executable gates (the new readiness suite and the full 423-test regression suite), and is ordered so FR-17 migrations land before the changes that depend on them.",
+      "at": "2026-09-09T14:17:10.313Z",
+      "source_hash": "a59e5db360dd2c5dc1c760b6057a70aa3d3a9b7a9f694ff43338bb1bf88474ca"
     }
   },
   "artifacts": [
@@ -92,6 +103,11 @@
       "requirements": [
         "AC-1",
         "AC-10",
+        "AC-11",
+        "AC-12",
+        "AC-13",
+        "AC-14",
+        "AC-15",
         "AC-2",
         "AC-3",
         "AC-4",
@@ -108,7 +124,12 @@
         "FR-14",
         "FR-15",
         "FR-16",
+        "FR-17",
+        "FR-18",
+        "FR-19",
         "FR-2",
+        "FR-20",
+        "FR-21",
         "FR-3",
         "FR-4",
         "FR-5",
@@ -122,14 +143,15 @@
         "NFR-4",
         "NFR-5",
         "NFR-6",
-        "NFR-7"
+        "NFR-7",
+        "NFR-8"
       ],
-      "source_hash": "bfd6e50a82529f0b3ced5e178c132d4d6f818609d468bb94cf0f8107a85031aa",
+      "source_hash": "7d9541cdffcafa8c98e1abbf5b8e6647cb281d26edf23de7c56806815e7d9316",
       "approval": {
         "human": "owner",
-        "reason": "Reviewed Phase 0 specification: 33 requirements, scope limited to the single-agent skeleton, ADR-13 resolved to OpenAI-compatible wire format on probe evidence. Approved to proceed to planning.",
-        "at": "2026-09-05T18:07:02.461Z",
-        "source_hash": "bfd6e50a82529f0b3ced5e178c132d4d6f818609d468bb94cf0f8107a85031aa"
+        "reason": "Phase 2 readiness: five store requirements (FR-17..FR-21) written against measured failures rather than suspected ones, NFR-8 carrying explicit stall and wall-clock bounds, and AC-11..AC-15 stating what fails today so each is reproducible before it is trusted. Phase 0/1 second wire format recorded as deferred by choice.",
+        "at": "2026-09-09T14:16:35.559Z",
+        "source_hash": "7d9541cdffcafa8c98e1abbf5b8e6647cb281d26edf23de7c56806815e7d9316"
       }
     }
   ],
@@ -629,6 +651,22 @@
       "source": "Phase 0/1 pre-flight probe",
       "tags": [],
       "recorded_at": "2026-09-09T13:04:19.666Z"
+    },
+    {
+      "id": "KNOWLEDGE-e52fb4dc",
+      "title": "Measured: what Phase 0 store assumptions do under Phase 2 conditions",
+      "text": "Probed 2026-09-09 against the real database, all four reproduced. (A) 12 concurrent appends to ONE run: 9 commit, 3 die with UniqueViolation -- a subagent message is dropped and the caller gets a raw driver error. (B) Two PostgresEventStore sinks on one run: the second starts its in-process counter at 1 and collides immediately; 1 event stored out of 2. This is reachable by a subagent sharing a run and by ANY resumed run. (C) Six concurrent runs with a no-network model client: 0.16s wall in memory versus 4.73s with Postgres, worst single event-loop stall 1008 ms, 4.65s stalled in total. The theoretical floor is 0.15s, so persistence costs about 30x and blocks the loop for a second at a time -- which would also starve the RunHandle progress surface Phase 2 introduces. (D) One short run commits 40 transactions, each its own connect/authenticate/close.",
+      "source": "Phase 2 pre-flight probe",
+      "tags": [],
+      "recorded_at": "2026-09-09T13:45:55.898Z"
+    },
+    {
+      "id": "KNOWLEDGE-010d12d3",
+      "title": "Migrations are the prerequisite for every other store fix, not a later cleanup",
+      "text": "apply_schema runs schema.sql, which is entirely CREATE TABLE IF NOT EXISTS. On an existing database it is a no-op for anything new, so a column added to schema.sql is silently NOT created and the code then fails at insert time with an undefined-column error. Every Phase 2 store fix needs a schema change: server-side event sequence numbers, and a parent/child link between runs (the runs table has no parent_run_id, so a subagent run cannot be tied to its parent today). That makes a migration path the FIRST item in any hardening milestone rather than the last, because without it none of the others can reach an existing database.",
+      "source": "Phase 2 pre-flight probe",
+      "tags": [],
+      "recorded_at": "2026-09-09T13:45:56.064Z"
     }
   ],
   "tasks": [
@@ -651,9 +689,9 @@
           "status": "pass",
           "evidence": {
             "human": "owner",
-            "reason": "Reviewed Phase 0 specification: 33 requirements, scope limited to the single-agent skeleton, ADR-13 resolved to OpenAI-compatible wire format on probe evidence. Approved to proceed to planning.",
-            "source_hash": "a8777aa0fd06561340b2d22b075779f9de842841e366351238951cc40bb3874f",
-            "observed_at": "2026-09-05T18:07:02.461Z"
+            "reason": "Phase 2 readiness: five store requirements (FR-17..FR-21) written against measured failures rather than suspected ones, NFR-8 carrying explicit stall and wall-clock bounds, and AC-11..AC-15 stating what fails today so each is reproducible before it is trusted. Phase 0/1 second wire format recorded as deferred by choice.",
+            "source_hash": "274299cb68bc48396ed917278a4f4f11dded0f1eb8a41774004c4c19a82e2c30",
+            "observed_at": "2026-09-09T14:16:35.559Z"
           }
         }
       ],
@@ -663,7 +701,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T14:48:57.897Z",
-      "updated_at": "2026-09-05T18:07:02.461Z"
+      "updated_at": "2026-09-09T14:16:35.559Z"
     },
     {
       "id": "M1-primitives",
@@ -950,6 +988,68 @@
       ],
       "created_at": "2026-09-05T18:10:01.160Z",
       "updated_at": "2026-09-09T07:11:44.552Z"
+    },
+    {
+      "id": "M7-store-hardening",
+      "outcome": "Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it",
+      "state": "active",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-17",
+        "FR-18",
+        "FR-19",
+        "FR-20",
+        "FR-21",
+        "NFR-8",
+        "AC-11",
+        "AC-12",
+        "AC-13",
+        "AC-14",
+        "AC-15"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_phase2_readiness.py -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M7-store-hardening-unit.json",
+            "source_hash": "9da4bbc78cd9d4d1885400a1b9aeb7fd4d605e444925cb1dd6ed2aee6b9072aa",
+            "hash": "9438ba3d326fad71c69103280df2c3afc70477155ae45dcd6f016b96c161890a",
+            "observed_at": "2026-09-09T14:29:05.434Z"
+          }
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M7-store-hardening-regression.json",
+            "source_hash": "9da4bbc78cd9d4d1885400a1b9aeb7fd4d605e444925cb1dd6ed2aee6b9072aa",
+            "hash": "e1784dc4e528c9b0895b30bc7c1c0af7dd403d364f340b0581fe23f51f02bc3c",
+            "observed_at": "2026-09-09T14:30:14.837Z"
+          }
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-09T14:16:43.750Z",
+      "updated_at": "2026-09-09T14:30:14.902Z"
     }
   ],
   "learning_proposals": [],

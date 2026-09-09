@@ -2,7 +2,7 @@
 
 > Status: draft. A coding agent must not implement product code until this specification is approved through Genesis.
 
-**Scope:** Stage 1, Phase 0 only — the single-agent skeleton. Phases 2–8 each get their own Genesis specification when they start, per the design docs' refusal to write low-level design for components that do not exist yet. Source of truth: `agent_sdk/agent-sdk-low-level-design (1).md` (Phase 0 detail) and `agent_sdk/agent-sdk-master-design-v0.3.md` (design of record).
+**Scope:** Stage 1, Phase 0 — the single-agent skeleton — plus the store-hardening requirements (FR-17..FR-21, NFR-8, AC-11..AC-15) that Phase 2 makes reachable. Those were added after Phase 0 was approved, measured rather than assumed: see the Phase 2 readiness section. Phases 2–8 each get their own Genesis specification when they start, per the design docs' refusal to write low-level design for components that do not exist yet. Source of truth: `agent_sdk/agent-sdk-low-level-design (1).md` (Phase 0 detail) and `agent_sdk/agent-sdk-master-design-v0.3.md` (design of record).
 
 ## Problem
 
@@ -35,6 +35,19 @@ Phase 0 does not solve that problem. Phase 0 proves the foundation the solution 
 - FR-15: `ModelError.Timeout` and `ModelError.RateLimited` retry up to 2 times with exponential backoff; every other `ModelError` propagates immediately without retry.
 - FR-16: Future-seam types are defined but only minimally implemented: `ToolExecutionOutcome` (only `Completed` and `Failed` reachable), `RunInterruption` (type only, no persistence), `ModelRequest.output_schema` (always `None`), `PrincipalContext` (persisted, never read).
 
+### Phase 2 readiness — store hardening
+
+Phase 2 introduces parallel subagents, which makes three Phase 0 assumptions
+reachable that Phase 0 could legitimately assume away. Each requirement below
+was written against a measured failure, not a suspected one; the measurements
+are recorded in `.genesis/project.json` (KNOWLEDGE-e52fb4dc, KNOWLEDGE-010d12d3).
+
+- FR-17: The schema has a versioned migration path. Applying migrations to a database created by an earlier schema brings it to the current version, records which migrations ran, and is idempotent. `apply_schema`'s `CREATE TABLE IF NOT EXISTS` is a no-op for anything new on an existing database, so today a column added to `schema.sql` is silently not created and the code fails later at insert time. FR-17 is ordered first because FR-18 and FR-21 both need a schema change to reach an existing database.
+- FR-18: `run_events.sequence_no` is assigned inside the insert from the stored maximum for that run, as `messages.sequence_no` already is — never from an in-process counter. A second event sink for one run (a subagent, or any resumed run) must continue the sequence rather than restart it.
+- FR-19: Concurrent appends to one run are available, not merely safe. A losing writer to `messages` or `run_events` retries and commits; no caller ever receives a raw driver exception for a write that a retry would have completed.
+- FR-20: Persistence does not block the event loop. Store calls issued from async code use non-blocking I/O and a connection pool, replacing the per-call connect/authenticate/close cycle.
+- FR-21: A run may record the run that spawned it, so a subagent's trace reconstructs together with its parent's. `runs` has no such column today.
+
 ## Non-functional requirements
 
 - NFR-1: Provider-agnostic. Switching between `openai.*`, `bedrock.*`, `azure.*`, and `vertex_ai.*` models is a configuration change only — no SDK source file changes, no new adapter.
@@ -44,6 +57,7 @@ Phase 0 does not solve that problem. Phase 0 proves the foundation the solution 
 - NFR-5: The public API surface is `AgentSpec`, `RunConfig`, `Runner`, `RunResult` only. No internal collaborator is imported by application code or by the golden eval.
 - NFR-6: No runtime dependency on LangGraph, Claude Agent SDK, or OpenAI Agents SDK. The SDK must import and run with none of them installed.
 - NFR-7: Phase 0 interfaces are chosen so Phases 2–6 add fields and implementations rather than replace contracts.
+- NFR-8: Persistence is not the concurrency ceiling. With several runs executing concurrently against a model client that performs no network I/O, the worst single event-loop stall stays under 50 ms, and wall-clock time stays within 3x the same workload run entirely in memory. Measured today: 1008 ms worst stall and roughly 30x wall time.
 
 ## Constraints
 
@@ -80,12 +94,25 @@ Phase 0 does not solve that problem. Phase 0 proves the foundation the solution 
 - AC-9: The same golden eval passes unchanged against two model ids from different upstream providers (`openai.gpt-4o-mini` and `bedrock.anthropic.claude-haiku-4-5`), with no source change between runs.
 - AC-10: No persisted row and no event payload anywhere in the database contains the value of `MODEL_API_KEY`.
 
+### Phase 2 readiness
+
+Each of these is a command, not a claim. AC-12 through AC-14 are the probe that
+found the defects, turned into assertions.
+
+- AC-11: Applying migrations to a database whose schema predates them brings it to the current version and creates the columns FR-18 and FR-21 need; applying them a second time changes nothing and reports the same version.
+- AC-12: Two independent event sinks bound to one run each emit an event, both rows commit, and the run's `sequence_no` values are unique and contiguous. Today the second sink fails with `UniqueViolation` and one of the two events is lost.
+- AC-13: Twelve concurrent writers appending to one run all commit, with unique contiguous sequence numbers and no exception reaching any caller. Today 9 of 12 commit and 3 raise `UniqueViolation`.
+- AC-14: Six runs executing concurrently against a no-network model client satisfy NFR-8's stall and wall-clock bounds, both measured in the same process as an in-memory baseline so the comparison is independent of machine speed.
+- AC-15: A run that records a parent run reconstructs together with it, and both rows carry the tenant and project of the run that owns them (ADR-11 is not relaxed for child runs).
+
 ## Risks
 
 - **Provider neutrality is only half-proven.** AC-9 switches upstream providers, but through one gateway speaking one wire format. That proves model-agnosticism, not wire-format-agnosticism; a genuinely second wire format remains unproven until a non-LiteLLM adapter exists. Mitigation: state the limit honestly now, keep `ModelClient` the only place provider shape is known, and treat the second wire format as Phase 0/1's real exit criterion rather than pretending Phase 0 closed it.
 - **Postgres credentials are unresolved.** The service is up but its password is not known to the harness, so no gate touching the database can pass yet. Mitigation: resolve before the first database-backed task is activated; it blocks AC-4 through AC-7.
 - **Gateway reachability is partly filtered.** `GET /v1/*` is blocked by Envoy today. If the filter later extends to POST paths, every model-backed gate fails for reasons unrelated to the code. Mitigation: keep a scripted stub `ModelClient` so loop logic stays testable without the network.
 - **Unused seams may be designed wrong.** `RunInterruption`, `ToolExecutionOutcome`'s unreachable variants, and `PrincipalContext` are specified against needs no Phase 0 code exercises. Mitigation: accepted deliberately and bounded — each is a type or a column, not a subsystem.
+- **A connection pool is a new runtime dependency.** FR-20 most likely needs `psycopg_pool` (via `psycopg[binary,pool]`) and touches every store method. Mitigation: NFR-6 forbids vendor agent SDKs, not infrastructure libraries, and `psycopg_pool` is maintained by the psycopg project itself — but the choice is a decision to record, not a detail to slip in.
+- **Hardening an approved milestone can regress it.** FR-17 through FR-21 change `postgres.py`, which M5 took nine review rounds to approve. Mitigation: the existing 423 tests are the regression gate and must stay green unchanged; any test that has to be edited to accommodate a change is a signal to re-examine the change, not the test.
 - **A single golden eval carrying three assertions may pass for the wrong reason.** Mitigation: assert each path independently rather than asserting only the final status.
 
 ## Open questions
@@ -95,3 +122,4 @@ Phase 0 does not solve that problem. Phase 0 proves the foundation the solution 
 - The Postgres connection string and credentials for the local PostgreSQL 16 service.
 - Which model id becomes the Phase 0 default, given the gateway exposes 308.
 - Whether the second wire format (Phase 0/1) should be Anthropic-native Bedrock or something else, now that the gateway already reaches Bedrock models over the OpenAI shape.
+- Resolved 2026-09-09, recorded rather than dropped: Phase 0/1's second wire format is DEFERRED past this hardening milestone. The gateway was found to serve the Anthropic Messages format at `/v1/messages` with the existing credential, tool round trip included, so the work is cheap whenever it is picked up; and the canonical contract was audited field by field and absorbs that shape, with two additive gaps (`Usage` cannot represent cached tokens, `Message.content` is a single string against Anthropic's content blocks). Provider neutrality therefore stays half-proven by choice, not by oversight.
