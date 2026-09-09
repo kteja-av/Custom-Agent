@@ -2,21 +2,21 @@
   "task": "M7-store-hardening",
   "gate": "unit",
   "command": ".venv\\Scripts\\python.exe -m pytest tests/test_phase2_readiness.py -q",
-  "started_at": "2026-09-09T14:29:03.822Z",
-  "observed_at": "2026-09-09T14:29:05.434Z",
+  "started_at": "2026-09-09T14:49:10.693Z",
+  "observed_at": "2026-09-09T14:49:13.100Z",
   "exit_code": 0,
   "signal": null,
-  "stdout": ".....                                                                    [100%]\r\n5 passed in 1.04s\r\n",
+  "stdout": ".......                                                                  [100%]\r\n7 passed in 1.85s\r\n",
   "stderr": "",
   "revision": {
-    "commit": "2c411fd50b556e62dab8561ec4f4560f6a9d6568",
-    "dirty": true
+    "commit": "dc3213354a8b7738fefc52807f346ebf4b16fe68",
+    "dirty": false
   },
-  "source_hash": "9da4bbc78cd9d4d1885400a1b9aeb7fd4d605e444925cb1dd6ed2aee6b9072aa",
+  "source_hash": "0881d5ea275b2b63e687b7423cca1dcab82d2e199e75725a263267b6ece80999",
   "environment": {
     "node": "v20.10.0",
     "platform": "win32",
     "arch": "x64"
   },
-  "hash": "9438ba3d326fad71c69103280df2c3afc70477155ae45dcd6f016b96c161890a"
+  "hash": "95b1a0859a608e5e880597b247814ed9b7fc0a58eed615879cb828c6bcd311f9"
 }

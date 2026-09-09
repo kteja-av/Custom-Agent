@@ -213,6 +213,7 @@ class PostgresSessionStore:
         tool_calls, tool_results = _message_to_columns(message)
         with psycopg.connect(self._dsn) as conn:
             with conn.transaction():
+                _serialise_writers(conn, run_id, _LOCK_MESSAGES)
                 # sequence_no is computed INSIDE the insert's transaction, so
                 # two concurrent appends cannot both read the same max and
                 # produce a duplicate. The UNIQUE (run_id, sequence_no)
@@ -288,6 +289,43 @@ class PostgresSessionStore:
         return [_message_from_row(row) for row in rows]
 
 
+# The two sequence spaces one run owns. Separate keys so appending a message
+# does not make an event wait behind it -- they are different sequences and
+# have no reason to contend.
+_LOCK_MESSAGES = 1
+_LOCK_EVENTS = 2
+
+
+def _serialise_writers(conn: Any, run_id: str, space: int) -> None:
+    """Make concurrent writers to one run queue instead of race (FR-19).
+
+    Both write paths compute their sequence number as MAX + 1 inside the
+    insert. That is SAFE -- two writers cannot produce the same number
+    unnoticed, because UNIQUE (run_id, sequence_no) turns the race into an
+    error. It is not AVAILABLE: the loser's row is simply not written, and the
+    caller gets a psycopg exception for a write that would have succeeded a
+    millisecond later. Measured before this: 12 concurrent appends to one run,
+    9 committed and 3 died.
+
+    A bounded retry was the obvious alternative and is the wrong one here. Each
+    round of contention lets exactly one writer through, so N simultaneous
+    writers need N rounds, and any cap small enough to be safe is too small to
+    help at the concurrency Phase 2 introduces.
+
+    An advisory lock inverts that: writers queue, every one of them commits,
+    and the number of round trips does not grow with contention. It is
+    transaction-scoped, so it is released on commit, on rollback, and if this
+    process dies -- a crashed writer cannot wedge a run. hashtext() may collide
+    across different run ids, which costs two unrelated runs a moment of
+    serialisation and can never cost correctness.
+
+    The UNIQUE constraint stays exactly where it is. This lock is about
+    availability; the constraint is what makes the invariant true at rest, and
+    it still holds if a future writer forgets to take the lock.
+    """
+    conn.execute("SELECT pg_advisory_xact_lock(hashtext(%s), %s)", (run_id, space))
+
+
 class PostgresEventStore:
     """FR-10. Owns sequence numbering, like the in-memory sink it replaces."""
 
@@ -318,6 +356,7 @@ class PostgresEventStore:
             **identifiers,
         )
         with psycopg.connect(self._dsn) as conn:
+            _serialise_writers(conn, event.run_id, _LOCK_EVENTS)
             cursor = conn.execute(
                 """
                 INSERT INTO run_events (

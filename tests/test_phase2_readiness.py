@@ -293,3 +293,133 @@ def test_a_fresh_sink_resumes_from_the_stored_maximum():
                 "in-memory trace and a reconstructed one would order "
                 "differently (NFR-3)"
             )
+
+
+# --- AC-13: concurrent writers are available, not merely safe -------------------
+
+
+WRITERS = 12
+# One barrier release does not reliably collide: measured against the UNFIXED
+# code, a single round of 12 message writers went cleanly through on 2 of 5
+# attempts. A test that detects the defect most of the time is a flaky
+# detector, and a flaky detector on a gate is how a regression gets in on a
+# lucky afternoon. Three rounds against the same run makes a miss require
+# three consecutive lucky schedules -- and it also exercises the case that
+# matters most, contention against a sequence that is already non-empty.
+ROUNDS = 3
+
+
+async def _race(work):
+    """Run `work(n)` for every writer, released together by a barrier.
+
+    Without the barrier the writers start staggered and mostly miss each other:
+    the original probe saw 9 of 12 commit precisely because they were not
+    perfectly simultaneous. A test for a race that does not actually race is
+    the coverage-vs-fitness shape wearing a stopwatch.
+    """
+    failures = []
+    for rnd in range(ROUNDS):
+        barrier = asyncio.Barrier(WRITERS)
+
+        async def one(n, rnd=rnd):
+            await barrier.wait()
+            try:
+                await asyncio.to_thread(work, rnd * WRITERS + n)
+                return None
+            except Exception as exc:  # noqa: BLE001 - the failure IS the measurement
+                return f"{type(exc).__name__}: {exc}"
+
+        failures.extend(await asyncio.gather(*(one(n) for n in range(WRITERS))))
+    return failures
+
+
+TOTAL = WRITERS * ROUNDS
+
+
+async def test_twelve_concurrent_message_writers_all_commit():
+    """AC-13. Before FR-19: 9 of 12 committed and 3 raised UniqueViolation --
+    a subagent's message dropped, and a raw driver exception handed to a caller
+    for a write that would have succeeded a millisecond later."""
+    with Run("ac13m") as scope:
+        store = Persistence.postgres(DSN).session_store_for(scope)
+
+        failures = await _race(
+            lambda n: store.append(
+                scope.run_id, Message(role=Role.ASSISTANT, content=f"writer {n}")
+            )
+        )
+
+        lost = [f for f in failures if f]
+        assert not lost, (
+            f"{len(lost)} of {TOTAL} writers lost their message: {sorted(set(lost))}"
+        )
+        seqs = [
+            row[0] for row in query(
+                "SELECT sequence_no FROM messages WHERE run_id=%s ORDER BY sequence_no",
+                (scope.run_id,),
+            )
+        ]
+        assert seqs == list(range(1, TOTAL + 1)), (
+            f"sequences are not unique and contiguous: {seqs}"
+        )
+        contents = {
+            row[0] for row in query(
+                "SELECT content FROM messages WHERE run_id=%s", (scope.run_id,)
+            )
+        }
+        assert contents == {f"writer {n}" for n in range(TOTAL)}, (
+            "every writer committed a row, but not every writer's CONTENT is "
+            "there -- a row was overwritten rather than appended"
+        )
+
+
+async def test_twelve_concurrent_event_writers_all_commit():
+    """AC-13 for the other sequence space. Events race exactly as messages do,
+    and were fixed by the same helper -- so they need their own assertion, or
+    one of the two call sites could lose the lock with the suite still green."""
+    from agentsdk.events import EventType
+
+    with Run("ac13e") as scope:
+        sinks = sinks_for(scope, WRITERS)
+
+        failures = await _race(
+            lambda n: sinks[n % WRITERS].emit(EventType.MODEL_CALLED, {"n": n})
+        )
+
+        lost = [f for f in failures if f]
+        assert not lost, f"{len(lost)} of {TOTAL} events were lost: {sorted(set(lost))}"
+        seqs = [
+            row[0] for row in query(
+                "SELECT sequence_no FROM run_events WHERE run_id=%s ORDER BY sequence_no",
+                (scope.run_id,),
+            )
+        ]
+        assert seqs == list(range(1, TOTAL + 1)), (
+            f"sequences are not unique and contiguous: {seqs}"
+        )
+        payloads = {
+            row[0]["n"] for row in query(
+                "SELECT payload FROM run_events WHERE run_id=%s", (scope.run_id,)
+            )
+        }
+        assert payloads == set(range(TOTAL))
+
+
+async def test_a_write_for_someone_elses_run_still_fails():
+    """FR-19 must buy availability, not silence.
+
+    Serialising writers means a losing writer now waits instead of failing --
+    which would be a defect if it also meant a write that SHOULD fail quietly
+    succeeded. The tenancy check is the one that must survive the change.
+    """
+    with Run("ac13x") as scope:
+        impostor = RunScope(
+            run_id=scope.run_id, tenant_id="SYN-m7-other", project_id="p-other"
+        )
+        store = Persistence.postgres(DSN).session_store_for(impostor)
+        with pytest.raises(ValueError, match="does not exist or belongs to someone else"):
+            store.append(impostor.run_id, Message(role=Role.ASSISTANT, content="nope"))
+
+        assert query(
+            "SELECT count(*) FROM messages WHERE run_id=%s", (scope.run_id,)
+        )[0][0] == 0
