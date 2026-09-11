@@ -27,7 +27,7 @@ from .manifest import build_manifest
 from .model import ModelClient, Usage
 from .permissions import AllowlistPermissionChecker, PermissionChecker
 from .persistence import Persistence
-from .postgres import RunScope
+from .postgres import RunScope, column_rejection_reason
 from .registry import ModelRegistry, default_registry
 from .session import InMemorySessionStore, SessionStore
 from .tools import Tool, ToolRegistry
@@ -136,6 +136,15 @@ class RunConfig:
             )
         if not self.tenant_id or not self.project_id:
             raise ValueError("tenant_id and project_id are mandatory on every run (ADR-11)")
+        # Refused HERE, by name, like max_turns above -- not only by the store.
+        # M7 round 1 found RunConfig constructing happily around "not-a-uuid",
+        # a NUL and an int, while every sibling field refused at construction:
+        # M5 round 8's shape exactly, a caller-supplied value reaching a typed
+        # column with no guard at the boundary the caller actually touches.
+        # One implementation shared with the store, so the two cannot disagree.
+        reason = column_rejection_reason(self.parent_run_id, "UUID")
+        if reason is not None:
+            raise ValueError(f"parent_run_id cannot be stored: {reason}")
 
 
 @dataclass(frozen=True)
@@ -287,7 +296,16 @@ class Runner:
                 ),
             )
 
-        events.emit(
+        # EVERY store call leaves the loop, not most of them (FR-20). M7 round 1
+        # found this emit, ToolCalled's and the terminal one still made on the
+        # loop -- four per run, scaling with fan-out -- and each takes the event
+        # stream's advisory lock, so a lock held by another process became a
+        # whole-loop stall: 479 ms, freezing unrelated runs with it, where the
+        # messages path that HAD been offloaded stalled 14 ms under the same
+        # probe. Moving three of four store paths off the loop is the defect
+        # this comment exists to prevent recurring.
+        await asyncio.to_thread(
+            events.emit,
             EventType.RUN_STARTED,
             {
                 "agent_spec_id": spec.id,
@@ -305,7 +323,10 @@ class Runner:
             registry=self._registry,
             permission_checker=spec.checker(),
             hook=self._hook,
-            emit=lambda event_type, payload: events.emit(EventType.TOOL_CALLED, payload),
+            # A coroutine, which the executor awaits: see ToolExecutor._safe_emit.
+            emit=lambda event_type, payload: asyncio.to_thread(
+                events.emit, EventType.TOOL_CALLED, payload
+            ),
         )
         loop = AgentLoop(
             model_client=self._clients[client_key],
@@ -333,7 +354,8 @@ class Runner:
         else:
             status, error = RunStatus.COMPLETED, None
 
-        events.emit(
+        await asyncio.to_thread(
+            events.emit,
             EventType.RUN_COMPLETED if status is RunStatus.COMPLETED else EventType.RUN_FAILED,
             {"status": status.value, "turns": outcome.turns, "reason": error},
         )

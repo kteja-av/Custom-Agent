@@ -243,9 +243,20 @@ def column_rejection_reason(value: Any, sql_type: str) -> str | None:
             if not isinstance(value, str):
                 return f"a {type(value).__name__} is not a UUID"
             try:
-                uuid.UUID(value)
+                canonical = str(uuid.UUID(value))
             except ValueError:
                 return f"{value!r} is not a well-formed UUID"
+            if value != canonical:
+                # uuid.UUID() is more permissive than a Postgres uuid column:
+                # it strips a "urn:uuid:" prefix the column refuses, so the
+                # first version of this guard waved that form through and the
+                # write failed with a DataError -- a guard answering a different
+                # question from the column it protects, M5 round 8's shape,
+                # found by a differential probe rather than by review. Only the
+                # canonical form is accepted. That also refuses uppercase,
+                # braced and unhyphenated forms the column WOULD take, which is
+                # the safe direction: every run id this SDK issues is canonical.
+                return f"{value!r} is not a canonical UUID (expected {canonical!r})"
     if sql_type == "INTEGER":
         if isinstance(value, bool):
             # The carve-out this replaces was the last surviving instance of

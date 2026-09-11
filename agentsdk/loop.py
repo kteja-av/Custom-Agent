@@ -76,12 +76,14 @@ class AgentLoop:
         # rewrite 94 call sites across the approved suites. Moving the
         # blocking off the loop needs neither.
         #
-        # The connection pool alone was not enough, which is worth stating
-        # because it very nearly looked like it was. Pooled, a store call
-        # costs about a millisecond -- but it is still a millisecond ON the
-        # loop, and with the pool and no thread the worst stall measured
-        # 51-57 ms against NFR-8's 50 ms bound, failing 5 runs out of 5.
-        # With the offload the same measurement is 13-16 ms.
+        # The connection pool alone was not enough. Pooled, a store call costs
+        # about a millisecond, but it is still a millisecond ON the loop and it
+        # scales with fan-out: pool only, 24 concurrent runs stalled the loop a
+        # median 62 ms (3 of 6 samples over NFR-8's 50 ms); offloaded, 14 ms.
+        # An earlier version of this comment said six runs failed 5 of 5
+        # without the offload. That did not reproduce (median 16 ms), and the
+        # tests that actually guard this are not timed -- see
+        # test_no_store_call_runs_on_the_event_loop_thread_on_any_run_path.
         await asyncio.to_thread(
             self._sessions.append, run_id, Message(role=Role.USER, content=task)
         )

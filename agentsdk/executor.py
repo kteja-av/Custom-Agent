@@ -47,7 +47,7 @@ class ToolExecutor:
         registry: ToolRegistry,
         permission_checker: PermissionChecker,
         hook: RuntimeHook | None = None,
-        emit: Callable[[str, dict[str, Any]], None] | None = None,
+        emit: Callable[[str, dict[str, Any]], Any] | None = None,
     ) -> None:
         self._registry = registry
         self._permissions = permission_checker
@@ -73,7 +73,7 @@ class ToolExecutor:
         try:
             return await self._execute(tool_call, principal_context)
         except Exception as exc:  # noqa: BLE001
-            return self._failed(tool_call, ToolExecutionError(describe_exception(exc)))
+            return await self._failed(tool_call, ToolExecutionError(describe_exception(exc)))
 
     async def _execute(
         self,
@@ -84,7 +84,7 @@ class ToolExecutor:
         try:
             tool = self._registry.get(tool_call.name)
         except ToolNotFound as exc:
-            return self._failed(tool_call, exc)
+            return await self._failed(tool_call, exc)
 
         # --- 2. validate arguments ------------------------------------------
         # Must precede the permission check: an unparseable call is rejected on
@@ -93,7 +93,7 @@ class ToolExecutor:
         # Undecodable arguments fail here explicitly rather than arriving as {}
         # and being waved through by any schema without required properties.
         if tool_call.arguments_error is not None:
-            return self._failed(
+            return await self._failed(
                 tool_call,
                 ToolValidationError(
                     f"could not decode tool arguments: {tool_call.arguments_error}"
@@ -103,7 +103,7 @@ class ToolExecutor:
         try:
             jsonschema.validate(tool_call.arguments, tool.spec.input_schema)
         except jsonschema.ValidationError as exc:
-            return self._failed(
+            return await self._failed(
                 tool_call, ToolValidationError(exc.message), tool_reached=False
             )
         except jsonschema.SchemaError as exc:
@@ -111,7 +111,7 @@ class ToolExecutor:
             # in a ToolSpec, which is a developer error rather than a model one.
             # It still must not crash the run: the model sees an error result
             # and can try something else, and the operator sees the reason.
-            return self._failed(
+            return await self._failed(
                 tool_call,
                 ToolValidationError(
                     f"tool {tool_call.name!r} has an invalid input_schema: {exc.message}"
@@ -122,7 +122,7 @@ class ToolExecutor:
         # --- 3. permission check --------------------------------------------
         result = self._permissions.check(tool_call, principal_context)
         if not result.allowed:
-            return self._failed(
+            return await self._failed(
                 tool_call, ToolPermissionDenied(result.reason), tool_reached=False
             )
 
@@ -133,7 +133,7 @@ class ToolExecutor:
         # --- 5. before_tool hook ----------------------------------------------
         outcome = self._hook.before_tool(tool_call)
         if outcome.action is HookAction.REJECT:
-            return self._failed(
+            return await self._failed(
                 tool_call, ToolPermissionDenied(outcome.reason or "rejected by hook")
             )
         if outcome.action is HookAction.MODIFY and outcome.replacement is not None:
@@ -143,11 +143,11 @@ class ToolExecutor:
         try:
             value = await self._invoke(tool, tool_call.arguments)
         except asyncio.TimeoutError:
-            return self._failed(
+            return await self._failed(
                 tool_call, ToolTimeout(f"tool {tool_call.name!r} exceeded its timeout")
             )
         except Exception as exc:  # noqa: BLE001 - any tool failure is a tool error
-            return self._failed(tool_call, ToolExecutionError(str(exc)))
+            return await self._failed(tool_call, ToolExecutionError(str(exc)))
 
         # --- 7. assign provenance ----------------------------------------------
         content = value if isinstance(value, str) else repr(value)
@@ -159,7 +159,7 @@ class ToolExecutor:
         # the model is told, identically on both backends.
         unstorable = unstorable_reason(content)
         if unstorable is not None:
-            return self._failed(
+            return await self._failed(
                 tool_call,
                 ToolExecutionError(
                     f"tool {tool_call.name!r} returned a result that cannot be stored: "
@@ -181,20 +181,30 @@ class ToolExecutor:
             tool_result = after.replacement
 
         # --- 9. emit ------------------------------------------------------------
-        self._safe_emit(
+        await self._safe_emit(
             {"tool_call_id": tool_call.id, "name": tool_call.name, "is_error": False}
         )
         return Completed(result=tool_result)
 
-    def _safe_emit(self, payload: dict[str, Any]) -> None:
+    async def _safe_emit(self, payload: dict[str, Any]) -> None:
         """Telemetry must never be able to fail the thing it observes.
 
         `emit` is caller-supplied, and it is called from inside the failure path
         below -- an exception there would escape the total boundary through the
         one route the boundary cannot catch.
+
+        It may return an awaitable, and the Runner's does. Persisting ToolCalled
+        is a store write, and before M7 round 1 this was the one store write
+        still made ON the event loop after every other had been moved off it:
+        the executor called its sink synchronously, so the Runner could not
+        offload it. The executor cannot know whether its sink does I/O, so it
+        awaits whatever it is handed -- the rule _invoke already applies to
+        tools, for the same reason.
         """
         try:
-            self._emit("ToolCalled", payload)
+            outcome = self._emit("ToolCalled", payload)
+            if inspect.isawaitable(outcome):
+                await outcome
         except Exception:  # noqa: BLE001
             pass
 
@@ -215,7 +225,7 @@ class ToolExecutor:
             return await _run()
         return await asyncio.wait_for(_run(), timeout=tool.spec.timeout_seconds)
 
-    def _failed(
+    async def _failed(
         self, tool_call: ToolCall, error: ToolError, tool_reached: bool = True
     ) -> Failed:
         """Every failure still yields a ToolResult, so the model sees the error."""
@@ -225,7 +235,7 @@ class ToolExecutor:
             provenance=ContentProvenance.executor_error(type(error).__name__),
             is_error=True,
         )
-        self._safe_emit(
+        await self._safe_emit(
             {
                 "tool_call_id": tool_call.id,
                 "name": tool_call.name,

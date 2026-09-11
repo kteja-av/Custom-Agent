@@ -18,6 +18,7 @@ runs.
 import asyncio
 import os
 import statistics
+import threading
 import time
 import uuid
 
@@ -536,11 +537,20 @@ async def _assert_within_nfr8(concurrent_runs, tag):
     the suite had been doing. Tuning the bound to make that pass would be
     fitting the requirement to the code.
 
-    The median distinguishes the two things that produce a big number. One
-    unlucky stall -- a GC pause, the pool opening a connection -- moves a
-    single attempt. Systematic blocking moves every attempt: measured against
-    the pool-only build, six runs stalled 51, 53, 55, 55 and 57 ms on five
-    consecutive tries, so a median is just as red as a maximum there.
+    What the median does NOT do is make this a detector. Measured across three
+    builds after M7 round 1: with the store offload fully reverted, six runs
+    still stalled a median 16 ms and would pass; with three event writes left
+    on the loop -- the defect round 1 rejected -- six and twenty-four runs both
+    stayed under 30 ms. A bound this close to Windows' ~15 ms timer tick cannot
+    tell those builds from the fixed one. So this is the acceptance measurement
+    AC-14 asks for, and nothing more. Regressions are caught by the untimed
+    thread-identity test and the lock-hold test below, both of which failed
+    against the unrepaired code.
+
+    An earlier version of this docstring claimed a pool-only build stalled
+    51-57 ms on five consecutive tries, "so a median is just as red as a
+    maximum there". That did not reproduce, and it is why this paragraph is
+    here rather than silently rewritten.
     """
     tenant = "SYN-m7-" + tag
     samples = []
@@ -577,34 +587,19 @@ async def _assert_within_nfr8(concurrent_runs, tag):
 
 
 async def test_six_concurrent_runs_stay_within_nfr8():
-    """AC-14 exactly as specified, and the reliable detector of the two.
+    """AC-14 exactly as specified -- an acceptance measurement, not a detector.
 
     Measured before any of FR-20: 4.73s against 0.16s in memory, worst stall
-    1008 ms. Measured against a build with the connection pool but the store
-    still called ON the loop: 51-57 ms across 5 runs, failing every time.
-    After the offload: 13-16 ms, so roughly a 3x margin rather than a squeak.
+    1008 ms. With the repair: median 12.6 ms across six samples, max 15.5 ms.
+
+    It cannot catch a regression. An earlier docstring here called it "the
+    reliable detector of the two" on the strength of one session in which a
+    pool-only build failed it 5 times out of 5. That did not reproduce: the M7
+    round 1 reviewer saw it pass 6 of 6 with the offload reverted, and a later
+    measurement put that build's median at 16 ms. Both sessions happened, and
+    together they describe a test whose verdict depends on the afternoon.
     """
     await _assert_within_nfr8(6, "nfr8a")
-
-
-async def test_twenty_four_concurrent_runs_stay_within_nfr8():
-    """The same bound at four times the fan-out.
-
-    Kept for the ceiling it explores rather than for its detection rate, and
-    the honest numbers are worth recording because they surprised me. Run
-    STANDALONE against the pool-only build, six runs stalled 16 ms (pass) and
-    twenty-four stalled 79 ms (fail) -- which is what motivated writing this
-    test at all. Run INSIDE this suite against the same build, the ordering
-    reversed: six runs failed 5 times out of 5 and twenty-four failed only 1
-    time in 5.
-
-    I do not have a confirmed explanation for the reversal, so it is written
-    down rather than explained away. What follows from it is only this: do not
-    treat this test as the safety net for the six-run one. They cover the same
-    property at different fan-out, and the six-run test is the one that has
-    actually caught a regression.
-    """
-    await _assert_within_nfr8(24, "nfr8b")
 
 
 def test_the_store_uses_one_pool_per_dsn_rather_than_a_connection_per_call():
@@ -787,10 +782,11 @@ async def test_the_public_api_carries_a_parent_run_id_through_to_the_row():
         _drop_runs(tenant)
 
 
-def test_run_config_refuses_a_malformed_parent_run_id():
-    """Configuration refuses by name. A malformed id completes in memory and
-    fails against Postgres with a DataError several frames from the caller that
-    supplied it -- the shape M5 round 8 was rejected for, on max_turns.
+def test_the_run_store_refuses_a_malformed_parent_run_id():
+    """The STORE's guard. This test was first named for RunConfig while testing
+    the store -- and RunConfig in fact accepted every malformed value, so the
+    name claimed a refusal nothing enforced (M7 round 1). The configuration
+    boundary now has its own test below.
     """
     ghost = RunScope(
         run_id=str(uuid.uuid4()), tenant_id="SYN-m7-bad", project_id="p-bad"
@@ -798,3 +794,289 @@ def test_run_config_refuses_a_malformed_parent_run_id():
     with pytest.raises(ValueError, match="parent_run_id cannot be stored"):
         _start(ghost, parent_run_id="not-a-uuid")
     assert query("SELECT 1 FROM runs WHERE run_id=%s", (ghost.run_id,)) == []
+
+
+# --- M7 round 1: detectors that do not depend on a stopwatch -------------------
+
+
+def test_run_config_refuses_a_malformed_parent_run_id():
+    """D3. Configuration refuses by name, at construction, like max_turns.
+
+    Before the repair RunConfig constructed around every one of these, while
+    its sibling fields refused theirs -- M5 round 8's shape exactly.
+    """
+    bad = {
+        "not a uuid": "not-a-uuid",
+        "NUL": str(uuid.uuid4())[:-1] + chr(0),
+        "int": 42,
+        "urn form the column refuses": "urn:uuid:" + str(uuid.uuid4()),
+    }
+    for label, value in bad.items():
+        with pytest.raises(ValueError, match="parent_run_id cannot be stored"):
+            RunConfig(tenant_id="t", project_id="p", parent_run_id=value)
+            pytest.fail(f"RunConfig accepted a parent_run_id that is {label}")
+    # And it still lets the two legitimate cases through.
+    RunConfig(tenant_id="t", project_id="p", parent_run_id=str(uuid.uuid4()))
+    RunConfig(tenant_id="t", project_id="p")
+
+
+def test_the_uuid_guard_never_accepts_what_the_column_refuses():
+    """A differential, not an example list: every form the guard ACCEPTS must
+    also be accepted by a real uuid column.
+
+    The first guard used uuid.UUID(), which strips a "urn:uuid:" prefix that
+    Postgres refuses, so that form passed the guard and failed at the write --
+    found by running exactly this comparison. False positives (refusing a form
+    the column would take) are allowed and expected; false negatives are the
+    defect.
+    """
+    from agentsdk.postgres import column_rejection_reason
+
+    u = uuid.uuid4()
+    forms = {
+        "canonical": str(u),
+        "uppercase": str(u).upper(),
+        "no hyphens": u.hex,
+        "braces": "{" + str(u) + "}",
+        "urn prefix": "urn:uuid:" + str(u),
+        "surrounding whitespace": " " + str(u) + " ",
+        "truncated": str(u)[:-2],
+        "empty": "",
+    }
+    assert column_rejection_reason(str(u), "UUID") is None, (
+        "the canonical form is refused, so this differential tests nothing"
+    )
+    false_negatives = []
+    with psycopg.connect(DSN, autocommit=True) as conn:
+        for label, value in forms.items():
+            if column_rejection_reason(value, "UUID") is not None:
+                continue
+            try:
+                conn.execute("SELECT %s::uuid", (value,))
+            except psycopg.Error:
+                false_negatives.append(label)
+    assert not false_negatives, (
+        f"the guard accepts forms a uuid column refuses: {false_negatives}"
+    )
+
+
+_STORE_IO = frozenset({"append", "history", "emit", "start_run", "finish_run"})
+
+
+class _ThreadSpy:
+    """Delegates to a real store, recording the thread each I/O call runs on."""
+
+    def __init__(self, inner, log, label):
+        self._inner, self._log, self._label = inner, log, label
+
+    def __getattr__(self, name):
+        attr = getattr(self._inner, name)
+        if name not in _STORE_IO or not callable(attr):
+            return attr
+
+        def recorded(*args, **kwargs):
+            self._log.append((f"{self._label}.{name}", threading.get_ident()))
+            return attr(*args, **kwargs)
+
+        return recorded
+
+
+class _SpiedPersistence:
+    def __init__(self, real, log):
+        self._real, self._log = real, log
+        self.runs = _ThreadSpy(real.runs, log, "runs")
+
+    def session_store_for(self, scope):
+        return _ThreadSpy(self._real.session_store_for(scope), self._log, "sessions")
+
+    def event_sink_for(self, scope):
+        return _ThreadSpy(self._real.event_sink_for(scope), self._log, "events")
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
+class _OneToolCall:
+    async def send(self, request):
+        await asyncio.sleep(0)
+        if any(m.role is Role.TOOL for m in request.messages):
+            return ModelResponse(
+                message=Message(role=Role.ASSISTANT, content="done"),
+                stop_reason=StopReason.END_TURN,
+                usage=Usage(1, 1, 2),
+            )
+        return ModelResponse(
+            message=Message(
+                role=Role.ASSISTANT,
+                tool_calls=(ToolCall(id="c1", name="noop", arguments={}),),
+            ),
+            stop_reason=StopReason.TOOL_CALLS,
+            usage=Usage(1, 1, 2),
+        )
+
+
+class _NeverEnds:
+    async def send(self, request):
+        await asyncio.sleep(0)
+        n = len(request.messages)
+        return ModelResponse(
+            message=Message(
+                role=Role.ASSISTANT,
+                tool_calls=(ToolCall(id=f"c{n}", name="noop", arguments={}),),
+            ),
+            stop_reason=StopReason.TOOL_CALLS,
+            usage=Usage(1, 1, 2),
+        )
+
+
+class _ProviderDown:
+    async def send(self, request):
+        from agentsdk import ModelProviderUnavailable
+
+        raise ModelProviderUnavailable("gateway down")
+
+
+async def test_no_store_call_runs_on_the_event_loop_thread_on_any_run_path():
+    """D1's detector, and the one this gate was missing.
+
+    FR-20's property is that no store I/O runs on the event loop. The NFR-8
+    tests measure a CONSEQUENCE of that with a stopwatch, and M7 round 1 showed
+    what that costs: with the offload reverted, the six-run test passed 6 of 6,
+    and with it in place the 24-run test (since removed) failed 1 time in 4. Meanwhile three
+    emits per run were still on the loop and neither test could say so.
+
+    This asserts the property itself, exactly: record the thread every store
+    call executes on, across every terminal path a run can take, and require
+    none of them to be the loop's. It cannot flake, because nothing in it is
+    timed.
+    """
+    from agentsdk.hooks import RuntimeHook
+
+    class Explodes(RuntimeHook):
+        def before_model(self, request):
+            raise RuntimeError("an unforeseen failure reaches Runner's total boundary")
+
+    tenant = "SYN-m7-threads"
+    real = Persistence.postgres(DSN)
+    log = []
+    loop_thread = threading.get_ident()
+    paths = {
+        "completed with a tool call": (_OneToolCall(), None, 4, RunStatus.COMPLETED),
+        "model failure": (_ProviderDown(), None, 4, RunStatus.FAILED),
+        "total-boundary failure": (_OneToolCall(), Explodes(), 4, RunStatus.FAILED),
+        "max turns exhausted": (_NeverEnds(), None, 2, RunStatus.MAX_TURNS_EXCEEDED),
+    }
+    offenders = {}
+    try:
+        for label, (model, hook, max_turns, expected) in paths.items():
+            first = len(log)
+            result = await Runner(
+                {"m": model}, tools=NOOP_TOOLS, hook=hook,
+                persistence=_SpiedPersistence(real, log),
+            ).run(
+                AgentSpec(id="threads", instructions="go", tool_profile=("noop",)),
+                "go",
+                RunConfig(tenant_id=tenant, project_id="p-threads", max_turns=max_turns),
+            )
+            assert result.status is expected, f"{label}: {result.status} ({result.error})"
+            on_loop = [name for name, ident in log[first:] if ident == loop_thread]
+            if on_loop:
+                offenders[label] = on_loop
+    finally:
+        _drop_runs(tenant)
+
+    observed = {name.split(".", 1)[1] for name, _ in log}
+    assert observed == _STORE_IO, (
+        f"the spy observed {sorted(observed)}, not every store method, so this "
+        "test could pass by not looking"
+    )
+    assert not offenders, f"store I/O ran ON the event loop thread: {offenders}"
+
+
+async def test_a_store_lock_held_elsewhere_does_not_freeze_the_event_loop():
+    """The reviewer's reproduction of D1's consequence, kept as a test.
+
+    Hold a lock on run_events from another connection, as a writer in another
+    process would, while a persisted run and an unrelated in-memory run execute
+    together. If any event write is made on the loop, the loop waits on the
+    lock and the unrelated run freezes with it: M7 round 1 measured a 479 ms
+    stall against NFR-8's 50 ms. If every write is offloaded, only the
+    persisted run waits.
+
+    The thresholds are detection thresholds, deliberately far from both
+    outcomes -- a freeze lasts the whole hold, an unblocked loop jitters by a
+    timer tick -- so this measures a freeze rather than re-importing the
+    flakiness of a bound set near the noise floor.
+    """
+    hold_seconds = 0.8
+    tenant = "SYN-m7-hold"
+    # Built BEFORE the hold: apply_schema runs DDL against these tables.
+    persistence = Persistence.postgres(DSN)
+    acquired = threading.Event()
+    released = {}
+
+    def hold_the_table():
+        # Releases on its own timer. Waiting on the loop to release it would
+        # deadlock exactly in the case this test exists to catch.
+        with psycopg.connect(DSN) as conn:
+            with conn.transaction():
+                conn.execute("LOCK TABLE run_events IN ACCESS EXCLUSIVE MODE")
+                acquired.set()
+                time.sleep(hold_seconds)
+        released["at"] = time.perf_counter()
+
+    holder = threading.Thread(target=hold_the_table, daemon=True)
+    holder.start()
+    assert await asyncio.to_thread(acquired.wait, 10), "could not take the table lock"
+
+    lags = []
+    stop = False
+
+    async def heartbeat():
+        last = time.perf_counter()
+        while not stop:
+            await asyncio.sleep(0.01)
+            now = time.perf_counter()
+            lags.append(now - last - 0.01)
+            last = now
+
+    async def timed(coro):
+        result = await coro
+        return result, time.perf_counter()
+
+    spec = AgentSpec(id="hold", instructions="go", tool_profile=("noop",))
+    beat = asyncio.create_task(heartbeat())
+    try:
+        persisted = asyncio.create_task(timed(
+            Runner({"m": NoNetworkModel()}, tools=NOOP_TOOLS, persistence=persistence).run(
+                spec, "go", RunConfig(tenant_id=tenant, project_id="p-hold", max_turns=6)
+            )
+        ))
+        bystander, bystander_done = await timed(
+            Runner({"m": NoNetworkModel()}, tools=NOOP_TOOLS).run(
+                spec, "go", RunConfig(tenant_id=tenant, project_id="p-bystander", max_turns=6)
+            )
+        )
+        persisted_result, persisted_done = await persisted
+    finally:
+        stop = True
+        await beat
+        await asyncio.to_thread(holder.join, 10)
+        _drop_runs(tenant)
+
+    assert persisted_result.status is RunStatus.COMPLETED, persisted_result.error
+    assert bystander.status is RunStatus.COMPLETED
+    # Non-vacuity: the persisted run really did have to wait for the lock.
+    assert persisted_done >= released["at"], (
+        "the persisted run finished before the lock was released, so nothing "
+        "in this test was ever blocked"
+    )
+    assert bystander_done < released["at"], (
+        "an unrelated in-memory run could not finish while another run's event "
+        "write waited on a lock -- that write is being made on the event loop"
+    )
+    worst = max(lags) if lags else 0.0
+    assert worst < hold_seconds / 4, (
+        f"the event loop froze for {worst * 1000:.0f} ms while a store lock was "
+        f"held elsewhere for {hold_seconds * 1000:.0f} ms"
+    )

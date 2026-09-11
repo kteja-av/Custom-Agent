@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-09T16:00:55.771Z"
+    "updated_at": "2026-09-11T08:34:35.786Z"
   },
   "policy": {
     "ponytail": "full",
@@ -24,7 +24,7 @@
   },
   "lifecycle": {
     "phase": "build",
-    "status": "active",
+    "status": "rejected",
     "active_task": "M7-store-hardening",
     "blocker": null,
     "next_action": "Run the task pre-flight."
@@ -667,6 +667,30 @@
       "source": "Phase 2 pre-flight probe",
       "tags": [],
       "recorded_at": "2026-09-09T13:45:56.064Z"
+    },
+    {
+      "id": "KNOWLEDGE-c0f23fea",
+      "title": "Moving most store calls off the loop is not moving them off the loop",
+      "text": "M7 round 1: FR-20 threaded the session store and the loop own emit, and left three event writes on the event loop -- RunStarted and the terminal event in api.py, and ToolCalled, which the executor called through a synchronous callback the Runner therefore could not offload. A thread-identity spy found on-loop writes on EVERY run path, not only the completed one (max turns exhausted had four). Each takes the event advisory lock, so a lock held by another process froze the whole loop: 479 ms, with an unrelated run frozen too, where the offloaded messages path stalled 14 ms under the same probe. The fix for the executor was to await whatever its emit callback returns, the rule _invoke already applied to tools. The lesson is the enumeration shape again: the offload was applied to the call sites someone looked at, not asserted as a property of every store call.",
+      "source": "M7 round 1 D1",
+      "tags": [],
+      "recorded_at": "2026-09-11T08:28:08.873Z"
+    },
+    {
+      "id": "KNOWLEDGE-3afb9c70",
+      "title": "Assert the property, not a stopwatch reading of its consequence",
+      "text": "M7 round 1: the NFR-8 timing tests could neither detect D1 nor stay quiet without it -- six runs passed 6 of 6 with the offload reverted, and 24 runs failed 1 in 4 with it in place, because both sat within a few milliseconds of a 50 ms bound on a Windows timer that ticks at about 15 ms. The property FR-20 names is that no store I/O runs on the event loop thread, and that is assertable exactly: a spy recording the thread each store call runs on, across every terminal path. It cannot flake because nothing in it is timed, and it failed against the unrepaired code on all four paths. Where a consequence must be measured, set the threshold far from both outcomes: a lock held for 800 ms either freezes the loop for 800 ms or not at all, so a 200 ms threshold is a detector, while 50 ms against 15 ms jitter is a coin.",
+      "source": "M7 round 1 D2",
+      "tags": [],
+      "recorded_at": "2026-09-11T08:28:09.071Z"
+    },
+    {
+      "id": "KNOWLEDGE-89b020d7",
+      "title": "A guard built on a permissive parser answers a different question from its column",
+      "text": "M7: the UUID column guard used uuid.UUID(), which strips a urn:uuid: prefix that a Postgres uuid column refuses, so that form passed the guard and failed at the write with a DataError. Found by a differential -- every form the guard accepts sent to a real uuid column -- not by review, and the reviewer did not find it either. Same shape as M5 round 8, where max_turns was checked for JSON serialisability while the column was INTEGER. The guard now accepts only the canonical form, which refuses some forms the column would take; that is the safe direction. Separately, RunConfig accepted every malformed parent_run_id while its sibling fields refused theirs, and the test named for RunConfig was testing the store: a test name is a claim, and nothing checked this one.",
+      "source": "M7 round 1 D3 and the differential",
+      "tags": [],
+      "recorded_at": "2026-09-11T08:28:09.220Z"
     }
   ],
   "tasks": [
@@ -992,7 +1016,7 @@
     {
       "id": "M7-store-hardening",
       "outcome": "Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it",
-      "state": "active",
+      "state": "rejected",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -1018,9 +1042,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M7-store-hardening-unit.json",
-            "source_hash": "61eb6f69d78850e680b07cb9ef1456feef1aafcc8e7b83f62c080c9be64db5c6",
-            "hash": "79ef43d6b01ddae0a0e11027eea937df1fbd0ffaf616070a78da79c97977ab5b",
-            "observed_at": "2026-09-09T16:00:01.962Z"
+            "source_hash": "79e266a8812b708c9a5c71101f3bf30787f1d8a8dffbdbafebe358319a298455",
+            "hash": "fddde3f879dcc40f919fd3f2ee83a0a83e231fd5806e2358658e57b6450e3499",
+            "observed_at": "2026-09-11T08:33:55.466Z"
           }
         },
         {
@@ -1030,9 +1054,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M7-store-hardening-regression.json",
-            "source_hash": "61eb6f69d78850e680b07cb9ef1456feef1aafcc8e7b83f62c080c9be64db5c6",
-            "hash": "7671b57810b6acf787787d13ccaffbd5a69c6aebd3b53f61c6992462a2ee0c7e",
-            "observed_at": "2026-09-09T16:00:55.684Z"
+            "source_hash": "fbe7bf5976fd163a4d1c4cd068403c3418d1a4f36675d06ad6552809ebfcdd60",
+            "hash": "4e611b1a2dc8eab6c0b6d3a958a1c3e600d9593e58ce0a8f3ffbd3b975eec14c",
+            "observed_at": "2026-09-11T08:34:35.667Z"
           }
         },
         {
@@ -1049,7 +1073,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-09T14:16:43.750Z",
-      "updated_at": "2026-09-09T16:00:55.771Z"
+      "updated_at": "2026-09-11T08:34:35.785Z"
     }
   ],
   "learning_proposals": [],
@@ -1368,6 +1392,15 @@
       "task": "M6-golden-eval",
       "human": null,
       "reason": null,
+      "revision": null
+    },
+    {
+      "id": "573d7163-1061-46e4-b6f4-f9e5c0303324",
+      "at": "2026-09-09T16:59:30.972Z",
+      "action": "reject",
+      "task": "M7-store-hardening",
+      "human": "Independent L4 reviewer, fresh session, M7 round 1",
+      "reason": "REJECTED. Gates reproduced: 19/19 and 442/442 match the prompt. The three prescribed reverts were applied CRLF-aware with the substitution count asserted, confirmed landed by grep, run under FULL pytest -q, restored with SHA-256 verified and git clean: FR-19 revert killed by 2 tests, FR-18 revert by 3, FR-20 revert by 1. DEFECT 1 (class not closed; FR-20 and NFR-8): the worker-thread offload covers loop.py, start_run, finish_run and the failure path, but RUN_STARTED (api.py 290), every TOOL_CALLED (the emit lambda at api.py 308, invoked synchronously inside the async executor) and the terminal RUN_COMPLETED or RUN_FAILED emit (api.py 336) still call PostgresEventStore.emit ON the event loop. Measured with the fix in place: 96 store calls per 24-run attempt (4 per run) execute on the main thread, 100-323 ms of loop time per attempt, worst single call 18.5 ms, stall median 29 ms and max 45 ms against the 50 ms bound. Each such emit takes pg_advisory_xact_lock, so when another writer holds the events lock for that run - the second-sink case FR-18 itself names as supported - the whole loop stops: a 600 ms hold elsewhere produced a 479 ms event-loop stall that also froze an unrelated bystander run, versus 14 ms when the identical hold is on the messages lock whose caller is threaded. NFR-8 is broken about 10x in a scenario this milestone declares supported. DEFECT 2 (gate unreliable in both directions): test_twenty_four_concurrent_runs_stay_within_nfr8 went red with the fix in place on an idle machine (1 of 4 standalone runs, no code change), while with the to_thread wrappers reverted test_six_concurrent_runs_stay_within_nfr8 - AC-14 exactly as written - PASSED 6 of 6 times; the only detector is the one that false-alarms, the reverse of what the docstring and the loop.py comment record. The median of three did not make the measurement robust; the thin margin IS defect 1. DEFECT 3 (M5 round 8 shape): RunConfig.__post_init__ does not validate parent_run_id although the store does, so RunConfig(parent_run_id=not-a-uuid) completes without persistence and returns FAILED with persistence, instead of raising at the call site as the Runner.run contract states; test_run_config_refuses_a_malformed_parent_run_id exercises PostgresRunStore, not RunConfig. DEFECT 4 (minor; claim vs code): apply_schema runs schema.sql outside the advisory lock that migrate.py says serialises CREATE; 8 processes initialising an EMPTY m7_ schema lost 1 to 3 with UniqueViolation on pg_type_typname_nsp_index in 3 of 3 trials (8 of 8 succeed on an existing schema). VERIFIED SOUND: the advisory lock is cross-process and transaction-scoped through the pool context-manager commit, both write paths take it and no other writer touches the sequenced tables; events() order agreed with stored order 5 of 5 under 12 threads on one sink; the parent-tenancy check refused self-parent, other-project, empty and dangling parents and only a raw-SQL planted cross-tenant grandparent is reachable; migrations are idempotent and recorded. CAVEATS: tests/test_golden_eval.py was edited without disclosure (first_error diagnostic added; the attempts==1 assertion is unchanged) - it strengthens M6 and does not weaken it; two SYN-why runs (52 rows, 19:53 today, from an untracked probe) were left in the database by the author and remain; no decision was recorded for psycopg_pool or the advisory lock despite the SPEC risk saying it must be; AC-11 and KNOWLEDGE-010d12d3 say FR-18 needs a column but no migration exists for it and numbering starts at 0002; no checksum on applied migrations; all pending migrations commit in ONE transaction, not one each as the docstring says. Database left as found: my SYN-m7-rev rows 0, m7_ schemas 0, orphan runs 994 unchanged, whole-row MODEL_API_KEY scan 0 rows across 6 tables.",
       "revision": null
     }
   ],
