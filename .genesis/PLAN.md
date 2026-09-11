@@ -4,7 +4,7 @@
 
 - workflow: new-product
 - phase: build
-- plan approval: owner at 2026-09-09T14:17:10.313Z
+- plan approval: owner at 2026-09-11T16:10:40.095Z
 
 ## Tasks
 
@@ -58,7 +58,7 @@
 
 ### M7-store-hardening — Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it
 
-- state/risk: rejected / medium
+- state/risk: active / medium
 - requirements: FR-17, FR-18, FR-19, FR-20, FR-21, NFR-8, AC-11, AC-12, AC-13, AC-14, AC-15
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_phase2_readiness.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending

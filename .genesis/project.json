@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-11T11:10:24.311Z"
+    "updated_at": "2026-09-11T16:12:48.901Z"
   },
   "policy": {
     "ponytail": "full",
@@ -24,18 +24,18 @@
   },
   "lifecycle": {
     "phase": "build",
-    "status": "rejected",
-    "active_task": "M7-store-hardening",
+    "status": "ready",
+    "active_task": null,
     "blocker": null,
-    "next_action": "Run the task pre-flight."
+    "next_action": "Add the next approved implementation task."
   },
   "commands": {},
   "workflow": {
     "type": "new-product",
     "started_at": "2026-09-05T14:48:57.897Z",
     "spec_check": {
-      "at": "2026-09-09T14:09:31.451Z",
-      "source_hash": "7d9541cdffcafa8c98e1abbf5b8e6647cb281d26edf23de7c56806815e7d9316",
+      "at": "2026-09-11T15:33:54.673Z",
+      "source_hash": "11cc9d26323ff5b8e9c677e1dc02cddb2b8493724378b457e5040fcf72159525",
       "requirements": [
         "AC-1",
         "AC-10",
@@ -84,13 +84,13 @@
       ]
     },
     "plan_check": {
-      "at": "2026-09-09T14:16:49.611Z",
+      "at": "2026-09-11T16:10:39.949Z",
       "source_hash": "a59e5db360dd2c5dc1c760b6057a70aa3d3a9b7a9f694ff43338bb1bf88474ca"
     },
     "plan_approval": {
       "human": "owner",
-      "reason": "M7-store-hardening carries all eleven new requirements, two executable gates (the new readiness suite and the full 423-test regression suite), and is ordered so FR-17 migrations land before the changes that depend on them.",
-      "at": "2026-09-09T14:17:10.313Z",
+      "reason": "Plan unchanged by the AC-11 and AC-14 amendments: M7-store-hardening still carries all eleven Phase 2 readiness requirements with its unit and regression gates.",
+      "at": "2026-09-11T16:10:40.095Z",
       "source_hash": "a59e5db360dd2c5dc1c760b6057a70aa3d3a9b7a9f694ff43338bb1bf88474ca"
     }
   },
@@ -146,12 +146,12 @@
         "NFR-7",
         "NFR-8"
       ],
-      "source_hash": "7d9541cdffcafa8c98e1abbf5b8e6647cb281d26edf23de7c56806815e7d9316",
+      "source_hash": "11cc9d26323ff5b8e9c677e1dc02cddb2b8493724378b457e5040fcf72159525",
       "approval": {
         "human": "owner",
-        "reason": "Phase 2 readiness: five store requirements (FR-17..FR-21) written against measured failures rather than suspected ones, NFR-8 carrying explicit stall and wall-clock bounds, and AC-11..AC-15 stating what fails today so each is reproducible before it is trusted. Phase 0/1 second wire format recorded as deferred by choice.",
-        "at": "2026-09-09T14:16:35.559Z",
-        "source_hash": "7d9541cdffcafa8c98e1abbf5b8e6647cb281d26edf23de7c56806815e7d9316"
+        "reason": "AC-14 now requires untimed detection of store calls on the event loop; AC-11 no longer claims FR-18 needs a column",
+        "at": "2026-09-11T16:10:39.787Z",
+        "source_hash": "11cc9d26323ff5b8e9c677e1dc02cddb2b8493724378b457e5040fcf72159525"
       }
     }
   ],
@@ -777,9 +777,9 @@
           "status": "pass",
           "evidence": {
             "human": "owner",
-            "reason": "Phase 2 readiness: five store requirements (FR-17..FR-21) written against measured failures rather than suspected ones, NFR-8 carrying explicit stall and wall-clock bounds, and AC-11..AC-15 stating what fails today so each is reproducible before it is trusted. Phase 0/1 second wire format recorded as deferred by choice.",
-            "source_hash": "274299cb68bc48396ed917278a4f4f11dded0f1eb8a41774004c4c19a82e2c30",
-            "observed_at": "2026-09-09T14:16:35.559Z"
+            "reason": "AC-14 now requires untimed detection of store calls on the event loop; AC-11 no longer claims FR-18 needs a column",
+            "source_hash": "c4db5385408e1128abd51b9ad2a259619eddf1b6fa6b2bed212b5ff51950aff9",
+            "observed_at": "2026-09-11T16:10:39.787Z"
           }
         }
       ],
@@ -789,7 +789,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T14:48:57.897Z",
-      "updated_at": "2026-09-09T14:16:35.559Z"
+      "updated_at": "2026-09-11T16:10:39.787Z"
     },
     {
       "id": "M1-primitives",
@@ -1080,7 +1080,7 @@
     {
       "id": "M7-store-hardening",
       "outcome": "Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it",
-      "state": "rejected",
+      "state": "active",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -1106,9 +1106,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M7-store-hardening-unit.json",
-            "source_hash": "d560500f5b13d0e8937338de69fda25fde3e1d16a396fb05a17ebb6fd6e95a20",
-            "hash": "047e1cfd69d8a4ef35601c7c908870a1756fd1d1103f1a5829bcb7709afd25c2",
-            "observed_at": "2026-09-11T11:09:32.154Z"
+            "source_hash": "c4db5385408e1128abd51b9ad2a259619eddf1b6fa6b2bed212b5ff51950aff9",
+            "hash": "b100d170a169187307f43f4a0a679110084569c5a905a77728a6415289fc776e",
+            "observed_at": "2026-09-11T16:12:06.981Z"
           }
         },
         {
@@ -1118,9 +1118,9 @@
           "status": "pass",
           "evidence": {
             "path": ".genesis/evidence/M7-store-hardening-regression.json",
-            "source_hash": "d560500f5b13d0e8937338de69fda25fde3e1d16a396fb05a17ebb6fd6e95a20",
-            "hash": "89a07b2b53ddee13e0ca567ee071876833166a2d57059dd7c55bc9cb61b1332a",
-            "observed_at": "2026-09-11T11:10:23.288Z"
+            "source_hash": "c4db5385408e1128abd51b9ad2a259619eddf1b6fa6b2bed212b5ff51950aff9",
+            "hash": "5c37e59032c3c7242d7c061ad3403f57417b52b7805b91ade7e3c618a7b381c2",
+            "observed_at": "2026-09-11T16:12:48.851Z"
           }
         },
         {
@@ -1137,7 +1137,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-09T14:16:43.750Z",
-      "updated_at": "2026-09-11T11:10:23.351Z"
+      "updated_at": "2026-09-11T16:12:48.901Z"
     }
   ],
   "learning_proposals": [],
@@ -1474,6 +1474,15 @@
       "task": "M7-store-hardening",
       "human": "Independent L4 reviewer, fresh session, M7 round 2",
       "reason": "REJECTED (M7 round 2). Gates reproduced: tests/test_phase2_readiness.py 22 passed; full pytest -q 445 passed in 44.80s (the Bedrock live test passed on both full-suite runs this session). Round-1 D1 closed as a class on the Runner path: every store call in api.py, loop.py and the executor emit is threaded (all call sites grepped); R2, R3, R4 killed by the thread-identity test, R3 also by the lock-hold test. D2 closed and the retraction reproduces: repaired 6 runs median 13.3 ms, 24 runs 14.3 ms; offload reverted 6 runs median 17.6 ms max 67.3 ms, 24 runs median 74.4 ms with 6 of 6 over 50 ms. D3 closed: R5 and R6 killed. DEFECT A (new; FR-20 and FR-19; regression against the M6-approved store): the pool is built without check=, so psycopg_pool hands out connections that died while idle. Terminating the pooled backends (what a Postgres restart, failover or idle kill does) made the next batch of runs FAIL with OperationalError (0 of 8 and 2 of 8 completed in two probes; the following batch 8 of 8), and a direct PostgresSessionStore.append raised raw psycopg.OperationalError 6 of 6 times, each a write a retry would have completed. The identical probe against e5e2c00 (per-call connect): 8 of 8 runs and 6 of 6 appends ok. Reachable after any database restart with a long-lived process; a whole fan-out batch fails. DEFECT B (round-1 D4 dropped, neither fixed nor declared): apply_schema still runs schema.sql outside the advisory lock that migrate.py says serialises CREATE; 8 processes on an empty m7_ schema: 1 of 8 ok in 3 of 3 trials, the other 7 UniqueViolation on pg_type_typname_nsp_index; an existing baseline 8 of 8 ok. The round-2 prompt reused the D4 label for a different issue and never mentions this one. VERIFIED SOUND: advisory lock across 3 processes x 12 threads on two run ids with a real hashtext collision, 72 of 72 commits, contiguous sequences; parent tenancy; UUID guard differential. GATE BLIND SPOTS over correct code: N1 (ToolCalled for a FAILED tool call written on the loop) survived the FULL suite, 445 passed, because the spy never exercises the tool-failure path; N2 (an on-loop store read outside the five spied names) passes the gate file; N3 (parent check drops project_id) passes phase2 plus persistence, 102 passed; N4 (migration advisory lock removed) passes phase2, 22 passed, although it makes concurrent upgrades fail 2 to 4 of 8. CAVEATS: the AC-14 test is an acceptance measurement, not a detector, acceptable because untimed tests carry detection; Persistence.postgres() does blocking DDL on the caller thread and waited 1.54 s behind one open writer; uuid.UUID objects (what get_run and PostgresTrace return) are refused with a TypeError reason; the live eval attempts==1 assertion makes the regression gate intermittently red on gateway health. Files restored SHA-verified, git status clean; SYN rows 0, m7_ schemas 0, manifest-less runs 994; whole-row credential scan 0 rows.",
+      "revision": null
+    },
+    {
+      "id": "9980f5c5-1e23-4351-b625-0c219960b829",
+      "at": "2026-09-11T16:11:57.907Z",
+      "action": "resume",
+      "task": "M7-store-hardening",
+      "human": null,
+      "reason": null,
       "revision": null
     }
   ],

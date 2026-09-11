@@ -58,7 +58,7 @@ share a reviewer's label.
 | R1-C1 | test_golden_eval.py edited without disclosure | disclosed in round 2 | `git diff --stat e5e2c00 -- tests/` |
 | R1-C2 | SYN-why probe debris left in the DB | removed in round 2 | |
 | **R1-C3** | no decision recorded for psycopg_pool or the advisory lock | **unaddressed in round 2; recorded now** | DECISION-0c58b3bf, DECISION-0a2105b4, plus DECISION-6b62d1f5 (offload), DECISION-01de1095 (migrations), DECISION-5582fa15 (UUID) |
-| **R1-C4** | AC-11 and KNOWLEDGE-010d12d3 say FR-18 needs a column; numbering starts at 0002 | **unaddressed in round 2; corrected now, one part is the owner's** | KNOWLEDGE-a3ee55b3; `migrate.py` docstring names schema.sql baseline 0001. AC-11's wording in the approved spec is left for the owner |
+| **R1-C4** | AC-11 and KNOWLEDGE-010d12d3 say FR-18 needs a column; numbering starts at 0002 | **unaddressed in round 2; corrected now, and AC-11 amended with the owner's approval** | KNOWLEDGE-a3ee55b3; `migrate.py` docstring names schema.sql baseline 0001. AC-11 amended in SPEC.md and approved by the owner |
 | **R1-C5** | no checksum on applied migrations | **unaddressed; implemented now** | newline-normalised SHA-256; edited-migration and pre-checksum tests |
 | **R1-C6** | all pending migrations committed in ONE transaction; docstring said one each | **unaddressed; fixed now** | one transaction per migration; `test_a_failed_migration_leaves_the_ones_before_it_applied` |
 | R2-A | pool hands out connections the server already closed; a restart fails a batch; regression vs e5e2c00 | fixed | `check=ConnectionPool.check_connection`; `test_the_pool_replaces_connections_the_server_has_closed` (red before: 3 of 8 runs completed) |
@@ -66,7 +66,7 @@ share a reviewer's label.
 | R2-N2 | an on-loop store read outside the five spied names passed | closed | spy is on the pool, not method names; premise test |
 | R2-N3 | dropping the parent project comparison passed | closed | `test_a_parent_in_another_project_of_the_same_tenant_is_refused` |
 | R2-N4 | removing the migration lock passed the gate | closed | concurrent upgrade and empty-DB tests |
-| R2-C1 | AC-14 is an acceptance measurement, not a detector | accepted by round 2; **SPEC amendment is the owner's decision, pending** | |
+| R2-C1 | AC-14 is an acceptance measurement, not a detector | **resolved: AC-14 amended, approved by the owner** | AC-14 now requires the untimed thread test on every terminal path; the six-run timing test is acceptance evidence only |
 | R2-C2 | Persistence.postgres() does blocking DDL on the caller thread (1.54 s behind an open writer) | declared | `Persistence.postgres` docstring; DECISION-01de1095; `create_schema=False` |
 | R2-C3 | uuid.UUID (what get_run returns) refused as TypeError | fixed | `test_a_uuid_object_is_accepted_wherever_a_run_id_is` |
 | R2-C4 | live eval `attempts == 1` makes the regression gate intermittently red on gateway health | **owner's decision, pending** | Genesis gates cannot be edited after `task add` (`task set` has no `--gate`) |
@@ -175,9 +175,10 @@ did: `test_golden_eval.py` (12 lines, `first_error`) and `test_persistence.py`
 - About 994 runs without a manifest (pre-M5 data); roughly 260 tool results with
   null `source_uri_or_hash` from earlier mutation runs. Neither produced by current code.
 
-**Owner decisions pending, not findings:** amending AC-14 (untimed detection) and
-AC-11 (FR-18 needs no column), and whether the live golden eval belongs inside
-M7's regression gate.
+**Owner decision pending, not a finding:** whether the live golden eval belongs
+inside M7's regression gate. AC-11 and AC-14 were amended with the owner's
+approval after round 2; judge them as `SPEC.md` states them now, not as rounds
+1 and 2 quoted them.
 
 ## Rules
 

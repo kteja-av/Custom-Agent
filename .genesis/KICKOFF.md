@@ -9,12 +9,12 @@ Load the official Ponytail skill at `full`. Verify repository state and baseline
 - objective: A model-agnostic, LangGraph-pluggable agent SDK with orchestrator-spawned isolated subagents and an evidence-centric governance ledger. Stage 1 delivers the harness (Phases 0-8); Phase 0 is a single-agent loop end to end.
 - mode/profile: init / prototype
 - workflow: new-product / build
-- phase/status: build / rejected
-- active task: M7-store-hardening — Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it
+- phase/status: build / ready
+- active task: none
 - owner: unassigned
 - blocker: none
-- next action: Run the task pre-flight.
-- source hash: d560500f5b13d0e8937338de69fda25fde3e1d16a396fb05a17ebb6fd6e95a20
+- next action: Add the next approved implementation task.
+- source hash: c4db5385408e1128abd51b9ad2a259619eddf1b6fa6b2bed212b5ff51950aff9
 - phase instruction: Implement only the active task and prove it against current sources.
 - specification: SPEC.md / approved
 - requirements: AC-1, AC-10, AC-11, AC-12, AC-13, AC-14, AC-15, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, FR-1, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18, FR-19, FR-2, FR-20, FR-21, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6, NFR-7, NFR-8
@@ -31,10 +31,7 @@ Load the official Ponytail skill at `full`. Verify repository state and baseline
 
 ## Active evidence and failures
 
-- gates: unit:pass (.genesis/evidence/M7-store-hardening-unit.json), regression:pass (.genesis/evidence/M7-store-hardening-regression.json), independent-review:pending
-- failures: none recorded
-- limitations: none recorded
-- notes: none recorded
+- no active task
 
 ## Binding context
 

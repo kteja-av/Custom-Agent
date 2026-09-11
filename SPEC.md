@@ -99,10 +99,10 @@ are recorded in `.genesis/project.json` (KNOWLEDGE-e52fb4dc, KNOWLEDGE-010d12d3)
 Each of these is a command, not a claim. AC-12 through AC-14 are the probe that
 found the defects, turned into assertions.
 
-- AC-11: Applying migrations to a database whose schema predates them brings it to the current version and creates the columns FR-18 and FR-21 need; applying them a second time changes nothing and reports the same version.
+- AC-11: Applying migrations to a database whose schema predates them brings it to the current version and creates the column FR-21 needs; applying them a second time changes nothing and reports the same version. (Amended after M7 review: the original wording also named a column for FR-18, which needed none, because its sequence numbers are computed inside the insert.)
 - AC-12: Two independent event sinks bound to one run each emit an event, both rows commit, and the run's `sequence_no` values are unique and contiguous. Today the second sink fails with `UniqueViolation` and one of the two events is lost.
 - AC-13: Twelve concurrent writers appending to one run all commit, with unique contiguous sequence numbers and no exception reaching any caller. Today 9 of 12 commit and 3 raise `UniqueViolation`.
-- AC-14: Six runs executing concurrently against a no-network model client satisfy NFR-8's stall and wall-clock bounds, both measured in the same process as an in-memory baseline so the comparison is independent of machine speed.
+- AC-14: No store I/O made during a run executes on the event loop's thread, on every terminal path a run can take (completion, each kind of tool failure, a model failure, a failure reaching the Runner's boundary, and max turns exhausted), asserted by recording the thread of every database connection checkout rather than inferred from timing. Six runs executing concurrently against a no-network model client also satisfy NFR-8's stall and wall-clock bounds, measured in the same process as an in-memory baseline; that measurement is acceptance evidence, not the detector. (Amended after M7 review rounds 1 and 2: as first written, AC-14 was only the timing measurement, which passed with the offload fully reverted and could not see three event writes left on the loop.)
 - AC-15: A run that records a parent run reconstructs together with it, and both rows carry the tenant and project of the run that owns them (ADR-11 is not relaxed for child runs).
 
 ## Risks
