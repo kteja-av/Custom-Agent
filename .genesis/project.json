@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-11T16:12:48.901Z"
+    "updated_at": "2026-09-11T16:46:54.640Z"
   },
   "policy": {
     "ponytail": "full",
@@ -755,6 +755,14 @@
       "source": "M7 round 3 pre-commit check",
       "tags": [],
       "recorded_at": "2026-09-11T11:10:24.311Z"
+    },
+    {
+      "id": "KNOWLEDGE-ae83f412",
+      "title": "Correction: working-copy line endings depend on what last wrote each file",
+      "text": "Corrects KNOWLEDGE-0bc27060, which attributed every CRLF file in the working copy to the author Python patch scripts. Measured after M7 round 3: core.autocrlf is true in the system gitconfig and there is no .gitattributes, so git checks files out as CRLF and commits LF. Files the Write tool created and git never re-checked out stay LF (agentsdk/__init__.py, agentsdk/tools.py, tests/test_agent_loop.py); files written by a git checkout or by Python write_text on Windows are CRLF; and a file a tool has just rewritten can be in either state until git normalises it on commit. That is why a reviewer saw LF lines where the round-2 prompt said CRLF: both described real moments. HEAD is LF throughout. Mutation anchors must tolerate either ending.",
+      "source": "M7 round 3 reviewer correction",
+      "tags": [],
+      "recorded_at": "2026-09-11T16:46:54.504Z"
     }
   ],
   "tasks": [
@@ -1080,7 +1088,7 @@
     {
       "id": "M7-store-hardening",
       "outcome": "Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it",
-      "state": "active",
+      "state": "done",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -1127,17 +1135,26 @@
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Independent L4 reviewer, fresh session, M7 round 3",
+            "reason": "APPROVED. Gates reproduced exactly: tests/test_phase2_readiness.py 31 passed; full pytest -q 454 passed in 34.5-45s across four clean runs (per-file breakdown 77+15+151+80+31+74+26=454 confirmed by collect-only; git diff --stat e5e2c00 -- tests/ shows only test_phase2_readiness.py 1400 lines new plus the two prior-disclosed files). Eight targeted mutations, each restored SHA-256-verified with git status clean, each run under FULL pytest -rf: (A) removing check=ConnectionPool.check_connection killed only test_the_pool_replaces_connections_the_server_has_closed, 5 of 8 runs failed, 453 passed. (B) reintroducing baseline-outside-lock via an ALIASED import (import psycopg as _pg_alias) evaded the substring premise test (test_stores_open_no_connections_of_their_own still passed) but was killed by test_eight_workers_initialising_an_empty_database_all_succeed, 7 of 8 UniqueViolation, 453 passed -- confirms the concurrency test, not the premise test, is the real defence, which is a blind spot in one auxiliary test but not a live gap since the primary detector holds. (N4) removing the migration pg_advisory_lock call killed both the empty-DB and upgrade concurrency tests, 452 passed. (C) disabling the checksum-mismatch raise killed only test_an_applied_migration_that_was_edited_is_refused, 453 passed. (N1) made ToolCalled for a failed tool run synchronously on the loop; killed with store I/O ON the loop thread reported as exactly 3 of 23 checkouts, matching the three injected tool failures, 453 passed. (N3) dropped the project_id comparison from the parent-tenancy SQL using valid SQL (a placeholder kept, compared with IS NOT NULL) rather than the prior invalid-SQL mistake; killed ONLY test_a_parent_in_another_project_of_the_same_tenant_is_refused, 453 passed, no cascade. (U) disabled the uuid.UUID carve-out in column_rejection_reason; killed with the exact TypeError message the round-2 defect described, 453 passed. (R2-style) reverted the RUN_STARTED emit to run synchronously; killed by BOTH the thread-identity test and the lock-hold test, 452 passed, matching DECISION-6b62d1f5 exactly. No mutant errored; every kill was a single targeted test or the intended small set, never an unrelated cascade. Session-level lock analysis: apply_migrations takes pg_advisory_lock on its OWN dedicated psycopg.connect (never a pooled connection) and the connection is closed via its own with-block regardless of whether the finally-block unlock succeeds, so Postgres releases the session lock on disconnect even if the explicit unlock is swallowed -- no leak onto a pooled connection is possible; this closes the round-3 prompts stated concern. NFR-8 margin under check= overhead measured directly: 6 concurrent runs 14.5ms worst stall, 2.02x wall ratio; 24 runs (4x the spec load) 16.6ms stall, 2.27x ratio -- both comfortably inside the 50ms and 3x bounds, so the per-checkout round trip does not erode the gates margin. Round-2 gap dispositions verified: N2 is closed by design, not by enumeration -- the checkout spy wraps the single _pool() choke point so ANY method reaching Postgres is logged regardless of name, pinned by the premise test (itself evadable only by an alias that the concurrency tests still catch, as mutation B showed). N3 closed and verified by mutation. uuid.UUID acceptance fixed and verified by mutation. Persistence.postgres blocking DDL is declared (docstring plus DECISION-01de1095) not fixed, matching its caveat disposition. Migration checksums implemented and verified live: edited-migration mutation caught, pre-checksum trust-on-first-sight test passes, deleted-migration non-detection remains an explicitly declared limitation, not a new finding. CAVEATS (not blocking): the premise substring test is evadable by import aliasing though the behavior it guards is still caught by the concurrency test; check_connections behaviour against a half-open TCP connection (vs a cleanly closed one) was not independently verified -- bounded in theory by the pools 30s timeout but not measured this round; declared limitations restated unchanged (unbounded messages/run_events growth, provider neutrality half-proven by choice, Usage/content-string gaps, deleted-migration detection, live-eval attempts==1 gate flakiness pending an owner decision). Database left as found: SYN- tenant runs 0, m7_ schemas 0, manifest-less runs 994 (unchanged baseline), no lingering m7-tagged backends. Whole-row scan for MODEL_API_KEY across runs/messages/run_events/execution_manifests: 0 rows in all four tables.",
+            "source_hash": "c4db5385408e1128abd51b9ad2a259619eddf1b6fa6b2bed212b5ff51950aff9",
+            "observed_at": "2026-09-11T16:40:36.013Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
       "blocker": null,
       "notes": [],
       "failures": [],
-      "limitations": [],
+      "limitations": [
+        "test_stores_open_no_connections_of_their_own is a substring check on postgres.py source, evaded by importing psycopg under an alias (M7 round 3). The behaviour it guards is still caught by the concurrency tests, 7 of 8 failing, so this is a blind spot in an auxiliary test rather than an open gap.",
+        "check=ConnectionPool.check_connection was verified only against cleanly terminated backends. Its behaviour against a half-open TCP connection is unmeasured, bounded in theory by the pool 30 s acquisition timeout.",
+        "The regression gate includes the live golden eval, whose attempts == 1 assertion goes red on gateway outages unrelated to the code. Whether that check belongs in this gate is an open owner decision; gates cannot be edited after task add."
+      ],
       "created_at": "2026-09-09T14:16:43.750Z",
-      "updated_at": "2026-09-11T16:12:48.901Z"
+      "updated_at": "2026-09-11T16:46:54.640Z"
     }
   ],
   "learning_proposals": [],
@@ -1483,6 +1500,15 @@
       "task": "M7-store-hardening",
       "human": null,
       "reason": null,
+      "revision": null
+    },
+    {
+      "id": "151fd361-23b3-461f-9b16-6f549e9217e2",
+      "at": "2026-09-11T16:40:36.013Z",
+      "action": "approve",
+      "task": "M7-store-hardening",
+      "human": "Independent L4 reviewer, fresh session, M7 round 3",
+      "reason": "APPROVED. Gates reproduced exactly: tests/test_phase2_readiness.py 31 passed; full pytest -q 454 passed in 34.5-45s across four clean runs (per-file breakdown 77+15+151+80+31+74+26=454 confirmed by collect-only; git diff --stat e5e2c00 -- tests/ shows only test_phase2_readiness.py 1400 lines new plus the two prior-disclosed files). Eight targeted mutations, each restored SHA-256-verified with git status clean, each run under FULL pytest -rf: (A) removing check=ConnectionPool.check_connection killed only test_the_pool_replaces_connections_the_server_has_closed, 5 of 8 runs failed, 453 passed. (B) reintroducing baseline-outside-lock via an ALIASED import (import psycopg as _pg_alias) evaded the substring premise test (test_stores_open_no_connections_of_their_own still passed) but was killed by test_eight_workers_initialising_an_empty_database_all_succeed, 7 of 8 UniqueViolation, 453 passed -- confirms the concurrency test, not the premise test, is the real defence, which is a blind spot in one auxiliary test but not a live gap since the primary detector holds. (N4) removing the migration pg_advisory_lock call killed both the empty-DB and upgrade concurrency tests, 452 passed. (C) disabling the checksum-mismatch raise killed only test_an_applied_migration_that_was_edited_is_refused, 453 passed. (N1) made ToolCalled for a failed tool run synchronously on the loop; killed with store I/O ON the loop thread reported as exactly 3 of 23 checkouts, matching the three injected tool failures, 453 passed. (N3) dropped the project_id comparison from the parent-tenancy SQL using valid SQL (a placeholder kept, compared with IS NOT NULL) rather than the prior invalid-SQL mistake; killed ONLY test_a_parent_in_another_project_of_the_same_tenant_is_refused, 453 passed, no cascade. (U) disabled the uuid.UUID carve-out in column_rejection_reason; killed with the exact TypeError message the round-2 defect described, 453 passed. (R2-style) reverted the RUN_STARTED emit to run synchronously; killed by BOTH the thread-identity test and the lock-hold test, 452 passed, matching DECISION-6b62d1f5 exactly. No mutant errored; every kill was a single targeted test or the intended small set, never an unrelated cascade. Session-level lock analysis: apply_migrations takes pg_advisory_lock on its OWN dedicated psycopg.connect (never a pooled connection) and the connection is closed via its own with-block regardless of whether the finally-block unlock succeeds, so Postgres releases the session lock on disconnect even if the explicit unlock is swallowed -- no leak onto a pooled connection is possible; this closes the round-3 prompts stated concern. NFR-8 margin under check= overhead measured directly: 6 concurrent runs 14.5ms worst stall, 2.02x wall ratio; 24 runs (4x the spec load) 16.6ms stall, 2.27x ratio -- both comfortably inside the 50ms and 3x bounds, so the per-checkout round trip does not erode the gates margin. Round-2 gap dispositions verified: N2 is closed by design, not by enumeration -- the checkout spy wraps the single _pool() choke point so ANY method reaching Postgres is logged regardless of name, pinned by the premise test (itself evadable only by an alias that the concurrency tests still catch, as mutation B showed). N3 closed and verified by mutation. uuid.UUID acceptance fixed and verified by mutation. Persistence.postgres blocking DDL is declared (docstring plus DECISION-01de1095) not fixed, matching its caveat disposition. Migration checksums implemented and verified live: edited-migration mutation caught, pre-checksum trust-on-first-sight test passes, deleted-migration non-detection remains an explicitly declared limitation, not a new finding. CAVEATS (not blocking): the premise substring test is evadable by import aliasing though the behavior it guards is still caught by the concurrency test; check_connections behaviour against a half-open TCP connection (vs a cleanly closed one) was not independently verified -- bounded in theory by the pools 30s timeout but not measured this round; declared limitations restated unchanged (unbounded messages/run_events growth, provider neutrality half-proven by choice, Usage/content-string gaps, deleted-migration detection, live-eval attempts==1 gate flakiness pending an owner decision). Database left as found: SYN- tenant runs 0, m7_ schemas 0, manifest-less runs 994 (unchanged baseline), no lingering m7-tagged backends. Whole-row scan for MODEL_API_KEY across runs/messages/run_events/execution_manifests: 0 rows in all four tables.",
       "revision": null
     }
   ],
