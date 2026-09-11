@@ -89,6 +89,18 @@ def _pool(dsn: str) -> ConnectionPool:
                 # no error; one that waits 30 seconds is a slow request with a
                 # message naming the pool.
                 timeout=30.0,
+                # Validate on checkout (M7 round 2). Without it the pool handed
+                # out connections the server had already closed -- a restart, a
+                # failover, an idle kill -- and every run that drew one failed:
+                # five dead connections, five failed runs, where the per-call
+                # connections this pool replaced had simply reconnected. The
+                # check is a round trip per checkout, made on a worker thread.
+                #
+                # A connection that dies DURING a write still fails that write,
+                # and deliberately so: the insert may have committed before the
+                # reply was lost, and retrying a MAX + 1 append would duplicate
+                # the message rather than recover it.
+                check=ConnectionPool.check_connection,
                 open=True,
             )
             _POOLS[dsn] = pool
@@ -105,17 +117,21 @@ def close_pools() -> None:
 
 
 def apply_schema(dsn: str) -> None:
-    """Create the baseline, then bring it forward (FR-17).
+    """Create the baseline, then bring it forward (FR-17) -- under one lock.
 
     schema.sql alone can only ever CREATE. On a database that already exists it
     is a no-op for anything new, so a column added to it would be silently
-    absent and the code would fail later at insert time. Migrations run here,
-    behind the same call, so every existing call site gets them without
-    knowing they exist.
+    absent and the code would fail later at insert time. Migrations run behind
+    the same call, so every existing call site gets them without knowing.
+
+    Both halves run inside apply_migrations' advisory lock. The first version
+    ran schema.sql here, in autocommit and outside that lock, so workers
+    initialising an empty database together raced on CREATE and all but one
+    failed (M7 review rounds 1 and 2). This module now opens no connection of
+    its own at all, which is what lets the event-loop test watch the pool
+    alone.
     """
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        conn.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
-    apply_migrations(dsn)
+    apply_migrations(dsn, baseline=SCHEMA_PATH)
 
 
 # --- serialisation ----------------------------------------------------------
@@ -230,6 +246,13 @@ _INT32_MIN, _INT32_MAX = -(2**31), 2**31 - 1
 
 def column_rejection_reason(value: Any, sql_type: str) -> str | None:
     """Why `value` cannot go into a column of this declared type."""
+    if sql_type == "UUID" and isinstance(value, uuid.UUID):
+        # Before the serialisability test, which refuses a uuid.UUID as a
+        # TypeError -- and uuid.UUID is exactly what get_run and PostgresTrace
+        # hand back for a run id, so passing one straight back as parent_run_id
+        # was refused by the SDK's own output type (M7 round 2). A UUID object
+        # cannot be malformed or non-canonical.
+        return None
     reason = unstorable_reason(value)
     if reason is not None:
         return reason

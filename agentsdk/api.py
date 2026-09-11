@@ -113,7 +113,7 @@ class RunConfig:
     # is the common case. Phase 2's subagents are what populate it; the column
     # and the tenancy rule exist now so that phase adds a caller rather than a
     # migration to a table that already holds production rows.
-    parent_run_id: str | None = None
+    parent_run_id: str | uuid.UUID | None = None
 
     def __post_init__(self) -> None:
         # Before the range checks: a bool passes every one of them (True >= 1,
@@ -145,6 +145,9 @@ class RunConfig:
         reason = column_rejection_reason(self.parent_run_id, "UUID")
         if reason is not None:
             raise ValueError(f"parent_run_id cannot be stored: {reason}")
+        if isinstance(self.parent_run_id, uuid.UUID):
+            # One type on the config, whichever form the caller had to hand.
+            object.__setattr__(self, "parent_run_id", str(self.parent_run_id))
 
 
 @dataclass(frozen=True)

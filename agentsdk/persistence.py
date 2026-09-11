@@ -43,6 +43,16 @@ class Persistence:
 
     @classmethod
     def postgres(cls, dsn: str, *, create_schema: bool = True) -> Persistence:
+        """Persistence on `dsn`, bringing the schema up to date first.
+
+        Schema application is BLOCKING DDL on the calling thread, under a
+        database-wide advisory lock so concurrent starts serialise instead of
+        racing. Build this once at process start -- not per run, and not from
+        inside a running event loop. It waits on that lock, and on any open
+        transaction holding locks on these tables: 1.54 s behind a single open
+        writer, measured in M7 review round 2. A process that does not own the
+        schema can pass create_schema=False and skip it entirely.
+        """
         if create_schema:
             apply_schema(dsn)
         return cls(dsn=dsn, runs=PostgresRunStore(dsn), _sessions=PostgresSessionStore(dsn))

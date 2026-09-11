@@ -73,7 +73,8 @@ class Namespace:
     constraint test in a namespace during M5.
     """
 
-    def __init__(self):
+    def __init__(self, baseline=True):
+        self.baseline = baseline
         self.name = "m7_" + uuid.uuid4().hex[:8]
         # libpq options, so migrations running on their OWN connection still
         # land here without the production API growing a test-shaped argument.
@@ -83,7 +84,8 @@ class Namespace:
         with psycopg.connect(DSN, autocommit=True) as conn:
             conn.execute(f'CREATE SCHEMA "{self.name}"')
             conn.execute(f'SET search_path TO "{self.name}"')
-            conn.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
+            if self.baseline:
+                conn.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
         return self
 
     def __exit__(self, *exc):
@@ -208,10 +210,33 @@ class Run:
         return self.scope
 
     def __exit__(self, *exc):
+        """Remove this run AND every run descended from it, in one statement.
+
+        Deleting only this run's row fails whenever a child still references it
+        through parent_run_id -- and it failed AFTER the parent's manifest had
+        already been deleted. So a test that failed with a child created left
+        the parent behind with no manifest and the child with one: exactly what
+        a mutant dropping the parent project check leaked, two SYN rows and one
+        new manifest-less orphan. Leaked debris has falsified this project's
+        mutation matrices before, so cleanup must survive the failure it is
+        cleaning up after.
+        """
         with psycopg.connect(DSN, autocommit=True) as conn:
-            for table in ("run_events", "messages", "execution_manifests"):
-                conn.execute(f"DELETE FROM {table} WHERE run_id=%s", (self.scope.run_id,))
-            conn.execute("DELETE FROM runs WHERE run_id=%s", (self.scope.run_id,))
+            ids = [
+                row[0] for row in conn.execute(
+                    "WITH RECURSIVE tree AS ("
+                    " SELECT run_id FROM runs WHERE run_id = %s"
+                    " UNION SELECT r.run_id FROM runs r JOIN tree t ON r.parent_run_id = t.run_id"
+                    ") SELECT run_id FROM tree",
+                    (self.scope.run_id,),
+                ).fetchall()
+            ]
+            if ids:
+                for table in ("run_events", "messages", "execution_manifests"):
+                    conn.execute(f"DELETE FROM {table} WHERE run_id = ANY(%s)", (ids,))
+                # One statement, so the self-referencing foreign key is checked
+                # after parent and children are both gone.
+                conn.execute("DELETE FROM runs WHERE run_id = ANY(%s)", (ids,))
         return False
 
 
@@ -860,40 +885,30 @@ def test_the_uuid_guard_never_accepts_what_the_column_refuses():
     )
 
 
-_STORE_IO = frozenset({"append", "history", "emit", "start_run", "finish_run"})
+class _CheckoutSpy:
+    """Wraps a real pool, recording the thread every connection checkout runs on.
 
+    Every store method in postgres.py reaches the database through
+    _pool(...).connection(), and test_stores_open_no_connections_of_their_own
+    pins that premise. So a checkout on the loop thread IS store I/O on the
+    loop, whichever method made it -- including one added tomorrow.
 
-class _ThreadSpy:
-    """Delegates to a real store, recording the thread each I/O call runs on."""
+    The version before this spied on five method NAMES and asserted all five
+    were seen, but never that five was all of them. M7 round 2 showed what that
+    enumeration cost: an on-loop read through a sixth method passed it, and so
+    did ToolCalled for a failed tool call, because no spied path ever failed a
+    tool.
+    """
 
-    def __init__(self, inner, log, label):
-        self._inner, self._log, self._label = inner, log, label
+    def __init__(self, pool, log):
+        self._pool, self._log = pool, log
 
-    def __getattr__(self, name):
-        attr = getattr(self._inner, name)
-        if name not in _STORE_IO or not callable(attr):
-            return attr
-
-        def recorded(*args, **kwargs):
-            self._log.append((f"{self._label}.{name}", threading.get_ident()))
-            return attr(*args, **kwargs)
-
-        return recorded
-
-
-class _SpiedPersistence:
-    def __init__(self, real, log):
-        self._real, self._log = real, log
-        self.runs = _ThreadSpy(real.runs, log, "runs")
-
-    def session_store_for(self, scope):
-        return _ThreadSpy(self._real.session_store_for(scope), self._log, "sessions")
-
-    def event_sink_for(self, scope):
-        return _ThreadSpy(self._real.event_sink_for(scope), self._log, "events")
+    def connection(self, *args, **kwargs):
+        self._log.append(threading.get_ident())
+        return self._pool.connection(*args, **kwargs)
 
     def __getattr__(self, name):
-        return getattr(self._real, name)
+        return getattr(self._pool, name)
 
 
 class _OneToolCall:
@@ -936,20 +951,70 @@ class _ProviderDown:
         raise ModelProviderUnavailable("gateway down")
 
 
-async def test_no_store_call_runs_on_the_event_loop_thread_on_any_run_path():
-    """D1's detector, and the one this gate was missing.
+class _EveryToolFailure:
+    """A denied tool, then invalid arguments, then a tool that raises, then done:
+    every route by which the executor's _failed emits ToolCalled."""
 
-    FR-20's property is that no store I/O runs on the event loop. The NFR-8
-    tests measure a CONSEQUENCE of that with a stopwatch, and M7 round 1 showed
-    what that costs: with the offload reverted, the six-run test passed 6 of 6,
-    and with it in place the 24-run test (since removed) failed 1 time in 4. Meanwhile three
-    emits per run were still on the loop and neither test could say so.
+    SCRIPT = (
+        ToolCall(id="f1", name="forbidden", arguments={}),
+        ToolCall(id="f2", name="noop", arguments={"unexpected": 1}),
+        ToolCall(id="f3", name="boom", arguments={}),
+    )
 
-    This asserts the property itself, exactly: record the thread every store
-    call executes on, across every terminal path a run can take, and require
-    none of them to be the loop's. It cannot flake, because nothing in it is
-    timed.
+    async def send(self, request):
+        await asyncio.sleep(0)
+        done = sum(1 for m in request.messages if m.role is Role.TOOL)
+        if done >= len(self.SCRIPT):
+            return ModelResponse(
+                message=Message(role=Role.ASSISTANT, content="done"),
+                stop_reason=StopReason.END_TURN,
+                usage=Usage(1, 1, 2),
+            )
+        return ModelResponse(
+            message=Message(role=Role.ASSISTANT, tool_calls=(self.SCRIPT[done],)),
+            stop_reason=StopReason.TOOL_CALLS,
+            usage=Usage(1, 1, 2),
+        )
+
+
+def _failing_tools():
+    def boom():
+        raise RuntimeError("the tool itself fails")
+
+    empty = {"type": "object", "properties": {}, "additionalProperties": False}
+    return NOOP_TOOLS + [
+        Tool(spec=ToolSpec(name="forbidden", description="Never allowed.", input_schema=empty),
+             fn=lambda: "no"),
+        Tool(spec=ToolSpec(name="boom", description="Raises.", input_schema=empty), fn=boom),
+    ]
+
+
+def test_stores_open_no_connections_of_their_own():
+    """The checkout spy's premise, pinned rather than assumed.
+
+    If a store method ever opened its own connection it would bypass the pool
+    -- a performance regression -- AND be invisible to the spy, so this is the
+    one fact that test's totality rests on. Schema application lives in
+    migrate.py, which is the only module allowed a direct connect.
     """
+    import inspect
+
+    from agentsdk import postgres
+
+    assert "psycopg.connect(" not in inspect.getsource(postgres), (
+        "postgres.py opens a connection outside the pool, which the event-loop "
+        "spy cannot see"
+    )
+
+
+async def test_no_store_call_runs_on_the_event_loop_thread_on_any_run_path(monkeypatch):
+    """FR-20's property, asserted exactly and without a clock.
+
+    Records the thread of every database connection checkout, across five run
+    paths -- now including one where every kind of tool failure happens -- and
+    requires none of them to be the event loop's thread.
+    """
+    from agentsdk import postgres
     from agentsdk.hooks import RuntimeHook
 
     class Explodes(RuntimeHook):
@@ -957,38 +1022,48 @@ async def test_no_store_call_runs_on_the_event_loop_thread_on_any_run_path():
             raise RuntimeError("an unforeseen failure reaches Runner's total boundary")
 
     tenant = "SYN-m7-threads"
-    real = Persistence.postgres(DSN)
+    persistence = Persistence.postgres(DSN)  # schema DDL happens here, before recording
     log = []
+    real_pool = postgres._pool
+    monkeypatch.setattr(postgres, "_pool", lambda dsn: _CheckoutSpy(real_pool(dsn), log))
     loop_thread = threading.get_ident()
     paths = {
-        "completed with a tool call": (_OneToolCall(), None, 4, RunStatus.COMPLETED),
-        "model failure": (_ProviderDown(), None, 4, RunStatus.FAILED),
-        "total-boundary failure": (_OneToolCall(), Explodes(), 4, RunStatus.FAILED),
-        "max turns exhausted": (_NeverEnds(), None, 2, RunStatus.MAX_TURNS_EXCEEDED),
+        "completed with a tool call": (_OneToolCall(), NOOP_TOOLS, ("noop",), None, 4, RunStatus.COMPLETED),
+        "every kind of tool failure": (_EveryToolFailure(), _failing_tools(), ("noop", "boom"), None, 6, RunStatus.COMPLETED),
+        "model failure": (_ProviderDown(), NOOP_TOOLS, ("noop",), None, 4, RunStatus.FAILED),
+        "total-boundary failure": (_OneToolCall(), NOOP_TOOLS, ("noop",), Explodes(), 4, RunStatus.FAILED),
+        "max turns exhausted": (_NeverEnds(), NOOP_TOOLS, ("noop",), None, 2, RunStatus.MAX_TURNS_EXCEEDED),
     }
-    offenders = {}
+    checkouts, offenders = {}, {}
     try:
-        for label, (model, hook, max_turns, expected) in paths.items():
+        for label, (model, tools, profile, hook, max_turns, expected) in paths.items():
             first = len(log)
-            result = await Runner(
-                {"m": model}, tools=NOOP_TOOLS, hook=hook,
-                persistence=_SpiedPersistence(real, log),
-            ).run(
-                AgentSpec(id="threads", instructions="go", tool_profile=("noop",)),
+            result = await Runner({"m": model}, tools=tools, hook=hook, persistence=persistence).run(
+                AgentSpec(id="threads", instructions="go", tool_profile=profile),
                 "go",
                 RunConfig(tenant_id=tenant, project_id="p-threads", max_turns=max_turns),
             )
             assert result.status is expected, f"{label}: {result.status} ({result.error})"
-            on_loop = [name for name, ident in log[first:] if ident == loop_thread]
+            if label == "every kind of tool failure":
+                failed_calls = [
+                    e for e in result.events
+                    if e.event_type.value == "ToolCalled" and e.payload.get("is_error")
+                ]
+                assert len(failed_calls) == 3, (
+                    f"the failure path produced {len(failed_calls)} failed tool calls, "
+                    "not 3, so it does not exercise what it is named for"
+                )
+            mine = log[first:]
+            checkouts[label] = len(mine)
+            on_loop = sum(1 for ident in mine if ident == loop_thread)
             if on_loop:
-                offenders[label] = on_loop
+                offenders[label] = f"{on_loop} of {len(mine)} checkouts"
     finally:
+        monkeypatch.undo()
         _drop_runs(tenant)
 
-    observed = {name.split(".", 1)[1] for name, _ in log}
-    assert observed == _STORE_IO, (
-        f"the spy observed {sorted(observed)}, not every store method, so this "
-        "test could pass by not looking"
+    assert all(checkouts.values()), (
+        f"a path checked out no connection at all, so it tested nothing: {checkouts}"
     )
     assert not offenders, f"store I/O ran ON the event loop thread: {offenders}"
 
@@ -1080,3 +1155,246 @@ async def test_a_store_lock_held_elsewhere_does_not_freeze_the_event_loop():
         f"the event loop froze for {worst * 1000:.0f} ms while a store lock was "
         f"held elsewhere for {hold_seconds * 1000:.0f} ms"
     )
+
+
+# --- M7 round 2: the pool survives a database restart ---------------------------
+
+
+async def test_the_pool_replaces_connections_the_server_has_closed():
+    """Defect A, M7 round 2, and a regression against the M6-approved store.
+
+    The pool was built with no check, so it handed out connections the server
+    had already closed -- which is what a Postgres restart, a failover or an
+    idle-connection kill leaves behind. Measured: five pooled backends killed,
+    and 3 of the next 8 runs completed; the rest failed with OperationalError,
+    each a write a fresh connection would have completed. The per-call connect
+    this pool replaced had simply reconnected: 8 of 8.
+
+    The pool gets its own application_name, so the kill touches only it.
+    """
+    from agentsdk import postgres
+
+    app = "m7deadpool" + uuid.uuid4().hex[:6]
+    pool_dsn = DSN + ("&" if "?" in DSN else "?") + f"application_name={app}"
+    tenant = "SYN-m7-deadpool"
+    persistence = Persistence.postgres(pool_dsn)
+
+    class Instant:
+        async def send(self, request):
+            await asyncio.sleep(0)
+            return ModelResponse(
+                message=Message(role=Role.ASSISTANT, content="ok"),
+                stop_reason=StopReason.END_TURN,
+                usage=Usage(1, 1, 2),
+            )
+
+    async def failed_runs():
+        results = await asyncio.gather(*(
+            Runner({"m": Instant()}, persistence=persistence).run(
+                AgentSpec(id="deadpool", instructions="go"),
+                "go",
+                RunConfig(tenant_id=tenant, project_id="p-deadpool", max_turns=2),
+            )
+            for _ in range(8)
+        ))
+        return [r for r in results if r.status is not RunStatus.COMPLETED]
+
+    try:
+        assert await failed_runs() == [], "the warm-up failed, so the kill measures nothing"
+        with psycopg.connect(DSN, autocommit=True) as conn:
+            killed = conn.execute(
+                "SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity"
+                " WHERE application_name = %s",
+                (app,),
+            ).fetchone()[0]
+        assert killed >= 1, "no pooled connection was idle to kill, so this tests nothing"
+
+        failed = await failed_runs()
+        assert not failed, (
+            f"{len(failed)} of 8 runs drew a connection the server had closed: "
+            f"{sorted({(r.error or '').split(':')[0] for r in failed})}"
+        )
+    finally:
+        pool = postgres._POOLS.pop(pool_dsn, None)
+        if pool is not None:
+            pool.close()
+        _drop_runs(tenant)
+
+
+# --- M7 rounds 1 and 2: migrations under concurrency, and their integrity -------
+
+
+WORKERS = 8
+
+
+def _in_threads(work):
+    barrier = threading.Barrier(WORKERS)
+    outcomes = [None] * WORKERS
+
+    def worker(i):
+        barrier.wait()
+        try:
+            work()
+        except Exception as exc:  # noqa: BLE001 - the failure IS the measurement
+            outcomes[i] = f"{type(exc).__name__}: {exc}"
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(WORKERS)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    return [o for o in outcomes if o]
+
+
+def _tables(ns):
+    return {
+        row[0] for row in query(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema=%s",
+            (ns.name,),
+        )
+    }
+
+
+def test_eight_workers_initialising_an_empty_database_all_succeed():
+    """Round 1's D4 -- which round 2's prompt dropped by reusing its label.
+
+    apply_schema ran schema.sql in autocommit OUTSIDE the lock migrate.py said
+    serialised concurrent callers, and Persistence.postgres() calls it on every
+    construction. Eight workers starting against a fresh database -- a first
+    deploy, a CI run, a new environment -- lost seven: 1 of 8 succeeded in
+    three trials in each of two review rounds, the rest UniqueViolation on
+    pg_type_typname_nsp_index. An existing database was unaffected, which is
+    why no test against the live one could see it.
+    """
+    with Namespace(baseline=False) as ns:
+        failures = _in_threads(lambda: apply_schema(ns.dsn))
+        assert not failures, (
+            f"{len(failures)} of {WORKERS} workers failed to initialise an empty "
+            f"database: {sorted({f.split(':')[0] for f in failures})}"
+        )
+        assert {"runs", "messages", "run_events", "execution_manifests"} <= _tables(ns)
+        assert "parent_run_id" in ns.columns("runs")
+        assert schema_version(ns.dsn) == discover()[-1][0]
+
+
+def test_eight_workers_upgrading_the_same_database_all_succeed():
+    """N4, M7 round 2: removing the migration lock passed the whole phase-2 gate,
+    although it makes concurrent upgrades fail 2 to 4 of 8. Nothing tested the
+    lock -- only the idempotence of a single caller."""
+    with Namespace() as ns:  # the pre-migration baseline
+        failures = _in_threads(lambda: apply_migrations(ns.dsn))
+        assert not failures, (
+            f"{len(failures)} of {WORKERS} concurrent upgrades failed: "
+            f"{sorted({f.split(':')[0] for f in failures})}"
+        )
+        with psycopg.connect(ns.dsn) as conn:
+            rows = conn.execute(
+                "SELECT version, count(*) FROM schema_migrations GROUP BY version ORDER BY version"
+            ).fetchall()
+        assert rows == [(version, 1) for version, _ in discover()], (
+            f"a migration was recorded more or less than once: {rows}"
+        )
+
+
+def test_an_applied_migration_that_was_edited_is_refused():
+    """Raised as a caveat in both review rounds. An applied migration edited
+    afterwards is otherwise skipped in silence -- the schema change appears to
+    succeed and does not, which is the failure FR-17 exists to remove."""
+    with Namespace() as ns:
+        apply_migrations(ns.dsn)
+        version = discover()[-1][0]
+        with psycopg.connect(ns.dsn, autocommit=True) as conn:
+            conn.execute(
+                "UPDATE schema_migrations SET checksum = 'edited' WHERE version = %s",
+                (version,),
+            )
+        with pytest.raises(ValueError, match="changed after it was applied"):
+            apply_migrations(ns.dsn)
+
+
+def test_a_migration_applied_before_checksums_existed_is_trusted_and_recorded():
+    """Every real database migrated before checksums existed has none. Refusing
+    them would refuse every database; they are trusted on first sight and the
+    checksum recorded from then on."""
+    from agentsdk.migrate import checksum
+
+    with Namespace() as ns:
+        apply_migrations(ns.dsn)
+        with psycopg.connect(ns.dsn, autocommit=True) as conn:
+            conn.execute("UPDATE schema_migrations SET checksum = NULL")
+        assert apply_migrations(ns.dsn) == []
+        with psycopg.connect(ns.dsn) as conn:
+            stored = dict(conn.execute("SELECT version, checksum FROM schema_migrations").fetchall())
+    assert stored == {version: checksum(path) for version, path in discover()}
+
+
+def test_a_failed_migration_leaves_the_ones_before_it_applied(tmp_path, monkeypatch):
+    """A round-1 caveat: the docstring described one transaction per migration
+    while the code ran every pending migration in ONE, so a failure in the last
+    rolled back all the others with it and the next attempt repeated them."""
+    from agentsdk import migrate
+
+    good = tmp_path / "0900_good.sql"
+    good.write_text("CREATE TABLE m7_good (id int);", encoding="utf-8")
+    bad = tmp_path / "0901_bad.sql"
+    bad.write_text("CREATE TABLE m7_bad (id int); SELECT 1/0;", encoding="utf-8")
+
+    with Namespace() as ns:
+        monkeypatch.setattr(migrate, "discover", lambda: [("0900", good), ("0901", bad)])
+        with pytest.raises(psycopg.errors.DivisionByZero):
+            apply_migrations(ns.dsn)
+        assert schema_version(ns.dsn) == "0900", "the migration before the failure was rolled back too"
+        tables = _tables(ns)
+        assert "m7_good" in tables and "m7_bad" not in tables
+
+        monkeypatch.setattr(migrate, "discover", lambda: [("0900", good)])
+        assert apply_migrations(ns.dsn) == [], "the next attempt repeated work already done"
+
+
+# --- M7 round 2: gate blind spots over correct code ----------------------------
+
+
+def test_a_parent_in_another_project_of_the_same_tenant_is_refused():
+    """N3, M7 round 2: dropping the project comparison from the parent check
+    passed every gate. The only cross-scope test changed tenant AND project
+    together, so the tenant comparison alone refused it and the project
+    comparison was never what the test depended on."""
+    with Run("ac15p") as parent:
+        sibling = RunScope(
+            run_id=str(uuid.uuid4()),
+            tenant_id=parent.tenant_id,
+            project_id="p-another-project",
+        )
+        with pytest.raises(ValueError, match="may only descend from one its own tenant"):
+            _start(sibling, parent_run_id=parent.run_id)
+        assert query("SELECT 1 FROM runs WHERE run_id=%s", (sibling.run_id,)) == []
+
+
+def test_a_uuid_object_is_accepted_wherever_a_run_id_is():
+    """A round-2 caveat. uuid.UUID is what get_run and PostgresTrace return for
+    a run id, and the canonical-form guard refused it as a TypeError -- so a
+    caller passing a run id straight back from a trace as parent_run_id was
+    refused by the SDK's own output type."""
+    from agentsdk.postgres import PostgresTrace, column_rejection_reason
+
+    as_object = uuid.uuid4()
+    assert column_rejection_reason(as_object, "UUID") is None
+    config = RunConfig(tenant_id="t", project_id="p", parent_run_id=as_object)
+    assert config.parent_run_id == str(as_object), "RunConfig did not normalise to one type"
+
+    with Run("uuidobj") as parent:
+        handed_back = PostgresTrace(DSN)._runs.get_run(parent)["run_id"]
+        assert isinstance(handed_back, uuid.UUID), (
+            "the premise changed: get_run no longer returns uuid.UUID"
+        )
+        child = RunScope(
+            run_id=str(uuid.uuid4()), tenant_id=parent.tenant_id, project_id=parent.project_id
+        )
+        try:
+            _start(child, parent_run_id=handed_back)
+            stored = query("SELECT parent_run_id FROM runs WHERE run_id=%s", (child.run_id,))[0][0]
+            assert str(stored) == parent.run_id
+        finally:
+            with psycopg.connect(DSN, autocommit=True) as conn:
+                conn.execute("DELETE FROM execution_manifests WHERE run_id=%s", (child.run_id,))
+                conn.execute("DELETE FROM runs WHERE run_id=%s", (child.run_id,))
