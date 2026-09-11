@@ -1,0 +1,22 @@
+{
+  "task": "M8-distribution-and-examples",
+  "gate": "unit",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests/test_distribution.py -q",
+  "started_at": "2026-09-11T18:34:21.636Z",
+  "observed_at": "2026-09-11T18:34:34.506Z",
+  "exit_code": 0,
+  "signal": null,
+  "stdout": "........                                                                 [100%]\r\n8 passed in 12.27s\r\n",
+  "stderr": "",
+  "revision": {
+    "commit": "0bf8fd9ea509883885d53d6087e2b20c64a9b16e",
+    "dirty": true
+  },
+  "source_hash": "a50cbdea8c2f2341f1f9c38be7c51692876f8e66a2dc621e3064f6ea466f8304",
+  "environment": {
+    "node": "v20.10.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "hash": "387957ebe48a10bc1517a4beb05094883b7f025d656ad84a96687c846d72da0c"
+}

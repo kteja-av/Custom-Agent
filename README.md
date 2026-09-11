@@ -6,8 +6,8 @@ runs, every result tagged with where it came from, and every run optionally
 persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
-> a store-hardening milestone for Phase 2 are complete: 454 tests, each milestone
-> approved by an independent review. It is not on PyPI yet, and a lot is
+> a store-hardening milestone for Phase 2 are complete, each approved by an
+> independent review; the suite has 462 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -67,6 +67,12 @@ cd Custom-Agent
 python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements.txt   # Windows
 # .venv/bin/python -m pip install -r requirements.txt     # macOS / Linux
+```
+
+Or install it as a package, together with what the examples need:
+
+```bash
+.venv/Scripts/python -m pip install -e ".[examples]"
 ```
 
 The runtime dependencies are `httpx`, `jsonschema`, `psycopg[binary]`,
@@ -323,6 +329,31 @@ print(trace["run"]["status"], "|", len(trace["messages"]), "messages |", len(tra
 print("configuration manifest recorded:", trace["manifest"] is not None)
 ```
 
+## Examples
+
+[`scripts/`](scripts/) holds eight runnable examples, one activity each. Every
+one runs live, or with `--offline` using a scripted model with no network and no
+credentials -- which is also how the test suite checks them.
+
+| script | what it shows |
+|---|---|
+| [`01_minimal_agent.py`](scripts/01_minimal_agent.py) | a tool, an agent, a run, a result |
+| [`02_custom_tools.py`](scripts/02_custom_tools.py) | JSON Schema validation, async tools, timeouts, a tool that raises |
+| [`03_permissions_and_hooks.py`](scripts/03_permissions_and_hooks.py) | a custom permission checker; hooks that rewrite calls and redact results |
+| [`04_persistence_and_trace.py`](scripts/04_persistence_and_trace.py) | PostgreSQL persistence, trace reconstruction, tenant isolation |
+| [`05_switching_models.py`](scripts/05_switching_models.py) | several model clients, a preferred model, a per-run override |
+| [`06_mcp_tools.py`](scripts/06_mcp_tools.py) | tools from an MCP server, bridged by hand, results marked untrusted |
+| [`07_delegating_to_a_child_run.py`](scripts/07_delegating_to_a_child_run.py) | a child run that records its parent |
+| [`08_testing_agents_offline.py`](scripts/08_testing_agents_offline.py) | behavioural checks against a scripted model, then a real one |
+
+```bash
+python scripts/02_custom_tools.py --offline
+```
+
+MCP and delegation are bridged or recorded by hand in those examples, because
+the SDK does not do either natively yet; each example says so. See
+[`scripts/README.md`](scripts/README.md).
+
 ## The public API
 
 Driving a run needs only the package root: `Runner`, `AgentSpec`, `RunConfig`,
@@ -341,7 +372,7 @@ Defining tools and model clients currently means importing from submodules:
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (454 tests) runs against a **real database and the live gateway**,
+The full suite (462 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.
@@ -373,6 +404,7 @@ agentsdk/
   migrate.py        versioned migrations
   schema.sql        the baseline schema
   migrations/       numbered schema changes
+scripts/            runnable examples, live or --offline
 tests/              the test suite
 SPEC.md             the specification
 .genesis/           decisions, knowledge, evidence and review verdicts

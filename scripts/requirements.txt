@@ -1,0 +1,5 @@
+# Example-only dependencies. The SDK itself needs none of these (NFR-9).
+#
+#   python -m pip install -r scripts/requirements.txt
+#
+mcp==2.2.0     # 06_mcp_tools.py: MCP client and a demo server (the mcp 2.x API)

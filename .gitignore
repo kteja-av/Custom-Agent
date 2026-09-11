@@ -6,3 +6,7 @@ __pycache__/
 .venv/
 venv/
 .genesis/local/
+# packaging debris
+build/
+dist/
+*.egg-info/

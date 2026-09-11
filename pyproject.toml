@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "custom-agent-sdk"
+dynamic = ["version"]
+description = "A Python SDK for tool-using AI agents: validated and permission-checked tools, provenance on every result, and optional PostgreSQL persistence."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "siva-rgb" }]
+# Must match the runtime section of requirements.txt exactly; a test compares them.
+dependencies = [
+    "httpx==0.28.1",
+    "jsonschema==4.26.0",
+    "psycopg[binary]==3.3.5",
+    "psycopg_pool==3.2.6",
+    "python-dotenv==1.2.3",
+]
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "wheel==0.45.1"]
+# Example-only. The SDK itself never imports these (NFR-9).
+examples = ["mcp==2.2.0"]
+
+[project.urls]
+Repository = "https://github.com/siva-rgb/Custom-Agent"
+
+[tool.setuptools]
+packages = ["agentsdk", "agentsdk.providers"]
+
+[tool.setuptools.package-data]
+# apply_schema reads these from the installed package, not from a checkout (FR-22).
+agentsdk = ["schema.sql", "migrations/*.sql"]
+
+[tool.setuptools.dynamic]
+version = { attr = "agentsdk.version.__version__" }

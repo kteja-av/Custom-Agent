@@ -4,7 +4,7 @@
 
 - workflow: new-product
 - phase: build
-- plan approval: owner at 2026-09-11T16:10:40.095Z
+- plan approval: owner at 2026-09-11T18:15:27.115Z
 
 ## Tasks
 
@@ -62,5 +62,13 @@
 - requirements: FR-17, FR-18, FR-19, FR-20, FR-21, NFR-8, AC-11, AC-12, AC-13, AC-14, AC-15
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_phase2_readiness.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pass
+- next: Run the task pre-flight.
+
+### M8-distribution-and-examples — The SDK installs as a package, and eight runnable examples in scripts/ show how to build agents, tools, hooks, persistence, model switching, MCP bridging, delegation and offline tests -- each running live and offline, with no credential in any tracked file
+
+- state/risk: active / medium
+- requirements: FR-22, FR-23, FR-24, FR-25, NFR-9, NFR-10, AC-16, AC-17, AC-18, AC-19
+- scope: not bounded
+- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_distribution.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending
 - next: Run the task pre-flight.
 

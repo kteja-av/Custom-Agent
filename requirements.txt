@@ -21,3 +21,4 @@ python-dotenv==1.2.3       # loads MODEL_API_KEY, BASE_URL, DATABASE_URL from .e
 # is a pytest invocation: without these the gates cannot be computed at all.
 pytest==9.1.1
 pytest-asyncio==1.4.0
+wheel==0.45.1              # builds the wheel AC-16 installs (tests/test_distribution.py)

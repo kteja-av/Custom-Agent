@@ -2,7 +2,7 @@
 
 > Status: draft. A coding agent must not implement product code until this specification is approved through Genesis.
 
-**Scope:** Stage 1, Phase 0 — the single-agent skeleton — plus the store-hardening requirements (FR-17..FR-21, NFR-8, AC-11..AC-15) that Phase 2 makes reachable. Those were added after Phase 0 was approved, measured rather than assumed: see the Phase 2 readiness section. Phases 2–8 each get their own Genesis specification when they start, per the design docs' refusal to write low-level design for components that do not exist yet. Source of truth: `agent_sdk/agent-sdk-low-level-design (1).md` (Phase 0 detail) and `agent_sdk/agent-sdk-master-design-v0.3.md` (design of record).
+**Scope:** Stage 1, Phase 0 — the single-agent skeleton — plus the store-hardening requirements (FR-17..FR-21, NFR-8, AC-11..AC-15) that Phase 2 makes reachable, and the distribution and example requirements (FR-22..FR-25, NFR-9..NFR-10, AC-16..AC-19) for publishing the SDK as a standalone project. Those were added after Phase 0 was approved, measured rather than assumed: see the Phase 2 readiness section. Phases 2–8 each get their own Genesis specification when they start, per the design docs' refusal to write low-level design for components that do not exist yet. Source of truth: `agent_sdk/agent-sdk-low-level-design (1).md` (Phase 0 detail) and `agent_sdk/agent-sdk-master-design-v0.3.md` (design of record).
 
 ## Problem
 
@@ -48,6 +48,17 @@ are recorded in `.genesis/project.json` (KNOWLEDGE-e52fb4dc, KNOWLEDGE-010d12d3)
 - FR-20: Persistence does not block the event loop. Store calls issued from async code use non-blocking I/O and a connection pool, replacing the per-call connect/authenticate/close cycle.
 - FR-21: A run may record the run that spawned it, so a subagent's trace reconstructs together with its parent's. `runs` has no such column today.
 
+### Distribution and examples (M8)
+
+M8 publishes the SDK as a standalone project. It adds no SDK capability: every
+example uses only what Phase 0 and M7 built, and says so where a reader would
+reasonably expect more.
+
+- FR-22: The SDK is installable as a package from a `pyproject.toml` that declares the same runtime dependencies as `requirements.txt`, puts test and example dependencies in optional extras, and ships `schema.sql` and every file in `migrations/` as package data, so `apply_schema` works from an installed copy and not only from a checkout.
+- FR-23: A `scripts/` directory holds runnable examples, one activity per file, written against the public API: a minimal agent; custom tools (schemas, validation failures, async tools, timeouts, tool errors); permissions and runtime hooks; persistence and trace reconstruction; switching models; bridging tools from an MCP server; recording a delegated child run under its parent (FR-21); and testing an agent offline with a scripted model client.
+- FR-24: Every example runs in two modes: live against the configured gateway (and the database, where the example is about persistence), and offline with `--offline`, using a scripted `ModelClient`, no network and no database, so an example can be checked without credentials.
+- FR-25: The MCP example states plainly that the SDK has no native MCP support (Phase 4), bridges an MCP server's tools into `Tool` objects itself, and relabels their results with MCP-origin, untrusted `ContentProvenance` through a `RuntimeHook` -- because the executor records every tool result as a trusted internal tool, which is wrong for content from an external server (ADR-26).
+
 ## Non-functional requirements
 
 - NFR-1: Provider-agnostic. Switching between `openai.*`, `bedrock.*`, `azure.*`, and `vertex_ai.*` models is a configuration change only — no SDK source file changes, no new adapter.
@@ -58,6 +69,8 @@ are recorded in `.genesis/project.json` (KNOWLEDGE-e52fb4dc, KNOWLEDGE-010d12d3)
 - NFR-6: No runtime dependency on LangGraph, Claude Agent SDK, or OpenAI Agents SDK. The SDK must import and run with none of them installed.
 - NFR-7: Phase 0 interfaces are chosen so Phases 2–6 add fields and implementations rather than replace contracts.
 - NFR-8: Persistence is not the concurrency ceiling. With several runs executing concurrently against a model client that performs no network I/O, the worst single event-loop stall stays under 50 ms, and wall-clock time stays within 3x the same workload run entirely in memory. Measured today: 1008 ms worst stall and roughly 30x wall time.
+- NFR-9: Example-only dependencies (the MCP client library) live in `scripts/requirements.txt` and the package's `examples` extra, never in the SDK's runtime dependencies, so NFR-6's guarantee that the SDK imports with nothing extra installed is unchanged.
+- NFR-10: The repository carries a README describing what Phase 0 and M7 actually do and what they do not -- no streaming, subagent orchestration, native MCP, sandboxing, human approvals, context compaction, budgets or resume -- an MIT `LICENSE`, and a `.env.example` naming every variable the SDK and examples read, with no values.
 
 ## Constraints
 
@@ -80,6 +93,7 @@ are recorded in `.genesis/project.json` (KNOWLEDGE-e52fb4dc, KNOWLEDGE-010d12d3)
 - No streaming of model tokens, and no `RunHandle`.
 - No structured-output enforcement beyond the unused schema slot.
 - None of the three Stage 2 products is built or started.
+- M8 adds no SDK capability. Examples that reach toward later phases (MCP, delegation) bridge or record by hand and say that they do.
 
 ## Acceptance criteria
 
@@ -105,8 +119,17 @@ found the defects, turned into assertions.
 - AC-14: No store I/O made during a run executes on the event loop's thread, on every terminal path a run can take (completion, each kind of tool failure, a model failure, a failure reaching the Runner's boundary, and max turns exhausted), asserted by recording the thread of every database connection checkout rather than inferred from timing. Six runs executing concurrently against a no-network model client also satisfy NFR-8's stall and wall-clock bounds, measured in the same process as an in-memory baseline; that measurement is acceptance evidence, not the detector. (Amended after M7 review rounds 1 and 2: as first written, AC-14 was only the timing measurement, which passed with the offload fully reverted and could not see three event writes left on the loop.)
 - AC-15: A run that records a parent run reconstructs together with it, and both rows carry the tenant and project of the run that owns them (ADR-11 is not relaxed for child runs).
 
+### Distribution and examples
+
+- AC-16: A wheel built from `pyproject.toml`, installed into a directory outside the repository, imports as `agentsdk` from that installed location, and contains `schema.sql` and every migration file.
+- AC-17: Every script in `scripts/` exits 0 when run with `--offline` in a working directory outside the repository with no `.env` and no model or database variables set, asserted by a test that runs each as a subprocess; a script added without an offline mode fails that test.
+- AC-18: The MCP example, offline, starts a real local MCP server over stdio, calls one of its tools through an SDK run, and the resulting `ToolResult` in the run's history carries `Origin.MCP_RESOURCE`, `TrustZone.UNTRUSTED` and `InstructionAuthority.DATA_ONLY`.
+- AC-19: No tracked file contains the value of `MODEL_API_KEY`, the database password or the gateway hostname from `.env`, asserted by a test that scans every tracked file and fails rather than skips when `.env` is absent.
+
 ## Risks
 
+- **A published history publishes every file ever committed.** Removing a file from the tree does not remove it from history, so an exclusion applied only to the current tree publishes the excluded file anyway. Mitigation: decide what is published per commit, not per tree, before the first push.
+- **Examples drift from the SDK.** An example that stops running teaches a wrong API with the authority of the repository behind it. Mitigation: AC-17 runs every example in the gate.
 - **Provider neutrality is only half-proven.** AC-9 switches upstream providers, but through one gateway speaking one wire format. That proves model-agnosticism, not wire-format-agnosticism; a genuinely second wire format remains unproven until a non-LiteLLM adapter exists. Mitigation: state the limit honestly now, keep `ModelClient` the only place provider shape is known, and treat the second wire format as Phase 0/1's real exit criterion rather than pretending Phase 0 closed it.
 - **Postgres credentials are unresolved.** The service is up but its password is not known to the harness, so no gate touching the database can pass yet. Mitigation: resolve before the first database-backed task is activated; it blocks AC-4 through AC-7.
 - **Gateway reachability is partly filtered.** `GET /v1/*` is blocked by Envoy today. If the filter later extends to POST paths, every model-backed gate fails for reasons unrelated to the code. Mitigation: keep a scripted stub `ModelClient` so loop logic stays testable without the network.

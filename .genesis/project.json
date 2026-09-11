@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-11T16:46:54.640Z"
+    "updated_at": "2026-09-11T18:35:43.858Z"
   },
   "policy": {
     "ponytail": "full",
@@ -24,18 +24,18 @@
   },
   "lifecycle": {
     "phase": "build",
-    "status": "ready",
-    "active_task": null,
+    "status": "active",
+    "active_task": "M8-distribution-and-examples",
     "blocker": null,
-    "next_action": "Add the next approved implementation task."
+    "next_action": "Run the task pre-flight."
   },
   "commands": {},
   "workflow": {
     "type": "new-product",
     "started_at": "2026-09-05T14:48:57.897Z",
     "spec_check": {
-      "at": "2026-09-11T15:33:54.673Z",
-      "source_hash": "11cc9d26323ff5b8e9c677e1dc02cddb2b8493724378b457e5040fcf72159525",
+      "at": "2026-09-11T17:48:19.909Z",
+      "source_hash": "9b23f39bad84984de3d4851d7c58383cfce85d56f865470f1b1644f6181b1a9a",
       "requirements": [
         "AC-1",
         "AC-10",
@@ -44,6 +44,10 @@
         "AC-13",
         "AC-14",
         "AC-15",
+        "AC-16",
+        "AC-17",
+        "AC-18",
+        "AC-19",
         "AC-2",
         "AC-3",
         "AC-4",
@@ -66,6 +70,10 @@
         "FR-2",
         "FR-20",
         "FR-21",
+        "FR-22",
+        "FR-23",
+        "FR-24",
+        "FR-25",
         "FR-3",
         "FR-4",
         "FR-5",
@@ -74,24 +82,26 @@
         "FR-8",
         "FR-9",
         "NFR-1",
+        "NFR-10",
         "NFR-2",
         "NFR-3",
         "NFR-4",
         "NFR-5",
         "NFR-6",
         "NFR-7",
-        "NFR-8"
+        "NFR-8",
+        "NFR-9"
       ]
     },
     "plan_check": {
-      "at": "2026-09-11T16:10:39.949Z",
-      "source_hash": "a59e5db360dd2c5dc1c760b6057a70aa3d3a9b7a9f694ff43338bb1bf88474ca"
+      "at": "2026-09-11T18:15:26.973Z",
+      "source_hash": "1c6a4ebdc5297928c1325b4a0a946952788aa6d9e18db2e2c86e3624c52103a1"
     },
     "plan_approval": {
       "human": "owner",
-      "reason": "Plan unchanged by the AC-11 and AC-14 amendments: M7-store-hardening still carries all eleven Phase 2 readiness requirements with its unit and regression gates.",
-      "at": "2026-09-11T16:10:40.095Z",
-      "source_hash": "a59e5db360dd2c5dc1c760b6057a70aa3d3a9b7a9f694ff43338bb1bf88474ca"
+      "reason": "M8-distribution-and-examples carries all ten distribution requirements with a unit gate over the examples and packaging and the full regression suite; every earlier task is done.",
+      "at": "2026-09-11T18:15:27.115Z",
+      "source_hash": "1c6a4ebdc5297928c1325b4a0a946952788aa6d9e18db2e2c86e3624c52103a1"
     }
   },
   "artifacts": [
@@ -108,6 +118,10 @@
         "AC-13",
         "AC-14",
         "AC-15",
+        "AC-16",
+        "AC-17",
+        "AC-18",
+        "AC-19",
         "AC-2",
         "AC-3",
         "AC-4",
@@ -130,6 +144,10 @@
         "FR-2",
         "FR-20",
         "FR-21",
+        "FR-22",
+        "FR-23",
+        "FR-24",
+        "FR-25",
         "FR-3",
         "FR-4",
         "FR-5",
@@ -138,20 +156,22 @@
         "FR-8",
         "FR-9",
         "NFR-1",
+        "NFR-10",
         "NFR-2",
         "NFR-3",
         "NFR-4",
         "NFR-5",
         "NFR-6",
         "NFR-7",
-        "NFR-8"
+        "NFR-8",
+        "NFR-9"
       ],
-      "source_hash": "11cc9d26323ff5b8e9c677e1dc02cddb2b8493724378b457e5040fcf72159525",
+      "source_hash": "9b23f39bad84984de3d4851d7c58383cfce85d56f865470f1b1644f6181b1a9a",
       "approval": {
         "human": "owner",
-        "reason": "AC-14 now requires untimed detection of store calls on the event loop; AC-11 no longer claims FR-18 needs a column",
-        "at": "2026-09-11T16:10:39.787Z",
-        "source_hash": "11cc9d26323ff5b8e9c677e1dc02cddb2b8493724378b457e5040fcf72159525"
+        "reason": "M8: package the SDK with pyproject, ship eight runnable examples that each work live and offline, bridge MCP tools by hand with untrusted provenance, and carry a README, MIT license and env example, gated by FR-22..FR-25, NFR-9..NFR-10 and AC-16..AC-19.",
+        "at": "2026-09-11T18:15:26.718Z",
+        "source_hash": "9b23f39bad84984de3d4851d7c58383cfce85d56f865470f1b1644f6181b1a9a"
       }
     }
   ],
@@ -763,6 +783,30 @@
       "source": "M7 round 3 reviewer correction",
       "tags": [],
       "recorded_at": "2026-09-11T16:46:54.504Z"
+    },
+    {
+      "id": "KNOWLEDGE-74c556aa",
+      "title": "mcp 2.x renamed the server class and moved every field to snake_case",
+      "text": "Measured with mcp 2.2.0, the version pip resolves today: from mcp.server.fastmcp import FastMCP fails with ModuleNotFoundError, because FastMCP was renamed MCPServer (from mcp.server.mcpserver import MCPServer), constructed as MCPServer(name) with the same @app.tool() decorator and app.run() defaulting to stdio. The client imports are unchanged (from mcp import ClientSession, StdioServerParameters; from mcp.client.stdio import stdio_client), but result and listing fields are snake_case: Tool.input_schema not inputSchema, CallToolResult.is_error not isError. A stdio round trip through list_tools and call_tool returned TextContent. Most published MCP examples are 1.x and fail against this version, the first by crashing the server so the client reports only Connection closed.",
+      "source": "M8 pre-spec probe",
+      "tags": [],
+      "recorded_at": "2026-09-11T17:48:20.033Z"
+    },
+    {
+      "id": "KNOWLEDGE-46ac0348",
+      "title": "PostgresTrace.reconstruct returns the manifest as a bare positional row",
+      "text": "Found by running scripts/04 live during M8. reconstruct returns run as a dict and messages and events as lists of dicts, but manifest as the raw fetchone() tuple of eight columns in SELECT order: sdk_version, agent_spec_hash, instructions_hash, model_id, model_version, model_adapter_version, tool_spec_hashes, policy_version. A caller treating it like the rest of the trace fails; sorted() over it raised TypeError comparing the tool_spec_hashes list with a string. The M8 gate could not see this, because it runs examples offline and only a live run with a database reaches that code. M8 adds no SDK capability, so the example prints the row as it comes; returning a dict is a candidate change for the next SDK milestone.",
+      "source": "M8 live run of scripts/04",
+      "tags": [],
+      "recorded_at": "2026-09-11T18:29:47.370Z"
+    },
+    {
+      "id": "KNOWLEDGE-862c2e9e",
+      "title": "A run whose model comes from the client default records no model id",
+      "text": "Seen running scripts/04 live in M8. The agent named no preferred_model and one client was registered, so the Runner resolved that client with model_id None; the client sent its own default model, but the runs row stored model_id NULL and the manifest recorded model_id unspecified and model_version unregistered. The run completed against a real model and nothing persisted says which one. FR-11 exists to answer what configuration produced a run, and this path cannot. The persisting examples now name the model on the agent. Candidate SDK change: resolve the client default model id into the run row and manifest when no model is named.",
+      "source": "M8 live run of scripts/04",
+      "tags": [],
+      "recorded_at": "2026-09-11T18:30:39.403Z"
     }
   ],
   "tasks": [
@@ -785,9 +829,9 @@
           "status": "pass",
           "evidence": {
             "human": "owner",
-            "reason": "AC-14 now requires untimed detection of store calls on the event loop; AC-11 no longer claims FR-18 needs a column",
-            "source_hash": "c4db5385408e1128abd51b9ad2a259619eddf1b6fa6b2bed212b5ff51950aff9",
-            "observed_at": "2026-09-11T16:10:39.787Z"
+            "reason": "M8: package the SDK with pyproject, ship eight runnable examples that each work live and offline, bridge MCP tools by hand with untrusted provenance, and carry a README, MIT license and env example, gated by FR-22..FR-25, NFR-9..NFR-10 and AC-16..AC-19.",
+            "source_hash": "f2c94b4fca846702be7717b412e13828ae7483cdc3e2c9afa373f9857c161c37",
+            "observed_at": "2026-09-11T18:15:26.718Z"
           }
         }
       ],
@@ -797,7 +841,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T14:48:57.897Z",
-      "updated_at": "2026-09-11T16:10:39.787Z"
+      "updated_at": "2026-09-11T18:15:26.718Z"
     },
     {
       "id": "M1-primitives",
@@ -1155,6 +1199,67 @@
       ],
       "created_at": "2026-09-09T14:16:43.750Z",
       "updated_at": "2026-09-11T16:46:54.640Z"
+    },
+    {
+      "id": "M8-distribution-and-examples",
+      "outcome": "The SDK installs as a package, and eight runnable examples in scripts/ show how to build agents, tools, hooks, persistence, model switching, MCP bridging, delegation and offline tests -- each running live and offline, with no credential in any tracked file",
+      "state": "active",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-22",
+        "FR-23",
+        "FR-24",
+        "FR-25",
+        "NFR-9",
+        "NFR-10",
+        "AC-16",
+        "AC-17",
+        "AC-18",
+        "AC-19"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_distribution.py -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M8-distribution-and-examples-unit.json",
+            "source_hash": "a50cbdea8c2f2341f1f9c38be7c51692876f8e66a2dc621e3064f6ea466f8304",
+            "hash": "387957ebe48a10bc1517a4beb05094883b7f025d656ad84a96687c846d72da0c",
+            "observed_at": "2026-09-11T18:34:34.506Z"
+          }
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M8-distribution-and-examples-regression.json",
+            "source_hash": "a50cbdea8c2f2341f1f9c38be7c51692876f8e66a2dc621e3064f6ea466f8304",
+            "hash": "0b6dd7985b552e62224b73a32ddd00c8b2dc81b86aca5f248e32a87da4fbece1",
+            "observed_at": "2026-09-11T18:35:43.753Z"
+          }
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-11T18:15:26.857Z",
+      "updated_at": "2026-09-11T18:35:43.858Z"
     }
   ],
   "learning_proposals": [],
