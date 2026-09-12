@@ -20,7 +20,7 @@
 | **`ArtifactRef`/`ArtifactStore` interface moved: Phase 5 → Phase 2** | The Phase-2 subagent result contract already promised "artifacts produced" — this was another internal contradiction (a contract with no defined type). Sandbox-produced artifacts, snapshots, and mounts remain Phase 5. |
 | `PlanNode` gains acceptance criteria | A node is `done` only when execution terminated **and** its output contract validates **and** its acceptance criteria are satisfied — not merely "the subagent stopped talking." Phase 2. |
 | `SchedulerLimits` introduced, separate from `BudgetGovernor` | Concurrency safety and monetary/token budget are different controls — a run can be affordable but operationally unsafe to fan out unbounded. Phase 2. |
-| **ADR-06 — Proposed resolution, not yet accepted** | Hard run ceiling + per-child reservation + unused-budget reclaim. Well-specified and directly resolves the original checkbox-vs-rationale mismatch, but recorded as `Proposed` — your confirmation needed, same as ADR-03 last round. |
+| **ADR-06 — Proposed in v0.3, accepted 2026-09-12** | Run ceiling + per-child reservation + unused-budget reclaim. Recorded as `Proposed` in v0.3; accepted by the owner on 2026-09-12 with soft enforcement in USD and tokens, so the earlier name "hard run ceiling" is dropped. See §4.7. |
 | ADR-15 actually applied this time | v0.2's ADR table left ADR-15 unchanged despite round 1 recommending a fix — an oversight, now corrected: adaptive calibration uses externally validated outcomes (deterministic tests, ground-truth fixtures, downstream correctness, human adjudication) where available; critic outcome is one lower-confidence signal, not the label that trains the gating threshold. Phase 3. |
 | `EvidenceSourceVersion` introduced | Claims bind to an immutable retrieved version of a source (content hash, retrieval time), not a mutable URL alone — makes the Evidence subsystem reproducible. Phase 3. |
 | Evidence cache isolation fixed | A canonical URL is not the same resource across different auth/tenant/locale contexts. Cache scopes (`PUBLIC_GLOBAL`/`TENANT`/`PROJECT`/`SESSION`/`NO_CACHE`) now required for ADR-11 (tenant tagging) to actually mean something inside the Evidence subsystem. Phase 3. |
@@ -234,18 +234,26 @@ SchedulerLimits
 
 Budget answers "can we afford this"; concurrency limits answer "is it operationally safe to run this many things at once" — a run can be affordable and still unsafe to fan out unbounded.
 
-**ADR-06, proposed resolution (not yet accepted):** hard run ceiling + per-child reservation + reclaim of unused budget.
+**ADR-06, accepted 2026-09-12:** run ceiling + per-child reservation + reclaim of unused budget. Inherited/split and a flat cap were rejected; a flat cap would contradict ADR-10's per-subagent governor nested in the per-session one. v0.3 proposed a *hard* run ceiling; enforcement is soft (below), so the name no longer says hard.
 
 ```text
-Run hard ceiling:       $10
-Orchestrator reserve:    $2
-Child A/B/C reservation: $2 each
-Unallocated reserve:     $2
+Run ceiling:             $10
+Orchestrator reserve:     $2
+Child A/B/C reservation:  $2 each
+Unallocated reserve:      $2
 
 Child A finishes at $0.80 → $1.20 returns to the run pool
 ```
 
-A child cannot exceed its current reservation without an explicit additional allocation; total committed + spent never exceeds the run ceiling; replanning operates within the same run budget. This directly resolves the original ADR-06 mismatch (you checked "inherited/split" but flagged wanting to prioritize performance over budget-tracking overhead) — a flat outer ceiling is simple, while per-child reservation still gives real containment. **Recorded as `Proposed`, not `Accepted`** — see §12.
+The figures are illustrative: the reserve sizes are left to the Phase 2 specification.
+
+- **Units.** USD and tokens. A run may set a USD ceiling, a token ceiling, or both; whichever is reached first applies. Reservations and reclaim track every unit that has a ceiling. A USD ceiling on a model with no price is a configuration error raised at the call site; a token ceiling always applies.
+- **Enforcement is soft.** Spend is checked before each model call, and an agent already at or over its reservation makes no further call. An agent can therefore exceed its reservation by at most one model call, and a run's committed plus spent budget can exceed its ceiling by at most one model call per concurrently running agent, the orchestrator included. `SchedulerLimits.max_concurrent_subagents` bounds that overshoot. Overshoot is charged to the run; once the run's spend reaches its ceiling, no new model call or child run starts.
+- **At the limit.** A child that reaches its reservation ends `failed` with reason `budget_exceeded`, and so does a run that reaches its ceiling. Additional allocation comes only from a deterministic orchestrator policy drawing on the unallocated reserve, never at the model's request.
+- **Sizing.** The planner model proposes each `PlanNode`'s `budget_reservation`, and a fixed policy rule caps it. Left to the Phase 2 specification: the reservation cap rule, the fallback when the planner proposes no budget, and the sizes of the orchestrator reserve and the unallocated reserve.
+- **Scope.** A nested child reserves from its parent's reservation, never directly from the run pool. Retries of a node draw on that node's reservation, and replanning stays inside the run ceiling. Budgets for plain single-agent runs are not part of this decision. Budgets across a tenant or across runs remain deferred per ADR-10.
+
+Recorded in Genesis as DECISION-e1bf0327, superseding DECISION-f39da722.
 
 ### 4.8 Subagent Pool & Isolation
 
@@ -381,11 +389,13 @@ Unchanged from v0.2.
 | Phase | v0.3 additions on top of v0.2 |
 |---|---|
 | **0 — Skeleton** | `ModelRequest`/`ModelResponse`; `ContentProvenance` reframed (informs, doesn't enforce) + taint propagation rule; minimal `ContextAssembler`; `ToolExecutionOutcome` type (`Completed`/`Failed` implemented); `RunInterruption` type (concept only); lean `RuntimeHook`; strengthened `RunEvent`; `PrincipalContext` metadata; restored `ModelRegistry`; lean `ExecutionManifest` |
-| **0/1 — Multi-provider** | Proves neutrality via the new `ModelRequest`/`ModelResponse` contract instead of the old positional one |
-| **2 — Orchestrator + DAG + replanning** | + `PlanNode` acceptance criteria; `SchedulerLimits` (separate from budget); ADR-06 resolution *(pending confirmation)*; `ArtifactRef`/`ArtifactStore` interface *(moved here from Phase 5)*; `RunHandle` + runtime event streaming; `ContextPolicy` |
+| **0/1 — Multi-provider** | Proves neutrality via the new `ModelRequest`/`ModelResponse` contract instead of the old positional one; native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns *(added 2026-09-12)* |
+| **M9 — Honest results** *(before Phase 2, added 2026-09-12)* | Scope specified separately by the owner; not yet in `SPEC.md` |
+| **M10 — Safe built-in tools** *(before Phase 2, added 2026-09-12)* | Scope specified separately by the owner; not yet in `SPEC.md` |
+| **2 — Orchestrator + DAG + replanning** | + `PlanNode` acceptance criteria; `SchedulerLimits` (separate from budget); ADR-06 budget model *(accepted 2026-09-12: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens; see §4.7)*; `ArtifactRef`/`ArtifactStore` interface *(moved here from Phase 5)*; `RunHandle` + runtime event streaming; `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits *(added 2026-09-12)* |
 | **3 — Evidence + conditional critic** | + `EvidenceSourceVersion` (immutable); tenant/auth-scoped evidence caching; ADR-15 correction actually applied |
-| **4 — MCP + identity + basic interruptions** *(expanded)* | Full MCP 2026-07-28 conformance (not just a feature list); `ToolCatalog`/`ToolResolver`/`QualifiedToolName`/catalog snapshots; **basic non-durable `ApprovalManager`** *(moved here from Phase 5)*; `RunInterruption` handling for MCP input-required/MRTR flows; `DelegationGrant`/`CredentialBroker` |
-| **5 — Sandbox + workspace** | WorkspaceManager/WorkspaceSpec before microVM (unchanged principle); sandbox-produced artifacts/snapshots build on the artifact model from Phase 2 |
+| **4 — MCP + identity + basic interruptions** *(expanded)* | Full MCP 2026-07-28 conformance (not just a feature list); `ToolCatalog`/`ToolResolver`/`QualifiedToolName`/catalog snapshots; **basic non-durable `ApprovalManager`** *(moved here from Phase 5)*; `RunInterruption` handling for MCP input-required/MRTR flows; `DelegationGrant`/`CredentialBroker`; tenant-scoped skills and instruction bundles (versioned, stored, hashed into the `ExecutionManifest`, loaded on demand through a tool, never read from the local filesystem); Tier 2 built-in write/edit tools behind the `ApprovalManager` *(added 2026-09-12)* |
+| **5 — Sandbox + workspace** | WorkspaceManager/WorkspaceSpec before microVM (unchanged principle); sandbox-produced artifacts/snapshots build on the artifact model from Phase 2; Tier 3 built-in shell and code-execution tools, only inside the sandbox *(added 2026-09-12)* |
 | **6 — Sequential/dependent execution + durable approvals** | Full `RunState` replay/idempotency; `RunInterruption` becomes durable/restart-surviving |
 | **7 — Context compaction** | `ContextCompactor`, unchanged, only when needed |
 | **8 — Production hardening** | Full OTel mapping; full `ExecutionManifest`-based compatibility enforcement; full eval matrix |
@@ -396,7 +406,7 @@ Unchanged from v0.2.
 
 | ADR | Status |
 |---|---|
-| 06 | **Proposed** (was: open). Hard ceiling + per-child reservation + reclaim — well-specified, resolves the original mismatch cleanly, but recorded as proposed pending your explicit confirmation, not silently accepted. |
+| 06 | **Accepted** 2026-09-12 (was: Proposed in v0.3). Run ceiling + per-child reservation + reclaim of unused budget, in USD and tokens; soft enforcement, with overshoot bounded by one model call per concurrently running agent; inherited/split and flat cap rejected. Phase 2. See §4.7. |
 | 15 | **Modified** (v0.2 left this unapplied by oversight). Calibrate from externally validated outcomes; critic is a signal, not the training label. Phase 3. |
 | 17 | **Clarified.** Added: "Provenance labels are policy inputs and do not themselves create a hard instruction/data boundary. Taint propagates through model-derived outputs until explicitly cleared by deterministic policy or verification logic." |
 | 19 | **Expanded.** Durable run state now explicitly includes generic interruptions, external task references, execution attempts, and resumable approval/input state. |
@@ -422,6 +432,14 @@ Unchanged from v0.2.
 | Durable `RunInterruption` (restart-surviving) | Phase 6 |
 | Full `RuntimeHook` outcome set (`modify`/`reject`/`require_approval`/`halt` behaviors beyond `continue`) | Grows through Phases 2–6 as each has something to intervene on |
 | Full `ModelRegistry`-gated model promotion (eval-gated production eligibility) | Phase 8, though the registry itself exists from Phase 0 |
+| Parallel execution of read-only tool calls, under ADR-30 per-run/provider/tool concurrency limits | Phase 2 |
+| Tenant-scoped skills and instruction bundles: versioned, stored, hashed into the `ExecutionManifest`, loaded on demand through a tool, never read from the local filesystem | Phase 4 |
+| Tier 2 built-in write/edit tools, behind the `ApprovalManager` | Phase 4 |
+| Tier 3 built-in shell and code-execution tools, only inside the sandbox | Phase 5 |
+| Explicit prompt-cache markers; thinking blocks returned between turns | Phase 0/1, native Anthropic Messages adapter |
+| Voice and realtime agents | Not planned — non-goal |
+
+Rows from *Parallel execution* down were added 2026-09-12 by the owner's roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-79f09566 (a response cut off at the output-token limit ends the run as failed, reason max_tokens), DECISION-e6228dd4 (Phase 2 parallel read-only tool calls), DECISION-37bcac5b (Phase 4 skills and Tier 2 tools), DECISION-6a8204d0 (Phase 5 Tier 3 tools), DECISION-67b65b89 (Anthropic Messages adapter), DECISION-09edb52b (voice and realtime non-goal) and DECISION-f39da722 (ADR-06 timing, superseded by DECISION-e1bf0327: ADR-06 accepted).
 
 ---
 
@@ -452,7 +470,7 @@ Sanitization/filtering and domain allowlisting remain defense-in-depth, never th
 
 ## 12. Open Items Requiring Your Input
 
-1. **ADR-06** — confirm the hard-ceiling + per-child-reservation + reclaim model (§4.7), or keep the original inherited/split checkbox, or switch to a flat cap.
+1. **ADR-06** — accepted 2026-09-12 (§4.7). Left open for the Phase 2 specification: the reservation cap rule, the fallback when the planner proposes no budget, and the sizes of the orchestrator reserve and the unallocated reserve.
 2. **ADR-13** — wire format for the bring-your-own model endpoint.
 3. **ADR-18** — not blocking; revisit when Track B starts.
 4. **ADR-27 (`PrincipalContext`)** — worth a quick gut-check: none of the three validation use cases clearly need delegated-authority semantics yet. Fine to keep as lean, cheap, unused metadata for now, but flagging in case you'd rather cut it until a use case actually calls for it.
@@ -516,4 +534,4 @@ Internally, `AgentLoop` now builds a `ModelRequest` and calls `ModelClient.send(
 
 ## 15. Next Step
 
-Resolve §12's four items (ADR-06 is the only one that changes Phase 2 code; the others are either non-blocking or a one-line answer), then build Phase 0 against §13. Every Phase-0 interface introduced in v0.2 and v0.3 alike was chosen specifically so that Phases 2 through 6 add implementations and fields, not replacement contracts.
+Resolve §12's four items (ADR-06, since accepted on 2026-09-12, is the only one that changes Phase 2 code; the others are either non-blocking or a one-line answer), then build Phase 0 against §13. Every Phase-0 interface introduced in v0.2 and v0.3 alike was chosen specifically so that Phases 2 through 6 add implementations and fields, not replacement contracts.

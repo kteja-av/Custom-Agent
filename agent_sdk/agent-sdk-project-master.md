@@ -83,7 +83,7 @@ Five layers, each depending only on the layers below it (full detail: HLD §3–
 
 The actual enforcement boundary is structural: `PolicyEngine → ToolExecutor → Approval/Credential/Sandbox/Network` — never "the model respected the label."
 
-**Non-functional posture:** model-agnostic (canonical `ModelRequest`/`ModelResponse` contract), multi-tenant by construction (ADR-11, enforced not just tagged), fully auditable (`RunEvent` + `ExecutionManifest` + `RunStateStore` together), extensible without vendor lock-in (ADR-01), cost-governed (ADR-06, pending), deterministic where it matters (ADR-02/03 — DAG-only, immutable versioned plans).
+**Non-functional posture:** model-agnostic (canonical `ModelRequest`/`ModelResponse` contract), multi-tenant by construction (ADR-11, enforced not just tagged), fully auditable (`RunEvent` + `ExecutionManifest` + `RunStateStore` together), extensible without vendor lock-in (ADR-01), cost-governed (ADR-06, accepted), deterministic where it matters (ADR-02/03 — DAG-only, immutable versioned plans).
 
 ---
 
@@ -92,16 +92,31 @@ The actual enforcement boundary is structural: `PolicyEngine → ToolExecutor �
 | Phase | Capability delivered | Key new components |
 |---|---|---|
 | **0** | Single-agent loop end to end | Primitives + `ContentProvenance`, `ModelRequest`/`ModelResponse`, `ToolExecutor`, `ToolExecutionOutcome`, `RunInterruption` (type only), lean `RuntimeHook`, `AgentSpec`/`RunConfig`/`Runner`, error taxonomy, `RunEvent`, `ModelRegistry`, lean `ExecutionManifest`, `PrincipalContext` (metadata only) |
-| **0/1** | Model-agnosticism actually proven | Second `ModelClient` adapter (blocked on BYO wire format) |
-| **2** | Orchestration, DAG planning, replanning | `Orchestrator`, `PlanVersion` + `ReplanRequest` policy, `PlanNode` acceptance criteria, `SchedulerLimits`, budget model (ADR-06, pending), `ArtifactRef`/`ArtifactStore`, `RunHandle` + event streaming, `ContextPolicy` |
+| **0/1** | Model-agnosticism actually proven | Second `ModelClient` adapter (blocked on BYO wire format); native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns |
+| **M9** *(before 2)* | Honest results | Scope specified separately by the owner; not yet in `SPEC.md` |
+| **M10** *(before 2)* | Safe built-in tools | Scope specified separately by the owner; not yet in `SPEC.md` |
+| **2** | Orchestration, DAG planning, replanning | `Orchestrator`, `PlanVersion` + `ReplanRequest` policy, `PlanNode` acceptance criteria, `SchedulerLimits`, budget model (ADR-06, accepted: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens), `ArtifactRef`/`ArtifactStore`, `RunHandle` + event streaming, `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits |
 | **3** | Evidence substrate, conditional verification | `EvidenceStore`/`EvidenceLedger`/`EvidenceClaim`/`EvidenceVersion`/`EvidenceVerification`, claim-lock + backoff, `EvidenceSourceVersion`, tenant/auth-scoped caching, ADR-15 calibration fix |
-| **4** | MCP, identity, basic interruptions | Full MCP 2026-07-28 conformance, `ToolCatalog`/`ToolResolver`/`QualifiedToolName`, basic non-durable `ApprovalManager`, `DelegationGrant`/`CredentialBroker` |
-| **5** | Sandboxed execution | `WorkspaceManager`/`WorkspaceSpec` (defined before the provider), microVM provider, sandbox-produced artifacts/snapshots |
+| **4** | MCP, identity, basic interruptions | Full MCP 2026-07-28 conformance, `ToolCatalog`/`ToolResolver`/`QualifiedToolName`, basic non-durable `ApprovalManager`, `DelegationGrant`/`CredentialBroker`; tenant-scoped skills and instruction bundles (versioned, stored, hashed into the `ExecutionManifest`, loaded on demand through a tool, never read from the local filesystem); Tier 2 built-in write/edit tools behind the `ApprovalManager` |
+| **5** | Sandboxed execution | `WorkspaceManager`/`WorkspaceSpec` (defined before the provider), microVM provider, sandbox-produced artifacts/snapshots; Tier 3 built-in shell and code-execution tools, only inside the sandbox |
 | **6** | Durable, sequential, destructive execution | Full `RunState` replay/idempotency, durable/restart-surviving `RunInterruption` and approvals |
 | **7** | Context compaction | `ContextCompactor` — only once a subagent actually needs it |
 | **8** | Production hardening | Full OpenTelemetry mapping, full `ExecutionManifest`-based compatibility enforcement, full eval matrix, finalized LangGraph adapter |
 
 Each phase's exit signal and detailed rationale: `agent-sdk-master-design-v0.3.md` §7.
+
+**Deferred capabilities and non-goals added 2026-09-12** by the owner's roadmap review against the Claude Agent SDK and the OpenAI Agents SDK. The full register is `agent-sdk-master-design-v0.3.md` §9.
+
+| Capability | Lands in |
+|---|---|
+| Parallel execution of read-only tool calls, under ADR-30 concurrency limits | Phase 2 |
+| Tenant-scoped skills and instruction bundles: versioned, stored, hashed into the `ExecutionManifest`, loaded on demand through a tool, never read from the local filesystem | Phase 4 |
+| Tier 2 built-in write/edit tools, behind the `ApprovalManager` | Phase 4 |
+| Tier 3 built-in shell and code-execution tools, only inside the sandbox | Phase 5 |
+| Explicit prompt-cache markers; thinking blocks returned between turns | Phase 0/1, native Anthropic Messages adapter |
+| Voice and realtime agents | Non-goal: not planned |
+
+Recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-79f09566 (a response cut off at the output-token limit ends the run as failed, reason max_tokens), DECISION-e6228dd4 (Phase 2 parallel read-only tool calls), DECISION-37bcac5b (Phase 4 skills and Tier 2 tools), DECISION-6a8204d0 (Phase 5 Tier 3 tools), DECISION-67b65b89 (Anthropic Messages adapter), DECISION-09edb52b (voice and realtime non-goal) and DECISION-f39da722 (ADR-06 timing, superseded by DECISION-e1bf0327: ADR-06 accepted).
 
 ---
 
@@ -114,7 +129,7 @@ Each phase's exit signal and detailed rationale: `agent-sdk-master-design-v0.3.m
 | 03 | Plan mutability: immutable versioned plans + policy-controlled replanning | Accepted *(reversed from fixed-upfront)* |
 | 04 | Project identity: personal product development | Accepted |
 | 05 | Session/audit store: Postgres | Accepted |
-| 06 | Recursion budget: hard run ceiling + per-child reservation + reclaim | **Proposed — awaiting your confirmation** |
+| 06 | Recursion budget: run ceiling + per-child reservation + reclaim of unused budget, in USD and tokens, enforced softly (overshoot bounded by one model call per concurrently running agent) | Accepted — Phase 2 *(2026-09-12; inherited/split and flat cap rejected)* |
 | 07 | Ledger versioning: supersede pointers | Accepted |
 | 08 | Claim-lock: retry-on-failure + required backoff | Accepted |
 | 09 | Sandbox: microVM, behind a `WorkspaceManager` abstraction | Accepted |
@@ -145,7 +160,7 @@ Each phase's exit signal and detailed rationale: `agent-sdk-master-design-v0.3.m
 
 ## 7. Open Items Requiring Your Input
 
-1. **ADR-06** — confirm the hard-ceiling/per-child-reservation/reclaim model, or the original inherited/split checkbox, or a flat cap.
+1. **ADR-06** — accepted 2026-09-12 (§6; detail in `agent-sdk-master-design-v0.3.md` §4.7). Left open for the Phase 2 specification: the reservation cap rule, the fallback when the planner proposes no budget, and the sizes of the orchestrator reserve and the unallocated reserve.
 2. **ADR-13** — wire format (OpenAI-compatible / Anthropic-compatible / custom) for the bring-your-own model endpoint. This is the only one actually blocking Phase 0/1 code.
 3. **ADR-18** — not blocking; revisit when Track B starts.
 4. **ADR-27** — gut-check on whether `PrincipalContext` earns a place in Phase 0 given no current use case clearly needs delegated authority yet. Low stakes either way — it's presently a free, unread metadata field.

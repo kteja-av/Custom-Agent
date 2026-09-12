@@ -20,5 +20,15 @@ python-dotenv==1.2.3       # loads MODEL_API_KEY, BASE_URL, DATABASE_URL from .e
 # Kept in this file rather than a second one because every Genesis gate command
 # is a pytest invocation: without these the gates cannot be computed at all.
 pytest==9.1.1
-pytest-asyncio==1.4.0
+pytest-asyncio==1.4.0      # asyncio_mode = auto in pytest.ini
 wheel==0.45.1              # builds the wheel AC-16 installs (tests/test_distribution.py)
+setuptools==65.5.0         # the build backend for that wheel: the test builds with
+                           # --no-build-isolation, so it uses this venv's copy
+
+# --- examples --------------------------------------------------------------
+# Not an SDK dependency (NFR-9): pyproject.toml keeps it in the `examples`
+# extra and scripts/requirements.txt lists it too. Listed here because the
+# regression gate needs it: AC-18 runs scripts/06_mcp_tools.py against a real
+# MCP server. Must stay below the `# --- test` line, which is where the FR-22
+# test stops reading runtime dependencies.
+mcp==2.2.0
