@@ -8,7 +8,7 @@ stay runnable without a database, or every test needs one.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from .events import EventSink
@@ -46,7 +46,11 @@ class RunRecorder(Protocol):
 
 @dataclass(frozen=True)
 class Persistence:
-    dsn: str
+    # The DSN carries the database password, and a dataclass renders every field
+    # in its repr: a log line, a traceback or a debugger showing a Persistence
+    # printed the password (NFR-4; KNOWLEDGE-cb2f13f5). Hidden from repr, still
+    # readable as an attribute, because the stores need it.
+    dsn: str = field(repr=False)
     runs: RunRecorder
     _sessions: PostgresSessionStore
 

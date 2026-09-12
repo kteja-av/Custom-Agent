@@ -875,6 +875,46 @@ def test_settings_repr_never_contains_the_api_key():
     assert "p@h" not in repr(settings)
 
 
+def test_no_persistence_object_renders_the_database_password():
+    """NFR-4. An M8 finding, recorded as KNOWLEDGE-cb2f13f5 and reported by the
+    M9 round 1 reviewer: Persistence is a dataclass whose first field is the raw
+    DSN, so repr() and str() -- a log line, a traceback, a debugger -- printed
+    the database password. Every object a Persistence hands out is rendered in
+    every way a string is commonly made from an object.
+
+    Deliberately about rendering, not extraction: `persistence.dsn`, vars() and
+    dataclasses.asdict() still return the DSN, because the stores need it.
+    """
+    import pprint
+
+    from agentsdk import Persistence
+    from agentsdk.postgres import PostgresRunStore, PostgresSessionStore, PostgresTrace, RunScope
+
+    password = "not-a-real-password-42"
+    dsn = f"postgresql://someone:{password}@db.example:5432/agents"
+    persistence = Persistence(dsn=dsn, runs=PostgresRunStore(dsn), _sessions=PostgresSessionStore(dsn))
+    scope = RunScope(run_id="00000000-0000-0000-0000-000000000001", tenant_id="t", project_id="p")
+    objects = [
+        persistence,
+        persistence.runs,
+        persistence._sessions,
+        persistence.session_store_for(scope),
+        persistence.event_sink_for(scope),
+        PostgresTrace(dsn),
+    ]
+    renders = {
+        "repr": repr,
+        "str": str,
+        "fstring": lambda o: f"{o}",
+        "percent-r": lambda o: "%r" % (o,),
+        "pprint": pprint.pformat,
+        "exception": lambda o: repr(RuntimeError(o)) + str(RuntimeError(o)),
+    }
+    for obj in objects:
+        for name, render in renders.items():
+            assert password not in render(obj), f"{name}({type(obj).__name__}) renders the database password"
+
+
 @pytest.mark.parametrize(
     "render",
     [
