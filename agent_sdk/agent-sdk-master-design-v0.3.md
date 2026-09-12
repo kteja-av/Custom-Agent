@@ -389,7 +389,7 @@ Unchanged from v0.2.
 | Phase | v0.3 additions on top of v0.2 |
 |---|---|
 | **0 — Skeleton** | `ModelRequest`/`ModelResponse`; `ContentProvenance` reframed (informs, doesn't enforce) + taint propagation rule; minimal `ContextAssembler`; `ToolExecutionOutcome` type (`Completed`/`Failed` implemented); `RunInterruption` type (concept only); lean `RuntimeHook`; strengthened `RunEvent`; `PrincipalContext` metadata; restored `ModelRegistry`; lean `ExecutionManifest` |
-| **0/1 — Multi-provider** | Proves neutrality via the new `ModelRequest`/`ModelResponse` contract instead of the old positional one; native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns *(added 2026-09-12)* |
+| **0/1 — Multi-provider** | Proves neutrality via the new `ModelRequest`/`ModelResponse` contract instead of the old positional one; native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns *(added 2026-09-12)*; the `ModelClient` contract reports every attempt that received, or may have received, a response, so a call billed inside `send()` is no longer uncounted *(added 2026-09-12, DECISION-0e3ed41b, closes ASSUMPTION-b7463ca2)* |
 | **M9 — Honest results** *(before Phase 2, added 2026-09-12)* | Scope specified separately by the owner; not yet in `SPEC.md` |
 | **M10 — Safe built-in tools** *(before Phase 2, added 2026-09-12)* | Scope specified separately by the owner; not yet in `SPEC.md` |
 | **2 — Orchestrator + DAG + replanning** | + `PlanNode` acceptance criteria; `SchedulerLimits` (separate from budget); ADR-06 budget model *(accepted 2026-09-12: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens; see §4.7)*; `ArtifactRef`/`ArtifactStore` interface *(moved here from Phase 5)*; `RunHandle` + runtime event streaming; `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits *(added 2026-09-12)* |
@@ -437,6 +437,7 @@ Unchanged from v0.2.
 | Tier 2 built-in write/edit tools, behind the `ApprovalManager` | Phase 4 |
 | Tier 3 built-in shell and code-execution tools, only inside the sandbox | Phase 5 |
 | Explicit prompt-cache markers; thinking blocks returned between turns | Phase 0/1, native Anthropic Messages adapter |
+| Counting calls billed inside `send()` (an attempt that timed out after the provider processed it, a 2xx whose body cannot be read): the `ModelClient` contract reports every attempt that received, or may have received, a response | Phase 0/1, native Anthropic Messages adapter (DECISION-0e3ed41b; closes ASSUMPTION-b7463ca2) |
 | Voice and realtime agents | Not planned — non-goal |
 
 Rows from *Parallel execution* down were added 2026-09-12 by the owner's roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-79f09566 (a response cut off at the output-token limit ends the run as failed, reason max_tokens), DECISION-e6228dd4 (Phase 2 parallel read-only tool calls), DECISION-37bcac5b (Phase 4 skills and Tier 2 tools), DECISION-6a8204d0 (Phase 5 Tier 3 tools), DECISION-67b65b89 (Anthropic Messages adapter), DECISION-09edb52b (voice and realtime non-goal) and DECISION-f39da722 (ADR-06 timing, superseded by DECISION-e1bf0327: ADR-06 accepted).

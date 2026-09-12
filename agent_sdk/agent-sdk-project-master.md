@@ -92,7 +92,7 @@ The actual enforcement boundary is structural: `PolicyEngine â†’ ToolExecutor â†
 | Phase | Capability delivered | Key new components |
 |---|---|---|
 | **0** | Single-agent loop end to end | Primitives + `ContentProvenance`, `ModelRequest`/`ModelResponse`, `ToolExecutor`, `ToolExecutionOutcome`, `RunInterruption` (type only), lean `RuntimeHook`, `AgentSpec`/`RunConfig`/`Runner`, error taxonomy, `RunEvent`, `ModelRegistry`, lean `ExecutionManifest`, `PrincipalContext` (metadata only) |
-| **0/1** | Model-agnosticism actually proven | Second `ModelClient` adapter (blocked on BYO wire format); native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns |
+| **0/1** | Model-agnosticism actually proven | Second `ModelClient` adapter (blocked on BYO wire format); native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns; the `ModelClient` contract reports every attempt that received, or may have received, a response, so a call billed inside `send()` is no longer uncounted (DECISION-0e3ed41b) |
 | **M9** *(before 2)* | Honest results | Scope specified separately by the owner; not yet in `SPEC.md` |
 | **M10** *(before 2)* | Safe built-in tools | Scope specified separately by the owner; not yet in `SPEC.md` |
 | **2** | Orchestration, DAG planning, replanning | `Orchestrator`, `PlanVersion` + `ReplanRequest` policy, `PlanNode` acceptance criteria, `SchedulerLimits`, budget model (ADR-06, accepted: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens), `ArtifactRef`/`ArtifactStore`, `RunHandle` + event streaming, `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits |
@@ -114,6 +114,7 @@ Each phase's exit signal and detailed rationale: `agent-sdk-master-design-v0.3.m
 | Tier 2 built-in write/edit tools, behind the `ApprovalManager` | Phase 4 |
 | Tier 3 built-in shell and code-execution tools, only inside the sandbox | Phase 5 |
 | Explicit prompt-cache markers; thinking blocks returned between turns | Phase 0/1, native Anthropic Messages adapter |
+| Counting calls billed inside `send()` (an attempt that timed out after the provider processed it, a 2xx whose body cannot be read): the `ModelClient` contract reports every attempt that received, or may have received, a response | Phase 0/1, native Anthropic Messages adapter (DECISION-0e3ed41b; closes ASSUMPTION-b7463ca2) |
 | Voice and realtime agents | Non-goal: not planned |
 
 Recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-79f09566 (a response cut off at the output-token limit ends the run as failed, reason max_tokens), DECISION-e6228dd4 (Phase 2 parallel read-only tool calls), DECISION-37bcac5b (Phase 4 skills and Tier 2 tools), DECISION-6a8204d0 (Phase 5 Tier 3 tools), DECISION-67b65b89 (Anthropic Messages adapter), DECISION-09edb52b (voice and realtime non-goal) and DECISION-f39da722 (ADR-06 timing, superseded by DECISION-e1bf0327: ADR-06 accepted).

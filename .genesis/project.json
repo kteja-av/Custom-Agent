@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-12T17:00:34.845Z"
+    "updated_at": "2026-09-12T17:09:07.583Z"
   },
   "policy": {
     "ponytail": "full",
@@ -682,6 +682,14 @@
       "status": "accepted",
       "source": "owner approval 2026-09-12",
       "recorded_at": "2026-09-12T13:22:22.355Z"
+    },
+    {
+      "id": "DECISION-0e3ed41b",
+      "title": "Uncounted billed calls are closed with the native Anthropic adapter, not in M10",
+      "text": "Owner decision 2026-09-12 on ASSUMPTION-b7463ca2. A model call billed inside send() with no usage reported is routine under the default retry of timeouts: a provider processes the request, the client times out, and the retry is a second billed call the loop never sees; a 2xx whose body cannot be read is the same. It is closed by extending the ModelClient contract so a client reports every attempt that received, or may have received, a response, and the run accounts for such an attempt, at minimum by reporting its cost as unknown rather than omitting it. The change lands with the native Anthropic Messages adapter in Phase 0/1, where the contract is being extended anyway. It is not part of M10. Until then the limitation stays declared.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-12",
+      "recorded_at": "2026-09-12T17:08:05.135Z"
     }
   ],
   "knowledge": [
@@ -1124,6 +1132,22 @@
       "source": "implementing session, 2026-09-12",
       "tags": [],
       "recorded_at": "2026-09-12T17:00:34.844Z"
+    },
+    {
+      "id": "KNOWLEDGE-c783cf3f",
+      "title": "Developer Mode is on: this host can now create symlinks for M10",
+      "text": "Updates KNOWLEDGE-083e000b. On 2026-09-12, with owner approval, Windows Developer Mode was turned on (HKLM AppModelUnlock AllowDevelopmentWithoutDevLicense = 1, set through an elevation prompt the owner accepted). Unprivileged os.symlink then created a file symlink and a directory symlink, and the file symlink resolved to and read its target. The M10 precondition of decision D7 is met: AC-28 symlink escape cases can run and fail rather than skip.",
+      "source": "implementing session, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T17:08:28.557Z"
+    },
+    {
+      "id": "KNOWLEDGE-539d53d9",
+      "title": "Correction: KNOWLEDGE-c783cf3f was recorded before its verification ran",
+      "text": "KNOWLEDGE-c783cf3f states that unprivileged symlink creation was verified after Developer Mode was turned on. When it was written, that was not yet true: a line continuation after a heredoc broke the verification script, which crashed on its first line with NameError, and the shell chain recorded the knowledge anyway instead of stopping. A standalone verification then ran on 2026-09-12 and confirmed the claim: a file symlink and a directory symlink were created without elevation, the file symlink is a symlink, resolves to its target and reads its content. The facts in KNOWLEDGE-c783cf3f hold; the order in which it was recorded did not follow the rule that gates are computed, not narrated.",
+      "source": "implementing session, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T17:09:07.583Z"
     }
   ],
   "tasks": [
