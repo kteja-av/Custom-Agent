@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-11T18:35:43.858Z"
+    "updated_at": "2026-09-12T10:16:49.925Z"
   },
   "policy": {
     "ponytail": "full",
@@ -23,11 +23,11 @@
     }
   },
   "lifecycle": {
-    "phase": "build",
-    "status": "active",
-    "active_task": "M8-distribution-and-examples",
+    "phase": "verify",
+    "status": "ready",
+    "active_task": null,
     "blocker": null,
-    "next_action": "Run the task pre-flight."
+    "next_action": "Review completed work and choose the next bounded outcome."
   },
   "commands": {},
   "workflow": {
@@ -1203,7 +1203,7 @@
     {
       "id": "M8-distribution-and-examples",
       "outcome": "The SDK installs as a package, and eight runnable examples in scripts/ show how to build agents, tools, hooks, persistence, model switching, MCP bridging, delegation and offline tests -- each running live and offline, with no credential in any tracked file",
-      "state": "active",
+      "state": "done",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -1249,17 +1249,30 @@
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Claude Fable 5.1 (independent L4 reviewer, M8 round 1)",
+            "reason": "Verified independently, not from the author claims: gate 8 passed and full suite 462 passed in 53s; git diff --stat 0bf8fd9 -- agentsdk/ prints nothing; isolated python -m build pulled setuptools 84.0.0 and built sdist and wheel with a SetuptoolsDeprecationWarning on the project.license TOML table (hard failure dated 2027-Feb-18, so a caveat today); the wheel installed with dependencies plus the examples extra into a clean venv, pip check clean, imports from site-packages, ships schema.sql and 0002_parent_run_id.sql; pip install -e .[examples] under isolation succeeds; the sdist ships agentsdk, README, LICENSE, pyproject and tests/*.py and nothing else, no .env, no scripts, no .genesis; all eight examples exit 0 offline from that clean venv outside the repository with no config variables, and all eight exit 0 live against the gateway and database, including 05 across openai and bedrock and 06 with a real stdio MCP server; the 3 runs 04 and 07 wrote under example-tenant were deleted, none were written under another-tenant, the whole-row key scan is zero across all six public tables, orphan count 994 unchanged, no m8 schema, no orphaned MCP server process. Author mutants A, G and F were re-run and each is killed by exactly the named test; working tree byte-identical after every restore. Caveats, none blocking: (1) dropping agentsdk.providers from packages survives the full suite, so the AC-16 test cannot see a missing subpackage, add providers to the wheel probe or compare the wheel listing to the tree; (2) removing the whole README Install section survives, the NFR-10 check is keyword coverage not fitness; (3) a failed MCP call in 06 stores server-chosen error text with origin internal_tool, trust_zone trusted_source and no taint flags, because the bridge forwards the server text into the raised exception, disclosed in the docstring but avoidable in the example; (4) FR-24 live mode is verified by hand only, the gate runs examples offline; (5) examples 04 and 07 read DATABASE_URL as a raw string exactly as the README persistence section does, nothing prints it, Settings.dsn would be the single greppable reveal; (6) examples import agentsdk.session, agentsdk.permissions and agentsdk.registry which the README public API section does not list.",
+            "source_hash": "a50cbdea8c2f2341f1f9c38be7c51692876f8e66a2dc621e3064f6ea466f8304",
+            "observed_at": "2026-09-11T19:10:58.753Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
       "blocker": null,
       "notes": [],
       "failures": [],
-      "limitations": [],
+      "limitations": [
+        "AC-16 wheel probe cannot see a missing subpackage: dropping agentsdk.providers from packages survives the full suite (M8 review caveat 1). Remedy for a later milestone: probe agentsdk.providers in the wheel test, or compare the wheel listing with the source tree.",
+        "The NFR-10 README check is keyword coverage, not fitness: removing the whole Install section survives (M8 review caveat 2).",
+        "A failed MCP call in scripts/06 stores server-chosen error text with origin internal_tool, trust_zone trusted_source and no taint flags, because the bridge forwards the server text into the raised exception and after_tool never runs on failures. Disclosed in the docstring, avoidable in the example (M8 review caveat 3).",
+        "FR-24 live mode is verified by hand only; the gate runs the examples offline (M8 review caveat 4). Tied to the open owner decision on live checks inside regression gates.",
+        "Examples 04 and 07 read DATABASE_URL as a raw string, as the README persistence section does. Nothing prints it; Settings.dsn would be the single greppable reveal (M8 review caveat 5).",
+        "Examples import agentsdk.session, agentsdk.permissions and agentsdk.registry, which the README public API section does not list (M8 review caveat 6).",
+        "pyproject.toml declares license as a TOML table, which setuptools 84 deprecates with a hard failure dated 2027-02-18; switch to an SPDX license string before then (M8 review, isolated build)."
+      ],
       "created_at": "2026-09-11T18:15:26.857Z",
-      "updated_at": "2026-09-11T18:35:43.858Z"
+      "updated_at": "2026-09-12T10:16:49.925Z"
     }
   ],
   "learning_proposals": [],
@@ -1614,6 +1627,15 @@
       "task": "M7-store-hardening",
       "human": "Independent L4 reviewer, fresh session, M7 round 3",
       "reason": "APPROVED. Gates reproduced exactly: tests/test_phase2_readiness.py 31 passed; full pytest -q 454 passed in 34.5-45s across four clean runs (per-file breakdown 77+15+151+80+31+74+26=454 confirmed by collect-only; git diff --stat e5e2c00 -- tests/ shows only test_phase2_readiness.py 1400 lines new plus the two prior-disclosed files). Eight targeted mutations, each restored SHA-256-verified with git status clean, each run under FULL pytest -rf: (A) removing check=ConnectionPool.check_connection killed only test_the_pool_replaces_connections_the_server_has_closed, 5 of 8 runs failed, 453 passed. (B) reintroducing baseline-outside-lock via an ALIASED import (import psycopg as _pg_alias) evaded the substring premise test (test_stores_open_no_connections_of_their_own still passed) but was killed by test_eight_workers_initialising_an_empty_database_all_succeed, 7 of 8 UniqueViolation, 453 passed -- confirms the concurrency test, not the premise test, is the real defence, which is a blind spot in one auxiliary test but not a live gap since the primary detector holds. (N4) removing the migration pg_advisory_lock call killed both the empty-DB and upgrade concurrency tests, 452 passed. (C) disabling the checksum-mismatch raise killed only test_an_applied_migration_that_was_edited_is_refused, 453 passed. (N1) made ToolCalled for a failed tool run synchronously on the loop; killed with store I/O ON the loop thread reported as exactly 3 of 23 checkouts, matching the three injected tool failures, 453 passed. (N3) dropped the project_id comparison from the parent-tenancy SQL using valid SQL (a placeholder kept, compared with IS NOT NULL) rather than the prior invalid-SQL mistake; killed ONLY test_a_parent_in_another_project_of_the_same_tenant_is_refused, 453 passed, no cascade. (U) disabled the uuid.UUID carve-out in column_rejection_reason; killed with the exact TypeError message the round-2 defect described, 453 passed. (R2-style) reverted the RUN_STARTED emit to run synchronously; killed by BOTH the thread-identity test and the lock-hold test, 452 passed, matching DECISION-6b62d1f5 exactly. No mutant errored; every kill was a single targeted test or the intended small set, never an unrelated cascade. Session-level lock analysis: apply_migrations takes pg_advisory_lock on its OWN dedicated psycopg.connect (never a pooled connection) and the connection is closed via its own with-block regardless of whether the finally-block unlock succeeds, so Postgres releases the session lock on disconnect even if the explicit unlock is swallowed -- no leak onto a pooled connection is possible; this closes the round-3 prompts stated concern. NFR-8 margin under check= overhead measured directly: 6 concurrent runs 14.5ms worst stall, 2.02x wall ratio; 24 runs (4x the spec load) 16.6ms stall, 2.27x ratio -- both comfortably inside the 50ms and 3x bounds, so the per-checkout round trip does not erode the gates margin. Round-2 gap dispositions verified: N2 is closed by design, not by enumeration -- the checkout spy wraps the single _pool() choke point so ANY method reaching Postgres is logged regardless of name, pinned by the premise test (itself evadable only by an alias that the concurrency tests still catch, as mutation B showed). N3 closed and verified by mutation. uuid.UUID acceptance fixed and verified by mutation. Persistence.postgres blocking DDL is declared (docstring plus DECISION-01de1095) not fixed, matching its caveat disposition. Migration checksums implemented and verified live: edited-migration mutation caught, pre-checksum trust-on-first-sight test passes, deleted-migration non-detection remains an explicitly declared limitation, not a new finding. CAVEATS (not blocking): the premise substring test is evadable by import aliasing though the behavior it guards is still caught by the concurrency test; check_connections behaviour against a half-open TCP connection (vs a cleanly closed one) was not independently verified -- bounded in theory by the pools 30s timeout but not measured this round; declared limitations restated unchanged (unbounded messages/run_events growth, provider neutrality half-proven by choice, Usage/content-string gaps, deleted-migration detection, live-eval attempts==1 gate flakiness pending an owner decision). Database left as found: SYN- tenant runs 0, m7_ schemas 0, manifest-less runs 994 (unchanged baseline), no lingering m7-tagged backends. Whole-row scan for MODEL_API_KEY across runs/messages/run_events/execution_manifests: 0 rows in all four tables.",
+      "revision": null
+    },
+    {
+      "id": "2b90037f-3cb8-4fa1-9901-4c0855c38fd7",
+      "at": "2026-09-11T19:10:58.753Z",
+      "action": "approve",
+      "task": "M8-distribution-and-examples",
+      "human": "Claude Fable 5.1 (independent L4 reviewer, M8 round 1)",
+      "reason": "Verified independently, not from the author claims: gate 8 passed and full suite 462 passed in 53s; git diff --stat 0bf8fd9 -- agentsdk/ prints nothing; isolated python -m build pulled setuptools 84.0.0 and built sdist and wheel with a SetuptoolsDeprecationWarning on the project.license TOML table (hard failure dated 2027-Feb-18, so a caveat today); the wheel installed with dependencies plus the examples extra into a clean venv, pip check clean, imports from site-packages, ships schema.sql and 0002_parent_run_id.sql; pip install -e .[examples] under isolation succeeds; the sdist ships agentsdk, README, LICENSE, pyproject and tests/*.py and nothing else, no .env, no scripts, no .genesis; all eight examples exit 0 offline from that clean venv outside the repository with no config variables, and all eight exit 0 live against the gateway and database, including 05 across openai and bedrock and 06 with a real stdio MCP server; the 3 runs 04 and 07 wrote under example-tenant were deleted, none were written under another-tenant, the whole-row key scan is zero across all six public tables, orphan count 994 unchanged, no m8 schema, no orphaned MCP server process. Author mutants A, G and F were re-run and each is killed by exactly the named test; working tree byte-identical after every restore. Caveats, none blocking: (1) dropping agentsdk.providers from packages survives the full suite, so the AC-16 test cannot see a missing subpackage, add providers to the wheel probe or compare the wheel listing to the tree; (2) removing the whole README Install section survives, the NFR-10 check is keyword coverage not fitness; (3) a failed MCP call in 06 stores server-chosen error text with origin internal_tool, trust_zone trusted_source and no taint flags, because the bridge forwards the server text into the raised exception, disclosed in the docstring but avoidable in the example; (4) FR-24 live mode is verified by hand only, the gate runs examples offline; (5) examples 04 and 07 read DATABASE_URL as a raw string exactly as the README persistence section does, nothing prints it, Settings.dsn would be the single greppable reveal; (6) examples import agentsdk.session, agentsdk.permissions and agentsdk.registry which the README public API section does not list.",
       "revision": null
     }
   ],

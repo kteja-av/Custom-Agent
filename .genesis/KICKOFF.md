@@ -8,12 +8,12 @@ Load the official Ponytail skill at `full`. Verify repository state and baseline
 
 - objective: A model-agnostic, LangGraph-pluggable agent SDK with orchestrator-spawned isolated subagents and an evidence-centric governance ledger. Stage 1 delivers the harness (Phases 0-8); Phase 0 is a single-agent loop end to end.
 - mode/profile: init / prototype
-- workflow: new-product / build
-- phase/status: build / active
-- active task: M8-distribution-and-examples — The SDK installs as a package, and eight runnable examples in scripts/ show how to build agents, tools, hooks, persistence, model switching, MCP bridging, delegation and offline tests -- each running live and offline, with no credential in any tracked file
+- workflow: new-product / verify
+- phase/status: verify / ready
+- active task: none
 - owner: unassigned
 - blocker: none
-- next action: Run the task pre-flight.
+- next action: Review completed work and choose the next bounded outcome.
 - source hash: a50cbdea8c2f2341f1f9c38be7c51692876f8e66a2dc621e3064f6ea466f8304
 - phase instruction: Implement only the active task and prove it against current sources.
 - specification: SPEC.md / approved
@@ -29,13 +29,11 @@ Load the official Ponytail skill at `full`. Verify repository state and baseline
 - M5-postgres: Postgres schema and stores persist runs, messages, run_events and exactly one execution manifest per run, every row tenant-scoped and the trace reconstructable in order · proof: .genesis/evidence/M5-postgres-unit.json, independent-review:pass
 - M6-golden-eval: The golden eval passes end to end against the live gateway on two upstream providers, exercising the permission-denial and validation-failure paths and leaking no credential into any row or event · proof: .genesis/evidence/M6-golden-eval-unit.json, independent-review:pass
 - M7-store-hardening: Concurrent writers to one run all commit, event sequence numbers come from the database, persistence stops blocking the event loop, and a schema change can reach an existing database -- so Phase 2 fan-out lands on a store that survives it · proof: .genesis/evidence/M7-store-hardening-unit.json, .genesis/evidence/M7-store-hardening-regression.json, independent-review:pass
+- M8-distribution-and-examples: The SDK installs as a package, and eight runnable examples in scripts/ show how to build agents, tools, hooks, persistence, model switching, MCP bridging, delegation and offline tests -- each running live and offline, with no credential in any tracked file · proof: .genesis/evidence/M8-distribution-and-examples-unit.json, .genesis/evidence/M8-distribution-and-examples-regression.json, independent-review:pass
 
 ## Active evidence and failures
 
-- gates: unit:pass (.genesis/evidence/M8-distribution-and-examples-unit.json), regression:pass (.genesis/evidence/M8-distribution-and-examples-regression.json), independent-review:pending
-- failures: none recorded
-- limitations: none recorded
-- notes: none recorded
+- no active task
 
 ## Binding context
 
