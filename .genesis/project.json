@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-12T16:51:53.076Z"
+    "updated_at": "2026-09-12T17:00:34.845Z"
   },
   "policy": {
     "ponytail": "full",
@@ -1108,6 +1108,22 @@
       "source": "M9 round 2 L4 review and implementing session query, 2026-09-12",
       "tags": [],
       "recorded_at": "2026-09-12T16:49:51.057Z"
+    },
+    {
+      "id": "KNOWLEDGE-bf77bf4d",
+      "title": "The repr of Persistence no longer shows the database password",
+      "text": "Closes the exposure recorded in KNOWLEDGE-cb2f13f5, with owner approval on 2026-09-12, in the commit titled Hide the database password from repr(Persistence). Persistence.dsn is field(repr=False). A test in tests/test_model_client.py renders every object a Persistence hands out six ways (repr, str, an f-string, percent-r, pprint, inside an exception) and was red before the fix. Extraction by persistence.dsn, vars or dataclasses.asdict still returns the DSN by design, because the stores need it.",
+      "source": "implementing session, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T16:59:10.000Z"
+    },
+    {
+      "id": "KNOWLEDGE-fe208635",
+      "title": "Stuck test runs purged, and the store tests now remove what they write",
+      "text": "Follows KNOWLEDGE-322ef7f4. On 2026-09-12, with owner approval and after a rolled back dry run of the same statements, one transaction deleted the 20487 runs at status running in tenants t and t-*, with 6499 run_events, 21266 messages and 19515 execution_manifests rows. After: 10020 runs, none running, 22 runs without a manifest (was 994, so 972 of that long standing baseline were these stuck test runs), and no event, message or manifest row without its run. tests/test_persistence.py now removes every run each test writes under tenant t or t-* and fails at module teardown if any remain; one run of the file left 47 runs before the fixture and none after. Future reviews should expect 22 manifest-less runs, not 994.",
+      "source": "implementing session, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T17:00:34.844Z"
     }
   ],
   "tasks": [

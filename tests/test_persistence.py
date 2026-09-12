@@ -101,6 +101,58 @@ def schema():
     apply_schema(DSN)
 
 
+# The tenants this file writes under: "t" and "t-*" (t-test, t-e2e, t-unreg...).
+# The M9 round 2 review found 20,455 runs left at status running -- two thirds
+# of the table -- and one run of this file measured 47 runs left behind, 32 of
+# them still running, because its store tests start runs and never finish or
+# remove them. Every test now removes what it wrote, and the module fails at
+# teardown if anything remains, so the leak cannot come back quietly.
+_TEST_TENANTS = "(tenant_id = 't' OR tenant_id LIKE 't-%%')"
+
+
+def _database_now():
+    with psycopg.connect(DSN) as conn:
+        return conn.execute("SELECT clock_timestamp()").fetchone()[0]
+
+
+def _test_runs_since(since):
+    with psycopg.connect(DSN) as conn:
+        return [
+            row[0]
+            for row in conn.execute(
+                f"SELECT run_id FROM runs WHERE {_TEST_TENANTS} AND started_at >= %s", (since,)
+            ).fetchall()
+        ]
+
+
+def _remove_runs(run_ids):
+    if not run_ids:
+        return
+    with psycopg.connect(DSN, autocommit=True) as conn:
+        for table in ("run_events", "messages", "execution_manifests"):
+            conn.execute(f"DELETE FROM {table} WHERE run_id = ANY(%s)", (run_ids,))
+        # One statement, so a child and its parent go together past the
+        # self-referencing foreign key.
+        conn.execute("DELETE FROM runs WHERE run_id = ANY(%s)", (run_ids,))
+
+
+@pytest.fixture(scope="module", autouse=True)
+def nothing_left_behind(schema):
+    started = _database_now() if DSN else None
+    yield
+    if started is not None:
+        left = _test_runs_since(started)
+        assert not left, f"tests/test_persistence.py left {len(left)} test runs in the store"
+
+
+@pytest.fixture(autouse=True)
+def remove_what_the_test_wrote():
+    started = _database_now() if DSN else None
+    yield
+    if started is not None:
+        _remove_runs(_test_runs_since(started))
+
+
 @pytest.fixture
 def scope():
     return RunScope(run_id=str(uuid.uuid4()), tenant_id="t-test", project_id="p-test")
