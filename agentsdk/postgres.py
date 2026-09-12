@@ -20,6 +20,7 @@ import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,7 @@ from psycopg.types.json import Jsonb
 
 from .events import SCHEMA_VERSION, EventType, RunEvent
 from .migrate import apply_migrations
+from .model import Usage
 from .primitives import (
     UNSTORABLE,
     refuse_unstorable_fields,
@@ -653,26 +655,84 @@ class PostgresRunStore:
                     )
                 self._insert_manifest(conn, scope, manifest)
 
-    def finish_run(self, scope: RunScope, status: str) -> None:
+    # FR-31: the Runner hands this store a run's usage and cost with its status.
+    # Declared rather than inferred from finish_run's signature: see Runner._finish.
+    records_accounting = True
+
+    # FR-31: the columns migration 0003 created, one per Usage field. Named
+    # here rather than read off Usage because they are what the migration made;
+    # the M9 persistence test compares every one of them with the RunResult.
+    _USAGE_COLUMNS = (
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "cache_read_tokens",
+        "cache_write_tokens",
+        "reasoning_tokens",
+    )
+
+    def finish_run(
+        self,
+        scope: RunScope,
+        status: str,
+        usage: Usage | None = None,
+        cost_usd: Decimal | None = None,
+    ) -> None:
         """Tenant-scoped, like every other statement here.
 
         history() was scoped by DECISION-e692386f on the premise that NFR-2
         means tenancy is enforced rather than unguessable. Leaving the writes
         and the trace unscoped answered the same question the other way one
         function over, which is worse than either answer consistently applied.
+
+        The run's token totals and cost go in the same statement as its status
+        (FR-31), so a terminal row never exists without them. A value no column
+        can hold is written NULL rather than failing the write -- accounting
+        never fails a run (NFR-11) -- and a caller that passes neither, as every
+        caller before M9 did, writes NULL: unknown, not zero.
         """
+        counts = [self._bigint_or_null(getattr(usage, name, None)) for name in self._USAGE_COLUMNS]
         with _pool(self._dsn).connection() as conn:
             conn.execute(
-                "UPDATE runs SET status = %s, completed_at = %s"
+                "UPDATE runs SET status = %s, completed_at = %s, "
+                + ", ".join(f"{name} = %s" for name in self._USAGE_COLUMNS)
+                + ", cost_usd = %s"
                 " WHERE run_id = %s AND tenant_id = %s AND project_id = %s",
                 (
                     status,
                     datetime.now(timezone.utc),
+                    *counts,
+                    self._numeric_or_null(cost_usd),
                     scope.run_id,
                     scope.tenant_id,
                     scope.project_id,
                 ),
             )
+
+    @staticmethod
+    def _bigint_or_null(value: Any) -> int | None:
+        """A token count as a BIGINT column holds it, or None if it cannot.
+
+        Usage keeps any int a provider sends, and psycopg refuses one past the
+        interpreter's digit limit before the database is even asked.
+        """
+        if isinstance(value, bool) or not isinstance(value, int):
+            return None
+        return value if -(2**63) <= value < 2**63 else None
+
+    @staticmethod
+    def _numeric_or_null(value: Any) -> Decimal | None:
+        """A cost as a NUMERIC column holds it: at most 131072 digits before the
+        point and 16383 after. None otherwise, and for anything not a finite
+        Decimal."""
+        try:
+            if not isinstance(value, Decimal) or not value.is_finite():
+                return None
+            if value.as_tuple().exponent < -16383 or value.adjusted() >= 131072:
+                return None
+            return value
+        except Exception:  # noqa: BLE001 - accounting never fails a run
+            return None
 
     def write_manifest(self, scope: RunScope, manifest: dict[str, Any]) -> None:
         """Write a manifest for a run that already exists.
@@ -689,18 +749,25 @@ class PostgresRunStore:
     def _insert_manifest(
         conn: psycopg.Connection, scope: RunScope, manifest: dict[str, Any]
     ) -> None:
-        """Takes the caller's connection so it can join an open transaction."""
+        """Takes the caller's connection so it can join an open transaction.
+
+        The last three columns arrived with migration 0003 (FR-31): the
+        effective output limit, the reasoning effort, and the prices the run
+        was costed with -- NULL for a manifest built without them.
+        """
+        pricing = manifest.get("pricing")
         conn.execute(
             """
                 INSERT INTO execution_manifests (
                     run_id, tenant_id, project_id, sdk_version, agent_spec_hash,
                     instructions_hash, model_id, model_version,
-                    model_adapter_version, tool_spec_hashes, policy_version
+                    model_adapter_version, tool_spec_hashes, policy_version,
+                    max_output_tokens, reasoning_effort, pricing
                 )
                 -- Tenancy from the run row, as everywhere else. Inside
                 -- start_run the row is written in this same transaction, so
                 -- the SELECT sees it.
-                SELECT r.run_id, r.tenant_id, r.project_id, %s,%s,%s,%s,%s,%s,%s,%s
+                SELECT r.run_id, r.tenant_id, r.project_id, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 FROM runs r
                 WHERE r.run_id = %s AND r.tenant_id = %s AND r.project_id = %s
             """,
@@ -713,6 +780,9 @@ class PostgresRunStore:
                 manifest.get("model_adapter_version"),
                 Jsonb(manifest.get("tool_spec_hashes") or []),
                 manifest.get("policy_version"),
+                manifest.get("max_output_tokens"),
+                manifest.get("reasoning_effort"),
+                Jsonb(pricing) if pricing is not None else None,
                 scope.run_id,
                 scope.tenant_id,
                 scope.project_id,
@@ -720,24 +790,21 @@ class PostgresRunStore:
         )
 
     def get_run(self, scope: RunScope) -> dict[str, Any] | None:
+        # The usage columns and cost_usd are appended after parent_run_id, so
+        # no key an earlier caller reads changes (FR-31).
+        keys = (
+            "run_id", "tenant_id", "project_id", "agent_spec_id", "status",
+            "principal_context", "max_turns", "model_id", "started_at",
+            "completed_at", "parent_run_id", *self._USAGE_COLUMNS, "cost_usd",
+        )
         with _pool(self._dsn).connection() as conn:
             row = conn.execute(
-                """
-                SELECT run_id, tenant_id, project_id, agent_spec_id, status,
-                       principal_context, max_turns, model_id, started_at,
-                       completed_at, parent_run_id
-                FROM runs
-                WHERE run_id = %s AND tenant_id = %s AND project_id = %s
-                """,
+                f"SELECT {', '.join(keys)} FROM runs"
+                " WHERE run_id = %s AND tenant_id = %s AND project_id = %s",
                 (scope.run_id, scope.tenant_id, scope.project_id),
             ).fetchone()
         if row is None:
             return None
-        keys = (
-            "run_id", "tenant_id", "project_id", "agent_spec_id", "status",
-            "principal_context", "max_turns", "model_id", "started_at",
-            "completed_at", "parent_run_id",
-        )
         return dict(zip(keys, row))
 
 

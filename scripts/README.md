@@ -1,6 +1,6 @@
 # Examples
 
-Eight runnable examples, one activity each. Every one runs two ways:
+Runnable examples, one activity each. Every one runs two ways:
 
 ```bash
 python scripts/01_minimal_agent.py            # live: uses BASE_URL and MODEL_API_KEY from .env
@@ -9,7 +9,8 @@ python scripts/01_minimal_agent.py --offline  # a scripted model: no network, no
 
 Offline mode is not a toy: it runs the real SDK code path with a scripted model
 in place of a real one, and several examples assert on every outcome. The test
-suite runs all eight offline, from outside the repository, with no credentials.
+suite runs every one of them offline, from outside the repository, with no
+credentials.
 
 | script | what it shows |
 |---|---|
@@ -21,6 +22,7 @@ suite runs all eight offline, from outside the repository, with no credentials.
 | [`06_mcp_tools.py`](06_mcp_tools.py) | bridging tools from an MCP server, with results marked untrusted |
 | [`07_delegating_to_a_child_run.py`](07_delegating_to_a_child_run.py) | a child run that records its parent |
 | [`08_testing_agents_offline.py`](08_testing_agents_offline.py) | behavioural checks against a scripted model, then a real one |
+| [`09_limits_and_cost.py`](09_limits_and_cost.py) | an output limit that fails a cut-off run honestly, and what a run cost from prices you supply |
 
 ## Setup
 
@@ -44,3 +46,6 @@ model endpoint.
 - **Delegation (07).** There is no orchestrator yet (Phase 2), and a tool cannot
   see its own run id, so a child run is started by your code between runs, not
   by an agent from inside a tool.
+
+The prices in 09 are illustrative. The SDK ships no price list: a bundled price
+goes stale, and a stale price reports a wrong number rather than an unknown one.

@@ -13,7 +13,7 @@ the convenience of a fourth role.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
@@ -27,6 +27,21 @@ class StopReason(str, Enum):
     STOP_SEQUENCE = "stop_sequence"
     CONTENT_FILTER = "content_filter"
     OTHER = "other"
+
+
+class ReasoningEffort(str, Enum):
+    """How hard a model should reason before answering (FR-28).
+
+    Provider-neutral: each adapter maps it to its own wire format, and the
+    OpenAI-compatible one sends `reasoning_effort`. It reaches a payload only
+    when a run sets it, so a model that rejects the parameter is unaffected by
+    runs that never ask for it. Later providers add members, not a new type
+    (NFR-7).
+    """
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
 
 
 def token_count(value: Any) -> int:
@@ -60,22 +75,38 @@ def token_count(value: Any) -> int:
 
 @dataclass(frozen=True)
 class Usage:
+    """Tokens consumed by one model call, or summed over a run (FR-29).
+
+    What each field means is fixed here, not left to each provider:
+
+      * `prompt_tokens` INCLUDES `cache_read_tokens` and `cache_write_tokens`;
+      * `completion_tokens` INCLUDES `reasoning_tokens`.
+
+    That is the gateway's own accounting, measured rather than assumed
+    (KNOWLEDGE-312441cb: 2560 cached of 2620 prompt tokens; 25 reasoning of 45
+    completion tokens), and it is what lets cost subtract cached tokens once
+    instead of charging them twice. An adapter whose provider reports them the
+    other way normalises before it constructs a Usage.
+    """
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
+    reasoning_tokens: int = 0
 
     def __post_init__(self) -> None:
         # Enforced here rather than trusted from the caller: this dataclass is
         # built from provider JSON and from replayed event payloads, neither of
-        # which is under our control.
-        for name in ("prompt_tokens", "completion_tokens", "total_tokens"):
-            object.__setattr__(self, name, token_count(getattr(self, name)))
+        # which is under our control. Every field is walked rather than named,
+        # so a count added later is coerced without anyone remembering to.
+        for f in fields(self):
+            object.__setattr__(self, f.name, token_count(getattr(self, f.name)))
 
     def __add__(self, other: Usage) -> Usage:
         return Usage(
-            self.prompt_tokens + other.prompt_tokens,
-            self.completion_tokens + other.completion_tokens,
-            self.total_tokens + other.total_tokens,
+            **{f.name: getattr(self, f.name) + getattr(other, f.name) for f in fields(self)}
         )
 
 

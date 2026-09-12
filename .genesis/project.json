@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-12T10:16:49.925Z"
+    "updated_at": "2026-09-12T16:51:53.076Z"
   },
   "policy": {
     "ponytail": "full",
@@ -23,19 +23,19 @@
     }
   },
   "lifecycle": {
-    "phase": "verify",
-    "status": "ready",
-    "active_task": null,
+    "phase": "build",
+    "status": "active",
+    "active_task": "M10-safe-builtin-tools",
     "blocker": null,
-    "next_action": "Review completed work and choose the next bounded outcome."
+    "next_action": "Run the task pre-flight."
   },
   "commands": {},
   "workflow": {
     "type": "new-product",
     "started_at": "2026-09-05T14:48:57.897Z",
     "spec_check": {
-      "at": "2026-09-11T17:48:19.909Z",
-      "source_hash": "9b23f39bad84984de3d4851d7c58383cfce85d56f865470f1b1644f6181b1a9a",
+      "at": "2026-09-12T13:14:28.640Z",
+      "source_hash": "6a261e8b88ba6f632c7571ddd984818a5c5c77f0bd6c440e556a09d41e99b4c7",
       "requirements": [
         "AC-1",
         "AC-10",
@@ -49,7 +49,21 @@
         "AC-18",
         "AC-19",
         "AC-2",
+        "AC-20",
+        "AC-21",
+        "AC-22",
+        "AC-23",
+        "AC-24",
+        "AC-25",
+        "AC-26",
+        "AC-27",
+        "AC-28",
+        "AC-29",
         "AC-3",
+        "AC-30",
+        "AC-31",
+        "AC-32",
+        "AC-33",
         "AC-4",
         "AC-5",
         "AC-6",
@@ -74,8 +88,25 @@
         "FR-23",
         "FR-24",
         "FR-25",
+        "FR-26",
+        "FR-27",
+        "FR-28",
+        "FR-29",
         "FR-3",
+        "FR-30",
+        "FR-31",
+        "FR-32",
+        "FR-33",
+        "FR-34",
+        "FR-35",
+        "FR-36",
+        "FR-37",
+        "FR-38",
+        "FR-39",
         "FR-4",
+        "FR-40",
+        "FR-41",
+        "FR-42",
         "FR-5",
         "FR-6",
         "FR-7",
@@ -83,6 +114,10 @@
         "FR-9",
         "NFR-1",
         "NFR-10",
+        "NFR-11",
+        "NFR-12",
+        "NFR-13",
+        "NFR-14",
         "NFR-2",
         "NFR-3",
         "NFR-4",
@@ -94,14 +129,14 @@
       ]
     },
     "plan_check": {
-      "at": "2026-09-11T18:15:26.973Z",
-      "source_hash": "1c6a4ebdc5297928c1325b4a0a946952788aa6d9e18db2e2c86e3624c52103a1"
+      "at": "2026-09-12T13:22:22.902Z",
+      "source_hash": "8d5819f8def851651343038df35e9bf172ee1a732bb2a28219356d76d8489110"
     },
     "plan_approval": {
       "human": "owner",
-      "reason": "M8-distribution-and-examples carries all ten distribution requirements with a unit gate over the examples and packaging and the full regression suite; every earlier task is done.",
-      "at": "2026-09-11T18:15:27.115Z",
-      "source_hash": "1c6a4ebdc5297928c1325b4a0a946952788aa6d9e18db2e2c86e3624c52103a1"
+      "reason": "M9-honest-results and M10-safe-builtin-tools carry all 35 new requirements with unit, regression and independent-review gates; M1 to M8 are done",
+      "at": "2026-09-12T13:39:10.415Z",
+      "source_hash": "8d5819f8def851651343038df35e9bf172ee1a732bb2a28219356d76d8489110"
     }
   },
   "artifacts": [
@@ -123,7 +158,21 @@
         "AC-18",
         "AC-19",
         "AC-2",
+        "AC-20",
+        "AC-21",
+        "AC-22",
+        "AC-23",
+        "AC-24",
+        "AC-25",
+        "AC-26",
+        "AC-27",
+        "AC-28",
+        "AC-29",
         "AC-3",
+        "AC-30",
+        "AC-31",
+        "AC-32",
+        "AC-33",
         "AC-4",
         "AC-5",
         "AC-6",
@@ -148,8 +197,25 @@
         "FR-23",
         "FR-24",
         "FR-25",
+        "FR-26",
+        "FR-27",
+        "FR-28",
+        "FR-29",
         "FR-3",
+        "FR-30",
+        "FR-31",
+        "FR-32",
+        "FR-33",
+        "FR-34",
+        "FR-35",
+        "FR-36",
+        "FR-37",
+        "FR-38",
+        "FR-39",
         "FR-4",
+        "FR-40",
+        "FR-41",
+        "FR-42",
         "FR-5",
         "FR-6",
         "FR-7",
@@ -157,6 +223,10 @@
         "FR-9",
         "NFR-1",
         "NFR-10",
+        "NFR-11",
+        "NFR-12",
+        "NFR-13",
+        "NFR-14",
         "NFR-2",
         "NFR-3",
         "NFR-4",
@@ -166,12 +236,12 @@
         "NFR-8",
         "NFR-9"
       ],
-      "source_hash": "9b23f39bad84984de3d4851d7c58383cfce85d56f865470f1b1644f6181b1a9a",
+      "source_hash": "6a261e8b88ba6f632c7571ddd984818a5c5c77f0bd6c440e556a09d41e99b4c7",
       "approval": {
         "human": "owner",
-        "reason": "M8: package the SDK with pyproject, ship eight runnable examples that each work live and offline, bridge MCP tools by hand with untrusted provenance, and carry a README, MIT license and env example, gated by FR-22..FR-25, NFR-9..NFR-10 and AC-16..AC-19.",
-        "at": "2026-09-11T18:15:26.718Z",
-        "source_hash": "9b23f39bad84984de3d4851d7c58383cfce85d56f865470f1b1644f6181b1a9a"
+        "reason": "M9 and M10 requirements FR-26 to FR-42, NFR-11 to NFR-14 and AC-20 to AC-33 approved with decisions D1 to D10 as recommended",
+        "at": "2026-09-12T13:22:22.184Z",
+        "source_hash": "6a261e8b88ba6f632c7571ddd984818a5c5c77f0bd6c440e556a09d41e99b4c7"
       }
     }
   ],
@@ -203,6 +273,13 @@
       "status": "open",
       "source": "L4 review round 5, 2026-09-06",
       "recorded_at": "2026-09-06T11:17:18.455Z"
+    },
+    {
+      "id": "ASSUMPTION-b7463ca2",
+      "text": "Declared M9 limitation A10, sharpened by the round 2 L4 reviewer: a model call billed inside send() with no usage reported is not counted in cost_usd. It is routine, not rare. RetryPolicy retries ModelTimeout by default, so when a provider processes a request but the client times out before reading the answer, the retry is a second billed call and the first is invisible to the loop. A 2xx whose body cannot be read or parsed is the same. Closing it needs the ModelClient contract to report attempts that received, or may have received, a response; recommended together with the native Anthropic adapter. Open.",
+      "status": "open",
+      "source": "M9 round 2 L4 review, 2026-09-12",
+      "recorded_at": "2026-09-12T16:49:50.543Z"
     }
   ],
   "invariants": [
@@ -445,6 +522,166 @@
       "status": "accepted",
       "source": null,
       "recorded_at": "2026-09-11T11:02:22.532Z"
+    },
+    {
+      "id": "DECISION-f04449c9",
+      "title": "M9 Honest results and M10 Safe built-in tools come before Phase 2",
+      "text": "Owner decision, 2026-09-12. Two milestones are inserted before Phase 2: M9 Honest results and M10 Safe built-in tools. Their scope is specified separately by the owner and is not yet in SPEC.md; nothing is built for either until it has approved requirements.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:00.395Z"
+    },
+    {
+      "id": "DECISION-79f09566",
+      "title": "A response cut off by the output-token limit ends the run as failed, reason max_tokens",
+      "text": "Owner decision, 2026-09-12. When a model response stops because it reached the output-token limit, the run ends with status failed and reason max_tokens. Chosen over adding a new run status and over keeping the run completed. Planning only, not implemented: today the loop decides on tool-call presence, so a truncated response with no tool calls currently ends as completed. It changes the terminal status of an existing path, so it needs a requirement and a test before it lands.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:00.675Z"
+    },
+    {
+      "id": "DECISION-e6228dd4",
+      "title": "Phase 2 adds parallel execution of read-only tool calls under ADR-30 limits",
+      "text": "Owner decision, 2026-09-12. Phase 2 adds parallel execution of read-only tool calls, governed by the per-run, per-provider and per-tool concurrency limits of ADR-30. Today the loop executes the tool calls of a turn one at a time.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:00.889Z"
+    },
+    {
+      "id": "DECISION-37bcac5b",
+      "title": "Phase 4 adds tenant-scoped skills and instruction bundles, and Tier 2 write and edit tools behind the ApprovalManager",
+      "text": "Owner decision, 2026-09-12. Skills and instruction bundles are tenant-scoped, versioned, stored, hashed into the ExecutionManifest, loaded on demand through a tool, and never read from the local filesystem. Tier 2 built-in write and edit tools arrive in the same phase, behind the ApprovalManager.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:01.092Z"
+    },
+    {
+      "id": "DECISION-6a8204d0",
+      "title": "Phase 5 adds Tier 3 built-in shell and code-execution tools, only inside the sandbox",
+      "text": "Owner decision, 2026-09-12. Tier 3 built-in tools, shell and code execution, arrive in Phase 5 and run only inside the sandbox.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:01.307Z"
+    },
+    {
+      "id": "DECISION-67b65b89",
+      "title": "The native Anthropic Messages adapter adds prompt-cache markers and thinking blocks between turns",
+      "text": "Owner decision, 2026-09-12, for the Phase 0/1 native Anthropic Messages adapter: it adds explicit prompt-cache markers and returns thinking blocks between turns. It will meet two additive gaps already recorded in SPEC.md: Usage has no cached-token fields, and Message.content is a single string rather than content blocks.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:01.518Z"
+    },
+    {
+      "id": "DECISION-09edb52b",
+      "title": "Non-goal: voice and realtime agents",
+      "text": "Owner decision, 2026-09-12. Voice and realtime agents are a non-goal: not planned in any phase.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:01.732Z"
+    },
+    {
+      "id": "DECISION-f39da722",
+      "title": "ADR-06 stays Proposed until Phase 2 budget work",
+      "text": "Owner decision, 2026-09-12. ADR-06 (hard run ceiling, per-child reservation, reclaim of unused budget) remains Proposed. It must be decided before the budget work in Phase 2, and is not a precondition for M9 or M10.",
+      "status": "accepted",
+      "source": "Owner roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, 2026-09-12",
+      "recorded_at": "2026-09-12T10:43:01.933Z"
+    },
+    {
+      "id": "DECISION-e1bf0327",
+      "title": "ADR-06 Accepted: run ceiling, per-child reservation and reclaim, enforced softly in USD and tokens",
+      "text": "Owner decision, 2026-09-12. Supersedes DECISION-f39da722, which kept ADR-06 Proposed. (1) Model: run ceiling plus per-child reservation plus reclaim of unused budget. Inherited/split and a flat cap are rejected; a flat cap would contradict ADR-10. The word hard is dropped from the name because enforcement is soft. (2) Units: USD and tokens. A run may set a USD ceiling, a token ceiling, or both, and whichever is reached first applies. Reservations and reclaim track every unit that has a ceiling. A USD ceiling on a model with no price is a configuration error raised at the call site; a token ceiling always applies. (3) Enforcement: soft. Spend is checked before each model call, and an agent already at or over its reservation makes no further call, so an agent can exceed its reservation by at most one model call and a run can exceed its ceiling by at most one call per concurrently running agent, orchestrator included; SchedulerLimits.max_concurrent_subagents bounds that overshoot. Overshoot is charged to the run, and once run spend reaches its ceiling no new model call or child run starts. (4) At the limit: a child that reaches its reservation ends failed with reason budget_exceeded, and so does a run that reaches its ceiling. Extra allocation comes only from a deterministic orchestrator policy drawing on the unallocated reserve, never at the request of the model. (5) Sizing: the planner model proposes each PlanNode budget_reservation and a fixed policy rule caps it. Left to the Phase 2 specification: the cap rule itself, the fallback when the planner proposes nothing, and the sizes of the orchestrator reserve and the unallocated reserve. (6) Scope: a nested child reserves from the reservation of its parent, never directly from the run pool. Retries of a node draw on that node reservation, and replanning stays inside the run ceiling. Budgets for plain single-agent runs are not part of this decision. Budgets across a tenant or across runs remain deferred per ADR-10.",
+      "status": "accepted",
+      "source": "Owner ADR-06 decision, 2026-09-12",
+      "recorded_at": "2026-09-12T10:47:46.175Z"
+    },
+    {
+      "id": "DECISION-87bcd821",
+      "title": "M9 D1: content_filter also ends a run as failed",
+      "text": "Owner approved 2026-09-12. A model response whose stop reason is content_filter ends the run failed with error content_filter, under the same rules as max_tokens: the message is recorded and no tool call from it executes. An unrecognised stop reason keeps its current behaviour. SPEC FR-26, AC-20.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:28.910Z"
+    },
+    {
+      "id": "DECISION-3b47f58d",
+      "title": "M9 D2: reasoning effort requires an explicit output limit",
+      "text": "Setting reasoning_effort with no explicit max_output_tokens on the agent or the run is a configuration error raised at the Runner.run call site, because with the adapter default of 1024 Claude Haiku over the gateway returns HTTP 400 (max_tokens must exceed the thinking budget). SPEC FR-28, AC-21.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:29.055Z"
+    },
+    {
+      "id": "DECISION-cc5837e4",
+      "title": "M9 D3: ModelPricing replaces cost_per_token",
+      "text": "ModelCapabilities.cost_per_token, read by nothing in agentsdk, tests or scripts, is replaced by ModelPricing with input, output, cache read and cache write prices, and FR-12 is amended. Cost is a Decimal and None when unknown, never 0. SPEC FR-12, FR-30.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:29.211Z"
+    },
+    {
+      "id": "DECISION-c8734410",
+      "title": "M9 D4: persist token totals and the prices used",
+      "text": "Migration 0003 adds the six token totals and cost_usd to runs, and max_output_tokens, reasoning_effort and the pricing used to execution_manifests, so a stored cost can be checked after prices change. SPEC FR-31, AC-24.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:29.377Z"
+    },
+    {
+      "id": "DECISION-afbe3542",
+      "title": "M10 D5: every tool output is capped at 50000 characters by default",
+      "text": "ToolSpec.max_output_chars defaults to 50000 with no uncapped setting, and applies to every ToolResult the executor returns, including errors and after_tool substitutions. SPEC FR-41, AC-33.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:29.539Z"
+    },
+    {
+      "id": "DECISION-fc5d2760",
+      "title": "M10 D6: literal grep and refusal of multiply linked files",
+      "text": "grep matches literal text only, because a model supplied regex can backtrack catastrophically and a timeout cannot interrupt a synchronous function. A file with more than one hard link is refused, because a hard link to an outside file cannot be told apart by its path. SPEC FR-36, FR-37.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:29.719Z"
+    },
+    {
+      "id": "DECISION-6c36d993",
+      "title": "M10 D7: symlink escape cases run on this host with Developer Mode",
+      "text": "AC-28 creates real symlinks and those cases fail rather than skip. This host refuses symlink creation without Windows Developer Mode (WinError 1314), so the owner turns Developer Mode on before the M10 gate runs. SPEC AC-28 and Constraints.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:29.867Z"
+    },
+    {
+      "id": "DECISION-5b1e3785",
+      "title": "M10 D8: M10 is high risk",
+      "text": "M10 is a security surface (filesystem confinement, SSRF, credential isolation) and enters the plan with risk high. M9 stays medium.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:30.028Z"
+    },
+    {
+      "id": "DECISION-59572370",
+      "title": "M9 and M10 D9: examples 09 and 10 are the demo commands",
+      "text": "scripts/09_limits_and_cost.py and scripts/10_builtin_tools.py, run offline, are the demo commands for M9 and M10. AC-17 covers both, and the README and scripts/README.md list them, so the eight examples wording changes. SPEC FR-34, FR-42.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:30.203Z"
+    },
+    {
+      "id": "DECISION-4e0a02be",
+      "title": "M9 and M10 D10: task add may regenerate PLAN.md",
+      "text": "The owner authorised Genesis to regenerate .genesis/PLAN.md when the M9 and M10 tasks are added. This covers that regeneration only: DONE.html, and any manual edit of PLAN.md, still need asking first.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:14:30.386Z"
+    },
+    {
+      "id": "DECISION-a540e820",
+      "title": "M9 and M10 D10 extended: PLAN.md regeneration for the whole setup sequence",
+      "text": "The owner extended D10 on 2026-09-12: Genesis may regenerate .genesis/PLAN.md for the whole M9 setup sequence, which is spec approve, task add for M9 and M10, plan check and plan approve. spec check had already regenerated it once before this permission, changing only the phase and plan approval lines, and that was disclosed to the owner.",
+      "status": "accepted",
+      "source": "owner approval 2026-09-12",
+      "recorded_at": "2026-09-12T13:22:22.355Z"
     }
   ],
   "knowledge": [
@@ -807,6 +1044,70 @@
       "source": "M8 live run of scripts/04",
       "tags": [],
       "recorded_at": "2026-09-11T18:30:39.403Z"
+    },
+    {
+      "id": "KNOWLEDGE-312441cb",
+      "title": "Gateway usage accounting: cached and reasoning tokens are subsets",
+      "text": "Measured 2026-09-12 through the LiteLLM gateway. gpt-4o-mini with a repeated 2620 token prompt reported prompt_tokens 2620 and prompt_tokens_details.cached_tokens 2560, so cached tokens are inside prompt_tokens. Claude Haiku with reasoning_effort low reported completion_tokens 45 with completion_tokens_details.reasoning_tokens 25 and text_tokens 20, so reasoning tokens are inside completion_tokens. Bedrock responses also carry top level cache_read_input_tokens and cache_creation_input_tokens plus prompt_tokens_details.cache_write_tokens. GET /model/info returns 403, so no prices come from the gateway. At finish_reason length, gpt-4o-mini returned a tool call with undecodable arguments and Claude Haiku returned one whose arguments decoded.",
+      "source": "M9 specification probe",
+      "tags": [],
+      "recorded_at": "2026-09-12T13:14:30.581Z"
+    },
+    {
+      "id": "KNOWLEDGE-d625552b",
+      "title": "Reasoning effort on Claude over the gateway",
+      "text": "Measured 2026-09-12. Claude Haiku with reasoning_effort low and max_tokens 1024 returns HTTP 400 because max_tokens must be greater than thinking.budget_tokens; with no max_tokens it succeeds, and responses then carry reasoning_content and thinking_blocks. A two turn tool loop that sent back only content and tool_calls, without thinking blocks, returned HTTP 200 with 0 reasoning tokens on turn 2. gpt-4o-mini accepted reasoning_effort low without error.",
+      "source": "M9 specification probe",
+      "tags": [],
+      "recorded_at": "2026-09-12T13:14:30.753Z"
+    },
+    {
+      "id": "KNOWLEDGE-083e000b",
+      "title": "Host limits for filesystem and HTTP confinement tests",
+      "text": "Measured 2026-09-12 on this Windows host. os.symlink fails with WinError 1314 for files and directories without Developer Mode, while _winapi.CreateJunction, os.link hard links and alternate data streams all succeed, and a hard link reports st_nlink 2. httpx 0.28.1 defaults to trust_env True, which honours environment proxy variables such as HTTP_PROXY; netrc credentials are used only through an explicit NetRCAuth.",
+      "source": "M10 specification probe",
+      "tags": [],
+      "recorded_at": "2026-09-12T13:14:30.960Z"
+    },
+    {
+      "id": "KNOWLEDGE-cb2f13f5",
+      "title": "repr of Persistence exposes the database password",
+      "text": "Persistence is a frozen dataclass whose first field is the raw DSN string, so repr(Persistence) and str(Persistence) print the database URL with its password. Verified 2026-09-12 with a fake DSN: the fake password appears in both, while repr(PostgresRunStore) does not show it. Reported by the M9 round 1 reviewer as an M8 finding recorded nowhere. It is contrary to NFR-4, which Secret exists to enforce: a log line, an exception message or a debugger that renders the Persistence object reveals the credential. Not an M9 defect. A one-field repr=False change closes it; open until the owner schedules the fix.",
+      "source": "M9 round 1 L4 review, verified by the implementing session",
+      "tags": [],
+      "recorded_at": "2026-09-12T15:21:20.576Z"
+    },
+    {
+      "id": "KNOWLEDGE-b3c2b462",
+      "title": "Cancelling a run loses its billed cost and leaves the row running",
+      "text": "Reproduced by the M9 round 2 L4 reviewer. After one billed call, asyncio.CancelledError propagates through Runner.run under the project rule that cancellation is control flow, so no RunResult is returned and finish_run is never called: a persisted run stays status running with NULL usage and cost, and the cost already billed is reported nowhere. Before M9 there was no cost to lose. A candidate for Phase 6, which owns pause, resume and cancel.",
+      "source": "M9 round 2 L4 review, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T16:49:50.663Z"
+    },
+    {
+      "id": "KNOWLEDGE-89f88103",
+      "title": "A recorder that omits records_accounting silently stores no usage or cost",
+      "text": "Since M9 round 2 the Runner passes usage and cost to a run recorder only when it declares records_accounting = True. A custom recorder with the new finish_run signature that forgets the flag receives usage None and cost_usd None while RunResult reports the real cost, with no error. Round 1 inferred support from the signature, and a wrapped pre-M9 recorder failed runs loudly; the declaration trades that loud failure for this silent one. PostgresRunStore declares the flag, so only custom recorders are affected.",
+      "source": "M9 round 2 L4 review, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T16:49:50.789Z"
+    },
+    {
+      "id": "KNOWLEDGE-e3bf9a4e",
+      "title": "A rate limit with a slow error body can take about 16.5 seconds to fail",
+      "text": "M9 round 2 bounds each error body read to error_body_timeout, default 5 seconds per attempt. Under default settings a rate limited call whose body trickles takes about 16.5 seconds to fail: three attempts at 5 seconds plus backoff of 0.5 and 1 second, where before M9 it failed almost at once. No NFR constrains error path latency; a caller that cares can lower error_body_timeout on the client. Measured by the M9 round 2 L4 reviewer.",
+      "source": "M9 round 2 L4 review, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T16:49:50.911Z"
+    },
+    {
+      "id": "KNOWLEDGE-322ef7f4",
+      "title": "Two thirds of stored runs are test debris left at status running",
+      "text": "Measured 2026-09-12: 20455 of 30447 runs are status running, 20417 of them in tenant t-test, started 2026-09-06 to 2026-09-12; no real or example tenant is affected. 756 running rows carry a RunCompleted (746) or RunFailed (20) event. 722 of those are t-test rows with agent_spec_id spec-1, written by store level tests in tests/test_persistence.py that start a run and emit events directly with no finish_run and no cleanup; the suite added 24 more that day. The other 34 are Runner test runs (t-unreg, t-e2e, t-fail, t-store and others), all started 2026-09-06 to 2026-09-08 and none since, and every t-unreg run from 2026-09-09 on completed, so no current code path leaves a Runner run unfinished. A which-runs-are-live query against this database returns mostly test debris. Found by the M9 round 2 L4 reviewer; characterised by the implementing session. Worth cleaning before Phase 2 builds orchestration on run status.",
+      "source": "M9 round 2 L4 review and implementing session query, 2026-09-12",
+      "tags": [],
+      "recorded_at": "2026-09-12T16:49:51.057Z"
     }
   ],
   "tasks": [
@@ -829,9 +1130,9 @@
           "status": "pass",
           "evidence": {
             "human": "owner",
-            "reason": "M8: package the SDK with pyproject, ship eight runnable examples that each work live and offline, bridge MCP tools by hand with untrusted provenance, and carry a README, MIT license and env example, gated by FR-22..FR-25, NFR-9..NFR-10 and AC-16..AC-19.",
-            "source_hash": "f2c94b4fca846702be7717b412e13828ae7483cdc3e2c9afa373f9857c161c37",
-            "observed_at": "2026-09-11T18:15:26.718Z"
+            "reason": "M9 and M10 requirements FR-26 to FR-42, NFR-11 to NFR-14 and AC-20 to AC-33 approved with decisions D1 to D10 as recommended",
+            "source_hash": "a7c603fe1a0f8dc882cbf506aeba871c6d5819950657f715d069824bdae1908b",
+            "observed_at": "2026-09-12T13:22:22.184Z"
           }
         }
       ],
@@ -841,7 +1142,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T14:48:57.897Z",
-      "updated_at": "2026-09-11T18:15:26.718Z"
+      "updated_at": "2026-09-12T13:22:22.184Z"
     },
     {
       "id": "M1-primitives",
@@ -1273,6 +1574,138 @@
       ],
       "created_at": "2026-09-11T18:15:26.857Z",
       "updated_at": "2026-09-12T10:16:49.925Z"
+    },
+    {
+      "id": "M9-honest-results",
+      "outcome": "A run cut off at the output-token limit or stopped by the content filter ends failed and runs none of its tool calls, output limits and reasoning effort are configurable and recorded, and every run reports and persists its token usage and its cost in USD, or None when the model has no price",
+      "state": "done",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-26",
+        "FR-27",
+        "FR-28",
+        "FR-29",
+        "FR-30",
+        "FR-31",
+        "FR-32",
+        "FR-33",
+        "FR-34",
+        "NFR-11",
+        "NFR-12",
+        "AC-20",
+        "AC-21",
+        "AC-22",
+        "AC-23",
+        "AC-24",
+        "AC-25",
+        "AC-26"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_honest_results.py -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M9-honest-results-unit.json",
+            "source_hash": "b4d1aba0105f379ffebcbb1af5354d9b6a2592c458eb69f9b075915e6b19370c",
+            "hash": "36cf39dd5e744f65515ae4e30380d27d885c77f37220c0d2012bbe675968f01e",
+            "observed_at": "2026-09-12T15:57:03.589Z"
+          }
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M9-honest-results-regression.json",
+            "source_hash": "b4d1aba0105f379ffebcbb1af5354d9b6a2592c458eb69f9b075915e6b19370c",
+            "hash": "465327e3808cc49c82ffc4d11778b7e4be1424d933a1e8507c96f0231f0d9b56",
+            "observed_at": "2026-09-12T15:58:18.291Z"
+          }
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pass",
+          "evidence": {
+            "human": "Independent L4 reviewer (round 2, fresh)",
+            "reason": "Verified independently: full suite 271/733 passed, R1 closed over a real socket for 8 body-failure shapes x 3 statuses plus a raising-body case, R2 closed for both the fault sweep (20+ injected seams, memory and Postgres) and the after_model halt shape. DB clean: 0 SYN-m9 rows, 0 m9_ schemas, 994 pre-existing orphans, 6 tables, 0 credential hits plain and percent-encoded. A10 and A13 are legitimate declared limitations though A10 is a routine consequence of default retries on ModelTimeout, not a rare edge, and should be flagged to the owner. Caveats found and confirmed by direct probe, none blocking: a recorder implementing the new finish_run signature but omitting records_accounting silently records no accounting with no error; a run cancelled after a billed call loses that cost entirely with no persisted row update, consistent with the pre-existing BaseException-passes-through design across the codebase but now with real financial stakes; the error-body read timeout can add up to attempts times error_body_timeout of wall time to a rate-limited call. Approved.",
+            "source_hash": "b4d1aba0105f379ffebcbb1af5354d9b6a2592c458eb69f9b075915e6b19370c",
+            "observed_at": "2026-09-12T16:20:47.122Z"
+          }
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-12T13:22:22.526Z",
+      "updated_at": "2026-09-12T16:51:53.074Z"
+    },
+    {
+      "id": "M10-safe-builtin-tools",
+      "outcome": "A caller can opt into read-only file, fetch and web search tools that cannot leave their root folder or allowlist, cannot reach private addresses, send no credential, cap every tool output, and label external results untrusted",
+      "state": "active",
+      "risk": "high",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-35",
+        "FR-36",
+        "FR-37",
+        "FR-38",
+        "FR-39",
+        "FR-40",
+        "FR-41",
+        "FR-42",
+        "NFR-13",
+        "NFR-14",
+        "AC-27",
+        "AC-28",
+        "AC-29",
+        "AC-30",
+        "AC-31",
+        "AC-32",
+        "AC-33"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_builtin_tools.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-12T13:22:22.696Z",
+      "updated_at": "2026-09-12T13:22:22.696Z"
     }
   ],
   "learning_proposals": [],
@@ -1636,6 +2069,33 @@
       "task": "M8-distribution-and-examples",
       "human": "Claude Fable 5.1 (independent L4 reviewer, M8 round 1)",
       "reason": "Verified independently, not from the author claims: gate 8 passed and full suite 462 passed in 53s; git diff --stat 0bf8fd9 -- agentsdk/ prints nothing; isolated python -m build pulled setuptools 84.0.0 and built sdist and wheel with a SetuptoolsDeprecationWarning on the project.license TOML table (hard failure dated 2027-Feb-18, so a caveat today); the wheel installed with dependencies plus the examples extra into a clean venv, pip check clean, imports from site-packages, ships schema.sql and 0002_parent_run_id.sql; pip install -e .[examples] under isolation succeeds; the sdist ships agentsdk, README, LICENSE, pyproject and tests/*.py and nothing else, no .env, no scripts, no .genesis; all eight examples exit 0 offline from that clean venv outside the repository with no config variables, and all eight exit 0 live against the gateway and database, including 05 across openai and bedrock and 06 with a real stdio MCP server; the 3 runs 04 and 07 wrote under example-tenant were deleted, none were written under another-tenant, the whole-row key scan is zero across all six public tables, orphan count 994 unchanged, no m8 schema, no orphaned MCP server process. Author mutants A, G and F were re-run and each is killed by exactly the named test; working tree byte-identical after every restore. Caveats, none blocking: (1) dropping agentsdk.providers from packages survives the full suite, so the AC-16 test cannot see a missing subpackage, add providers to the wheel probe or compare the wheel listing to the tree; (2) removing the whole README Install section survives, the NFR-10 check is keyword coverage not fitness; (3) a failed MCP call in 06 stores server-chosen error text with origin internal_tool, trust_zone trusted_source and no taint flags, because the bridge forwards the server text into the raised exception, disclosed in the docstring but avoidable in the example; (4) FR-24 live mode is verified by hand only, the gate runs examples offline; (5) examples 04 and 07 read DATABASE_URL as a raw string exactly as the README persistence section does, nothing prints it, Settings.dsn would be the single greppable reveal; (6) examples import agentsdk.session, agentsdk.permissions and agentsdk.registry which the README public API section does not list.",
+      "revision": null
+    },
+    {
+      "id": "eb263e57-ad4c-4b0b-b742-4f651ccc55e3",
+      "at": "2026-09-12T15:11:04.237Z",
+      "action": "reject",
+      "task": "M9-honest-results",
+      "human": "Independent L4 reviewer (Claude Opus 5)",
+      "reason": "Round 1 reject, two reachable defects. R1 FR-33 class not closed: the status is in hand but any body read failure other than DecodingError still reclassifies it. A 429 with a lying Content-Length or truncated chunked body is ModelProviderUnavailable after 1 attempt, never retried; a 429 or 5xx whose body trickles past the read timeout is ModelTimeout and a 5xx is retried 3 times. Reproduced over a real 127.0.0.1 socket. A5 closed the instance, not the class. R2 FR-30 never a partial sum: when a run fails at the Runner boundary after a billed call but before its ModelCalled event (after_model hook raises, session append fails, emit fails), cost_usd and usage are rebuilt from events and omit that call. Persisted repro: 2 calls billed, true cost 0.036000, runs.cost_usd 0.006000, prompt_tokens 1000 of 6000, no signal it is partial. Same root cause: after_model HALT leaves event cost sum 0.006 against a run total 0.036, and mutant X2 dropping the halted call cost survives the full suite (694 passed). Verified: 232 and 694 green, 21 reconstructed author mutants killed with matching counts, NUMERIC and BIGINT guards exact against Postgres. Caveats in the report.",
+      "revision": null
+    },
+    {
+      "id": "b41e267b-b72d-4e87-a67e-467b68de2fee",
+      "at": "2026-09-12T15:56:37.247Z",
+      "action": "retry",
+      "task": "M9-honest-results",
+      "human": "Implementing session (Claude Opus 5)",
+      "reason": "Round 2 repair of R1 and R2 and caveats C1 to C7 complete: 733 tests pass, 36 of 36 mutants killed, ready for gates and a fresh L4 review",
+      "revision": null
+    },
+    {
+      "id": "58465423-eefd-4feb-b9a4-ec65dfbbd382",
+      "at": "2026-09-12T16:20:47.122Z",
+      "action": "approve",
+      "task": "M9-honest-results",
+      "human": "Independent L4 reviewer (round 2, fresh)",
+      "reason": "Verified independently: full suite 271/733 passed, R1 closed over a real socket for 8 body-failure shapes x 3 statuses plus a raising-body case, R2 closed for both the fault sweep (20+ injected seams, memory and Postgres) and the after_model halt shape. DB clean: 0 SYN-m9 rows, 0 m9_ schemas, 994 pre-existing orphans, 6 tables, 0 credential hits plain and percent-encoded. A10 and A13 are legitimate declared limitations though A10 is a routine consequence of default retries on ModelTimeout, not a rare edge, and should be flagged to the owner. Caveats found and confirmed by direct probe, none blocking: a recorder implementing the new finish_run signature but omitting records_accounting silently records no accounting with no error; a run cancelled after a billed call loses that cost entirely with no persisted row update, consistent with the pre-existing BaseException-passes-through design across the codebase but now with real financial stakes; the error-body read timeout can add up to attempts times error_body_timeout of wall time to a rate-limited call. Approved.",
       "revision": null
     }
   ],

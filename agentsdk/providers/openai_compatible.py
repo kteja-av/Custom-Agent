@@ -28,7 +28,7 @@ from ..errors import (
     ModelRateLimited,
     ModelTimeout,
 )
-from ..model import ModelRequest, ModelResponse, StopReason, Usage
+from ..model import ModelRequest, ModelResponse, StopReason, Usage, token_count
 from ..primitives import Message, Role, ToolCall
 
 _STOP_REASONS = {
@@ -38,6 +38,11 @@ _STOP_REASONS = {
     "length": StopReason.MAX_TOKENS,
     "content_filter": StopReason.CONTENT_FILTER,
 }
+
+# An error body is read only for the detail it adds to a message, so it is read
+# within bounds: a body that never ends, or trickles in just under the read
+# timeout, cannot hold up the classification or the retry that follows (FR-33).
+_ERROR_BODY_LIMIT = 64_000
 
 
 @dataclass(frozen=True)
@@ -61,6 +66,7 @@ class OpenAICompatibleModelClient:
         timeout: float = 60.0,
         retry: RetryPolicy | None = None,
         max_tokens: int | None = 1024,
+        error_body_timeout: float = 5.0,
     ) -> None:
         self._base_url = base_url if base_url.endswith("/") else base_url + "/"
         self._api_key = api_key if isinstance(api_key, Secret) else Secret(api_key)
@@ -68,6 +74,8 @@ class OpenAICompatibleModelClient:
         self._timeout = timeout
         self._retry = retry or RetryPolicy()
         self._max_tokens = max_tokens
+        # The whole time an error body may take to read, however it arrives.
+        self._error_body_timeout = error_body_timeout
         self._client = client
         self._owns_client = client is None
 
@@ -92,6 +100,15 @@ class OpenAICompatibleModelClient:
     def __repr__(self) -> str:
         # Never render the key (NFR-4).
         return f"OpenAICompatibleModelClient(model={self._model!r}, base_url={self._base_url!r})"
+
+    @property
+    def default_model_id(self) -> str:
+        """The model this client sends when a request names none (FR-32).
+
+        Read by the Runner, so a run on the client's default records the model
+        it actually used rather than NULL (KNOWLEDGE-862c2e9e).
+        """
+        return self._model
 
     def _describe_failure(self, exc: BaseException) -> str:
         """Render a caught exception for a ModelError message, unconditionally.
@@ -147,15 +164,98 @@ class OpenAICompatibleModelClient:
         redacted = text.replace(key, REDACTED) if key else text
         return redacted[:limit] if limit is not None else redacted
 
-    def _error_text(self, response: httpx.Response) -> str:
+    def _scrub(self, value: Any) -> Any:
+        """A copy of decoded JSON with the credential removed from every string,
+        dictionary keys included (FR-33, NFR-4).
+
+        Error bodies were always redacted; success bodies were not, on the
+        reasoning that providers echo request context in errors and not in
+        answers (ASSUMPTION-75110765). NFR-4 is absolute, so the asymmetry goes.
+        This works on DECODED values, so a key the wire JSON-escaped is found
+        too, which literal matching on the raw text would miss. It walks with an
+        explicit stack, because a body may legally nest as deep as the decoder
+        allows. The limit `_redact` states still applies: a base64, URL-encoded
+        or line-wrapped rendering is not found.
+        """
+        key = self._api_key.reveal()
+        if not key:
+            return value
+        holder = [value]
+        stack: list[tuple[Any, Any]] = [(holder, 0)]
+        while stack:
+            container, slot = stack.pop()
+            item = container[slot]
+            if isinstance(item, str):
+                container[slot] = item.replace(key, REDACTED)
+            elif isinstance(item, dict):
+                copied = {
+                    (k.replace(key, REDACTED) if isinstance(k, str) else k): v
+                    for k, v in item.items()
+                }
+                container[slot] = copied
+                stack.extend((copied, k) for k in copied)
+            elif isinstance(item, list):
+                copied_list = list(item)
+                container[slot] = copied_list
+                stack.extend((copied_list, index) for index in range(len(copied_list)))
+        return holder[0]
+
+    async def _read_error_body(self, response: httpx.Response) -> str | None:
+        """The body of an error response as text, or None when it cannot be read.
+
+        An error's class is decided by its status line; the body only adds
+        detail to the message. So ANY failure to read it -- a body that cannot
+        be decoded as declared, a lying Content-Length, a truncated chunked
+        body, a reset, a read timeout, an exception from a custom transport --
+        leaves the status to speak for itself (FR-33). M9 round 1 guarded
+        DecodingError alone and was rejected for it: the instance, not the
+        class. Bounded in size and in total time, so a body that never ends, or
+        trickles in just under the read timeout, cannot stall the retry.
+        """
+        chunks: list[bytes] = []
+
+        async def read() -> None:
+            size = 0
+            async for chunk in response.aiter_bytes():
+                chunks.append(chunk)
+                size += len(chunk)
+                if size >= _ERROR_BODY_LIMIT:
+                    break
+
         try:
-            body = response.json()
-        except ValueError:
-            return self._redact(response.text, 300)
-        error = body.get("error") if isinstance(body, dict) else None
-        if isinstance(error, dict):
-            return self._redact(str(error.get("message", "")), 300)
-        return self._redact(str(error if error is not None else body), 300)
+            await asyncio.wait_for(read(), timeout=self._error_body_timeout)
+            return b"".join(chunks)[:_ERROR_BODY_LIMIT].decode(
+                response.encoding or "utf-8", errors="replace"
+            )
+        except Exception:  # noqa: BLE001 - see the docstring: the class, not a list
+            return None
+        finally:
+            try:
+                await response.aclose()
+            except Exception:  # noqa: BLE001 - closing cannot change the status either
+                pass
+
+    def _error_text(self, status: int, body: str | None) -> str:
+        """The message for an error response, redacted and bounded -- and TOTAL.
+
+        This sits between an error status and the exception that status means,
+        so it must never raise: before M9 a body nested past the recursion limit
+        raised here, and a rate limit escaped as a generic ModelError that was
+        never retried (ASSUMPTION-75110765).
+        """
+        if body is None:
+            return f"HTTP {status}: the error body could not be read"
+        try:
+            try:
+                parsed = json.loads(body)
+            except Exception:  # noqa: BLE001 - not JSON, or nested too deep
+                return self._redact(body, 300)
+            error = parsed.get("error") if isinstance(parsed, dict) else None
+            if isinstance(error, dict):
+                return self._redact(str(error.get("message", "")), 300)
+            return self._redact(str(error if error is not None else parsed), 300)
+        except Exception:  # noqa: BLE001 - the classification must survive the body
+            return f"HTTP {status}: the error body could not be read"
 
     # --- the interface ------------------------------------------------------
 
@@ -208,14 +308,23 @@ class OpenAICompatibleModelClient:
         raise AssertionError("unreachable")  # pragma: no cover
 
     async def _post(self, url: str, payload: dict[str, Any]) -> dict[str, Any]:
+        http = self._http()
         try:
-            response = await self._http().post(
-                url,
-                json=payload,
-                headers={
-                    "Authorization": f"Bearer {self._api_key.reveal()}",
-                    "Content-Type": "application/json",
-                },
+            # Streamed, so the status is in hand before any body is read. A
+            # plain post() reads the body inside the request, and a failure
+            # there -- a body that cannot be decoded, a connection cut short --
+            # was raised before anything looked at the status (FR-33).
+            response = await http.send(
+                http.build_request(
+                    "POST",
+                    url,
+                    json=payload,
+                    headers={
+                        "Authorization": f"Bearer {self._api_key.reveal()}",
+                        "Content-Type": "application/json",
+                    },
+                ),
+                stream=True,
             )
         except httpx.TimeoutException as exc:
             raise ModelTimeout(self._redact(str(exc))) from exc
@@ -224,13 +333,39 @@ class OpenAICompatibleModelClient:
         except (httpx.HTTPError, httpx.StreamError) as exc:
             raise ModelProviderUnavailable(self._redact(str(exc))) from exc
 
-        if response.status_code == 429:
-            raise ModelRateLimited(self._error_text(response))
-        if response.status_code >= 500:
-            raise ModelProviderUnavailable(self._error_text(response))
-        if response.status_code >= 400:
+        status = response.status_code
+        if status >= 400:
+            # The status line decides the class, and nothing about the body can
+            # change it: the body is read for its message, within bounds, and a
+            # body that cannot be read leaves the status to speak for itself.
+            detail = self._error_text(status, await self._read_error_body(response))
+            if status == 429:
+                raise ModelRateLimited(detail)
+            if status >= 500:
+                raise ModelProviderUnavailable(detail)
             # A raw provider exception must never escape this boundary.
-            raise ModelError(f"{response.status_code}: {self._error_text(response)}")
+            raise ModelError(f"{status}: {detail}")
+
+        body_readable = True
+        try:
+            await response.aread()
+        except httpx.DecodingError:
+            # A success whose body cannot be decoded as its headers declare.
+            body_readable = False
+        except httpx.TimeoutException as exc:
+            raise ModelTimeout(self._redact(str(exc))) from exc
+        except (httpx.HTTPError, httpx.StreamError) as exc:
+            raise ModelProviderUnavailable(self._redact(str(exc))) from exc
+        finally:
+            await response.aclose()
+
+        if not body_readable:
+            # A malformed response, the same class as a non-JSON one below --
+            # not an unavailable provider.
+            raise ModelError(
+                f"provider returned a {status} body that could not be "
+                "decoded as its headers declare"
+            )
 
         # A 2xx does not guarantee JSON. This deployment sits behind an Envoy
         # layer that can return a non-JSON body, so an unguarded .json() here
@@ -240,7 +375,7 @@ class OpenAICompatibleModelClient:
             body = response.json()
         except (ValueError, RecursionError) as exc:
             raise ModelError(
-                f"provider returned a non-JSON body ({response.status_code}): "
+                f"provider returned a non-JSON body ({status}): "
                 f"{self._redact(response.text, 200)!r}"
             ) from exc
         if not isinstance(body, dict):
@@ -294,6 +429,10 @@ class OpenAICompatibleModelClient:
         max_tokens = request.model_settings.get("max_tokens", self._max_tokens)
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
+        # FR-28: only when a run set it. A model that rejects the parameter is
+        # unaffected by runs that never asked for it.
+        if request.model_settings.get("reasoning_effort") is not None:
+            payload["reasoning_effort"] = request.model_settings["reasoning_effort"]
         for key in ("temperature", "top_p", "stop"):
             if key in request.model_settings:
                 payload[key] = request.model_settings[key]
@@ -302,6 +441,11 @@ class OpenAICompatibleModelClient:
     # --- translation: provider -> canonical ---------------------------------
 
     def _parse(self, body: dict[str, Any]) -> ModelResponse:
+        # The credential leaves the body before anything is read from it, so no
+        # field this parser reads -- or a later one adds -- can carry it into
+        # model context, a row or an event (FR-33).
+        body = self._scrub(body)
+
         # Every shape assumption below is checked. A provider that returns
         # well-formed JSON of the wrong shape must still come out of this
         # component as a ModelError, never as an AttributeError or TypeError.
@@ -323,6 +467,11 @@ class OpenAICompatibleModelClient:
             function = item.get("function")
             function = function if isinstance(function, dict) else {}
             arguments, arguments_error = _decode_arguments(function.get("arguments"))
+            # Arguments arrive as a JSON string INSIDE the body, so a key
+            # escaped at that inner level only appears once they are decoded.
+            arguments = self._scrub(arguments)
+            if arguments_error is not None:
+                arguments_error = self._redact(arguments_error)
             tool_calls.append(
                 ToolCall(
                     id=str(item.get("id") or ""),
@@ -345,6 +494,10 @@ class OpenAICompatibleModelClient:
         )
         usage = body.get("usage")
         usage = usage if isinstance(usage, dict) else {}
+        prompt_details = usage.get("prompt_tokens_details")
+        prompt_details = prompt_details if isinstance(prompt_details, dict) else {}
+        completion_details = usage.get("completion_tokens_details")
+        completion_details = completion_details if isinstance(completion_details, dict) else {}
 
         # dict.get() requires a HASHABLE key, so looking up an unchecked value
         # in _STOP_REASONS is itself a shape assumption: a list or dict
@@ -369,6 +522,22 @@ class OpenAICompatibleModelClient:
                 prompt_tokens=usage.get("prompt_tokens"),
                 completion_tokens=usage.get("completion_tokens"),
                 total_tokens=usage.get("total_tokens"),
+                # FR-29. The gateway reports cache tokens in more than one
+                # place -- OpenAI's detail object, Anthropic's top-level fields
+                # -- and they are the same tokens either way, so the larger
+                # report is taken, never the sum. token_count is Usage's own
+                # coercion (INVARIANT-3c123c38), applied first so the
+                # comparison is between ints.
+                cache_read_tokens=max(
+                    token_count(prompt_details.get("cached_tokens")),
+                    token_count(usage.get("cache_read_input_tokens")),
+                ),
+                cache_write_tokens=max(
+                    token_count(usage.get("cache_creation_input_tokens")),
+                    token_count(prompt_details.get("cache_write_tokens")),
+                    token_count(prompt_details.get("cache_creation_tokens")),
+                ),
+                reasoning_tokens=completion_details.get("reasoning_tokens"),
             ),
             provider_response_id=str(response_id) if response_id is not None else None,
             provider_metadata={

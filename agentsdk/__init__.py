@@ -6,6 +6,7 @@ the public surface is AgentSpec / RunConfig / Runner / RunResult (NFR-5).
 """
 
 from .api import AgentSpec, RunConfig, Runner, RunResult, RunStatus
+from .model import ReasoningEffort
 from .persistence import Persistence
 from .errors import (
     AgentSDKError,
@@ -56,6 +57,8 @@ __all__ = [
     # the one place every real caller has to go.
     "Persistence",
     "RunStatus",
+    # A field of AgentSpec and RunConfig (FR-28), so it belongs beside them.
+    "ReasoningEffort",
     "ContentProvenance",
     "InstructionAuthority",
     "Message",

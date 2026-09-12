@@ -7,7 +7,7 @@ persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
 > a store-hardening milestone for Phase 2 are complete, each approved by an
-> independent review; the suite has 462 tests. It is not on PyPI yet, and a lot is
+> independent review; the suite has 733 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -26,14 +26,21 @@ persisted so you can reconstruct exactly what happened afterwards.
   text the model can be talked out of.
 - **Talks to any OpenAI-compatible chat completions API** over plain HTTP, with
   retries for timeouts and rate limits and credentials that refuse to appear in
-  logs, reprs or stored rows. Verified against OpenAI and Anthropic (via
-  Bedrock) models through a LiteLLM gateway.
+  logs, reprs, stored rows or model context. Verified against OpenAI and
+  Anthropic (via Bedrock) models through a LiteLLM gateway.
+- **Is honest about how a run ended and what it cost.** A response cut off at
+  the output-token limit, or stopped by a content filter, ends the run failed
+  with that reason instead of passing half an answer off as complete, and none
+  of its tool calls run. Every run reports its token usage, cached and reasoning
+  tokens included, and its cost in USD from prices you supply; a model with no
+  price reports `None`, never 0. The output limit and reasoning effort can be set
+  per agent or per run.
 - **Persists runs to PostgreSQL, if you want it**: runs, messages, events and a
   per-run manifest of the exact configuration, every row scoped to a tenant and
-  project, reconstructable in order. Schema changes ship as versioned,
-  checksummed migrations. Connections are pooled and validated, store calls stay
-  off the event loop, concurrent writers to one run all commit, and a run can
-  record the run that spawned it.
+  project, reconstructable in order, with each run's usage and cost. Schema
+  changes ship as versioned, checksummed migrations. Connections are pooled and
+  validated, store calls stay off the event loop, concurrent writers to one run
+  all commit, and a run can record the run that spawned it.
 - **Works entirely in memory** when you don't pass a database.
 
 ## What it does not do yet
@@ -49,7 +56,7 @@ Stated plainly, because an SDK that overstates itself costs you a week:
 | Sandboxed tool execution | Phase 5 |
 | Pause, resume, cancel; durable interruptions | Phase 6 |
 | Context compaction (the full history is sent every turn) | Phase 7 |
-| Budget and cost governance; retention and partitioning of stored rows | Phase 2 / Phase 8 |
+| Budget enforcement (cost is measured and recorded, never limited); retention and partitioning of stored rows | Phase 2 / Phase 8 |
 | A second wire format (for example Anthropic's native Messages API) | Deferred by choice; the contract was checked against it |
 | Enforcing structured output | Phase 2. The slot exists and is unused |
 
@@ -331,8 +338,8 @@ print("configuration manifest recorded:", trace["manifest"] is not None)
 
 ## Examples
 
-[`scripts/`](scripts/) holds eight runnable examples, one activity each. Every
-one runs live, or with `--offline` using a scripted model with no network and no
+[`scripts/`](scripts/) holds runnable examples, one activity each. Every one runs
+live, or with `--offline` using a scripted model with no network and no
 credentials -- which is also how the test suite checks them.
 
 | script | what it shows |
@@ -345,6 +352,7 @@ credentials -- which is also how the test suite checks them.
 | [`06_mcp_tools.py`](scripts/06_mcp_tools.py) | tools from an MCP server, bridged by hand, results marked untrusted |
 | [`07_delegating_to_a_child_run.py`](scripts/07_delegating_to_a_child_run.py) | a child run that records its parent |
 | [`08_testing_agents_offline.py`](scripts/08_testing_agents_offline.py) | behavioural checks against a scripted model, then a real one |
+| [`09_limits_and_cost.py`](scripts/09_limits_and_cost.py) | an output limit that fails a cut-off run honestly, and what a run cost from prices you supply |
 
 ```bash
 python scripts/02_custom_tools.py --offline
@@ -357,14 +365,15 @@ the SDK does not do either natively yet; each example says so. See
 ## The public API
 
 Driving a run needs only the package root: `Runner`, `AgentSpec`, `RunConfig`,
-`RunResult`, `RunStatus` and `Persistence`, plus the primitives (`Message`,
-`Role`, `ToolCall`, `ToolResult`, `ContentProvenance` and its enums) and the
-error types.
+`RunResult`, `RunStatus`, `ReasoningEffort` and `Persistence`, plus the
+primitives (`Message`, `Role`, `ToolCall`, `ToolResult`, `ContentProvenance` and
+its enums) and the error types.
 
-Defining tools and model clients currently means importing from submodules:
-`agentsdk.tools` (`Tool`, `ToolSpec`), `agentsdk.providers`
-(`OpenAICompatibleModelClient`), `agentsdk.hooks`, `agentsdk.model` and
-`agentsdk.postgres`. Narrowing that is a known, recorded gap.
+Defining tools, model clients and prices currently means importing from
+submodules: `agentsdk.tools` (`Tool`, `ToolSpec`), `agentsdk.providers`
+(`OpenAICompatibleModelClient`), `agentsdk.registry` (`ModelRegistry`,
+`ModelPricing`), `agentsdk.hooks`, `agentsdk.model` and `agentsdk.postgres`.
+Narrowing that is a known, recorded gap.
 
 ## Run the tests
 
@@ -372,7 +381,7 @@ Defining tools and model clients currently means importing from submodules:
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (462 tests) runs against a **real database and the live gateway**,
+The full suite (733 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.
@@ -396,7 +405,8 @@ agentsdk/
   tools.py          Tool, ToolSpec, ToolRegistry
   permissions.py    permission checkers
   hooks.py          runtime hooks
-  model.py          ModelRequest, ModelResponse, the ModelClient protocol
+  model.py          ModelRequest, ModelResponse, Usage, the ModelClient protocol
+  registry.py       ModelRegistry, ModelPricing and cost
   providers/        the OpenAI-compatible HTTP client
   primitives.py     Message, ToolCall, ToolResult, ContentProvenance
   persistence.py    Persistence

@@ -10,7 +10,9 @@ orchestrator without any caller noticing.
 from __future__ import annotations
 
 import asyncio
+from decimal import Decimal
 from functools import partial
+from typing import Any
 
 import uuid
 from dataclasses import dataclass, field
@@ -22,45 +24,60 @@ from .events import EventSink, EventType, InMemoryEventSink, RunEvent
 from .executor import ToolExecutor
 from .hooks import RuntimeHook
 from .identity import PrincipalContext
-from .loop import AgentLoop
+from .loop import AgentLoop, RunMeter
 from .manifest import build_manifest
-from .model import ModelClient, Usage
+from .model import ModelClient, ModelRequest, ReasoningEffort, Usage
 from .permissions import AllowlistPermissionChecker, PermissionChecker
 from .persistence import Persistence
 from .postgres import RunScope, column_rejection_reason
-from .registry import ModelRegistry, default_registry
+from .registry import ModelRegistry, call_cost, default_registry
 from .session import InMemorySessionStore, SessionStore
 from .tools import Tool, ToolRegistry
 from .version import __version__
-
-
-def _usage_from_events(events: tuple[RunEvent, ...]) -> Usage:
-    """Rebuild total usage from the ModelCalled events.
-
-    Used when the total boundary catches a non-SDK exception and never sees the
-    loop's accumulator. The tokens were spent either way; reporting zero would
-    quietly under-report cost on exactly the runs someone is investigating.
-
-    Runs on the error path, so it must not be able to raise: `Usage` coerces
-    every field it is handed, which is what makes the bare reads below safe
-    even when a ModelClient reported NaN, Infinity or a string.
-    """
-    total = Usage()
-    for event in events:
-        raw = event.payload.get("usage") if isinstance(event.payload, dict) else None
-        if isinstance(raw, dict):
-            total = total + Usage(
-                prompt_tokens=raw.get("prompt_tokens", 0),
-                completion_tokens=raw.get("completion_tokens", 0),
-                total_tokens=raw.get("total_tokens", 0),
-            )
-    return total
 
 
 class RunStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     MAX_TURNS_EXCEEDED = "max_turns_exceeded"
+
+
+# The INTEGER column's ceiling, named once (see RunConfig.__post_init__).
+_MAX_TURNS_CEILING = 2**31 - 1
+
+
+def _refuse_bad_output_limit(value: object, owner: str) -> None:
+    """max_output_tokens (FR-27), refused by name at construction like max_turns.
+
+    Explicit about type rather than trusting a comparison: a bool passes every
+    range check (True >= 1), and a string raises a TypeError that names nothing.
+    """
+    if value is None:
+        return
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(
+            f"{owner}.max_output_tokens must be an int or None, got {type(value).__name__}"
+        )
+    if not 1 <= value <= _MAX_TURNS_CEILING:
+        raise ValueError(
+            f"{owner}.max_output_tokens must be between 1 and {_MAX_TURNS_CEILING} "
+            f"(execution_manifests.max_output_tokens is an INTEGER column), got {value}"
+        )
+
+
+def _reasoning_effort(value: object, owner: str) -> ReasoningEffort | None:
+    """reasoning_effort (FR-28): a ReasoningEffort, its exact value, or None."""
+    if value is None or isinstance(value, ReasoningEffort):
+        return value
+    if isinstance(value, str):
+        try:
+            return ReasoningEffort(value)
+        except ValueError:
+            pass
+    raise ValueError(
+        f"{owner}.reasoning_effort must be one of "
+        f"{[effort.value for effort in ReasoningEffort]} or None, got {value!r}"
+    )
 
 
 @dataclass(frozen=True)
@@ -82,9 +99,17 @@ class AgentSpec:
     # agent may see rather than what it may do.
     tool_profile: tuple[str, ...] = ()
     permission_policy: PermissionChecker | None = None
+    # FR-27 / FR-28. None leaves the model client's own default in place. A
+    # value set on the RunConfig overrides the agent's.
+    max_output_tokens: int | None = None
+    reasoning_effort: ReasoningEffort | str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "tool_profile", tuple(self.tool_profile))
+        _refuse_bad_output_limit(self.max_output_tokens, "AgentSpec")
+        object.__setattr__(
+            self, "reasoning_effort", _reasoning_effort(self.reasoning_effort, "AgentSpec")
+        )
 
     def checker(self) -> PermissionChecker:
         """Default policy: allow exactly the declared tool profile.
@@ -96,10 +121,6 @@ class AgentSpec:
         if self.permission_policy is not None:
             return self.permission_policy
         return AllowlistPermissionChecker(set(self.tool_profile))
-
-
-# The INTEGER column's ceiling, named once (see RunConfig.__post_init__).
-_MAX_TURNS_CEILING = 2**31 - 1
 
 
 @dataclass(frozen=True)
@@ -114,6 +135,9 @@ class RunConfig:
     # and the tenancy rule exist now so that phase adds a caller rather than a
     # migration to a table that already holds production rows.
     parent_run_id: str | uuid.UUID | None = None
+    # FR-27 / FR-28: override the agent's values for this run only.
+    max_output_tokens: int | None = None
+    reasoning_effort: ReasoningEffort | str | None = None
 
     def __post_init__(self) -> None:
         # Before the range checks: a bool passes every one of them (True >= 1,
@@ -148,6 +172,10 @@ class RunConfig:
         if isinstance(self.parent_run_id, uuid.UUID):
             # One type on the config, whichever form the caller had to hand.
             object.__setattr__(self, "parent_run_id", str(self.parent_run_id))
+        _refuse_bad_output_limit(self.max_output_tokens, "RunConfig")
+        object.__setattr__(
+            self, "reasoning_effort", _reasoning_effort(self.reasoning_effort, "RunConfig")
+        )
 
 
 @dataclass(frozen=True)
@@ -160,6 +188,10 @@ class RunResult:
     # Not in the design's four-field sketch, but a failed run that cannot say
     # why is not debuggable. None on success.
     error: str | None = None
+    # What the run cost in USD (FR-30): the sum of its model calls' costs, from
+    # the prices in the Runner's ModelRegistry. None when that cannot be known
+    # -- a model with no price, or a call nothing could price -- never 0.
+    cost_usd: Decimal | None = None
 
     @property
     def succeeded(self) -> bool:
@@ -207,9 +239,10 @@ class Runner:
         never an exception reaching application code.
 
         Configuration errors are the deliberate exception. An unknown model
-        client or an invalid RunConfig is a caller bug that must surface loudly
-        at the call site, not be buried in a failed RunResult the caller might
-        not inspect. Those raise before the run is considered started.
+        client, an invalid RunConfig, or a reasoning effort with no output limit
+        is a caller bug that must surface loudly at the call site, not be buried
+        in a failed RunResult the caller might not inspect. Those raise before
+        the run is considered started.
 
         BaseException passes through: cancellation is control flow, not failure.
         """
@@ -222,25 +255,66 @@ class Runner:
         )
         # Deliberately OUTSIDE the guard below -- see the docstring.
         client_key, model_id = self._resolve_model(spec, config)
+        max_output_tokens = (
+            config.max_output_tokens
+            if config.max_output_tokens is not None
+            else spec.max_output_tokens
+        )
+        reasoning_effort = (
+            config.reasoning_effort if config.reasoning_effort is not None else spec.reasoning_effort
+        )
+        if reasoning_effort is not None and max_output_tokens is None:
+            # Decision D2. The SDK cannot see a client's own default output
+            # limit, and a provider that budgets reasoning inside it refuses the
+            # request: Claude over the gateway answers HTTP 400 when max_tokens
+            # does not exceed the thinking budget (KNOWLEDGE-d625552b).
+            raise ValueError(
+                "reasoning_effort is set but max_output_tokens is not: set "
+                "max_output_tokens on the AgentSpec or the RunConfig, large enough "
+                "for the reasoning the model may spend as well as its answer"
+            )
+        # FR-32: a run records the model it used, including a client's own
+        # default when nothing was named (KNOWLEDGE-862c2e9e).
+        recorded_model = model_id or self._default_model_id(client_key)
+        # The run's account, created here so that it outlives any exception the
+        # loop raises: the failure path below reports what the meter recorded,
+        # not what the events happened to capture (R2).
+        meter = RunMeter(no_call_cost=self._cost(recorded_model, Usage()))
         try:
-            return await self._run(spec, task, config, scope, events, client_key, model_id)
+            return await self._run(
+                spec,
+                task,
+                config,
+                scope,
+                events,
+                client_key,
+                model_id,
+                recorded_model=recorded_model,
+                max_output_tokens=max_output_tokens,
+                reasoning_effort=reasoning_effort,
+                meter=meter,
+            )
         except Exception as exc:  # noqa: BLE001
             reason = describe_exception(exc)
             await self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason})
-            await self._safe_finish(scope, RunStatus.FAILED)
+            await self._safe_finish(scope, RunStatus.FAILED, meter.usage, meter.cost_usd)
             return RunResult(
                 status=RunStatus.FAILED,
                 output=None,
                 events=events.events(),
-                # Reconstructed from the ModelCalled events rather than reported
-                # as zero: the tokens were spent, and a caller reconciling cost
-                # should not have to know that a failed run under-reports.
-                usage=_usage_from_events(events.events()),
+                # The meter's totals: every call the model answered, recorded
+                # before anything that could fail. Reporting zero, or only the
+                # calls whose events were written, would under-report cost on
+                # exactly the runs someone is investigating.
+                usage=meter.usage,
                 run_id=run_id,
                 error=reason,
+                cost_usd=meter.cost_usd,
             )
 
-    async def _safe_finish(self, scope: RunScope, status: RunStatus) -> None:
+    async def _safe_finish(
+        self, scope: RunScope, status: RunStatus, usage: Usage, cost_usd: Decimal | None
+    ) -> None:
         # Threaded like every other store call (FR-20). This one runs once, on
         # the failure path, so it is not what NFR-8 measures -- but a store
         # call that blocks the loop only when a run is already failing is the
@@ -248,9 +322,28 @@ class Runner:
         if self._persistence is None:
             return
         try:
-            await asyncio.to_thread(self._persistence.runs.finish_run, scope, status.value)
+            await asyncio.to_thread(self._finish, scope, status, usage, cost_usd)
         except Exception:  # noqa: BLE001 - persistence must not mask the real failure
             pass
+
+    def _finish(
+        self, scope: RunScope, status: RunStatus, usage: Usage, cost_usd: Decimal | None
+    ) -> None:
+        """The terminal write, carrying the run's usage and cost to a recorder
+        that declares it records them (FR-31).
+
+        Declared, not inferred. Round 1 offered accounting to any finish_run
+        whose signature could bind it, and a pre-M9 recorder wrapped without
+        functools.wraps -- which looks like (*args, **kwargs) -- took the
+        arguments, raised, and turned a completed run FAILED with both terminal
+        events emitted. A recorder that declares nothing is called exactly as
+        it was before M9.
+        """
+        runs = self._persistence.runs
+        if getattr(runs, "records_accounting", False) is True:
+            runs.finish_run(scope, status.value, usage=usage, cost_usd=cost_usd)
+        else:
+            runs.finish_run(scope, status.value)
 
     @staticmethod
     async def _safe_emit(events: EventSink, event_type: EventType, payload: dict) -> None:
@@ -269,6 +362,11 @@ class Runner:
         events: EventSink,
         client_key: str,
         model_id: str | None,
+        *,
+        recorded_model: str | None,
+        max_output_tokens: int | None,
+        reasoning_effort: ReasoningEffort | None,
+        meter: RunMeter,
     ) -> RunResult:
         run_id = scope.run_id
         sessions = self._sessions
@@ -282,7 +380,7 @@ class Runner:
                 partial(self._persistence.runs.start_run, scope),
                 agent_spec_id=spec.id,
                 max_turns=config.max_turns,
-                model_id=model_id,
+                model_id=recorded_model,
                 principal_context=(
                     config.principal_context.to_json() if config.principal_context else None
                 ),
@@ -293,9 +391,12 @@ class Runner:
                     instructions=spec.instructions,
                     tool_profile=spec.tool_profile,
                     tool_spec_hashes=[s.schema_hash() for s in self._registry.specs()],
-                    model_id=model_id or "unspecified",
-                    **self._model_versions(model_id, client_key),
+                    model_id=recorded_model or "unspecified",
+                    **self._model_versions(recorded_model, client_key),
                     policy_version=type(spec.checker()).__name__,
+                    max_output_tokens=max_output_tokens,
+                    reasoning_effort=reasoning_effort.value if reasoning_effort is not None else None,
+                    pricing=self._pricing_record(recorded_model),
                 ),
             )
 
@@ -312,7 +413,7 @@ class Runner:
             EventType.RUN_STARTED,
             {
                 "agent_spec_id": spec.id,
-                "model": model_id,
+                "model": recorded_model,
                 "provider": client_key,
                 "max_turns": config.max_turns,
                 # Recorded, never read in Phase 0 (ADR-27).
@@ -331,6 +432,14 @@ class Runner:
                 events.emit, EventType.TOOL_CALLED, payload
             ),
         )
+
+        def cost_of(request: ModelRequest, usage: Usage) -> Decimal | None:
+            # Priced by the model the request was actually sent with, which a
+            # before_model hook may have changed (FR-30).
+            settings = getattr(request, "model_settings", None)
+            sent = settings.get("model") if isinstance(settings, dict) else None
+            return self._cost(sent if isinstance(sent, str) and sent else recorded_model, usage)
+
         loop = AgentLoop(
             model_client=self._clients[client_key],
             session_store=sessions,
@@ -339,14 +448,24 @@ class Runner:
             event_sink=events,
             assembler=self._assembler,
             hook=self._hook,
+            cost_of=cost_of,
+            meter=meter,
         )
+
+        # Only what the caller set: a run that sets none of M9's options sends
+        # exactly the request it sent before M9 (NFR-12).
+        model_settings: dict[str, Any] = {"model": model_id} if model_id else {}
+        if max_output_tokens is not None:
+            model_settings["max_tokens"] = max_output_tokens
+        if reasoning_effort is not None:
+            model_settings["reasoning_effort"] = reasoning_effort.value
 
         outcome = await loop.run(
             run_id,
             task,
             max_turns=config.max_turns,
             instructions=spec.instructions,
-            model_settings={"model": model_id} if model_id else {},
+            model_settings=model_settings,
             principal_context=config.principal_context,
         )
 
@@ -363,15 +482,49 @@ class Runner:
             {"status": status.value, "turns": outcome.turns, "reason": error},
         )
         if self._persistence is not None:
-            await asyncio.to_thread(self._persistence.runs.finish_run, scope, status.value)
+            await asyncio.to_thread(self._finish, scope, status, meter.usage, meter.cost_usd)
         return RunResult(
             status=status,
             output=outcome.output,
             events=events.events(),
-            usage=outcome.usage,
+            usage=meter.usage,
             run_id=run_id,
             error=error,
+            cost_usd=meter.cost_usd,
         )
+
+    def _cost(self, model_id: str | None, usage: Usage) -> Decimal | None:
+        """What `usage` cost on `model_id`, or None when that cannot be known.
+
+        Guarded as a whole, the registry lookup included: the registry is the
+        caller's, and accounting never fails a run (NFR-11).
+        """
+        try:
+            entry = self._models.resolve(model_id) if model_id else None
+            return call_cost(usage, entry.capabilities.pricing if entry is not None else None)
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _pricing_record(self, model_id: str | None) -> dict[str, str | None] | None:
+        """The prices a run is costed with, for its manifest (FR-31)."""
+        entry = self._models.resolve(model_id) if model_id else None
+        pricing = entry.capabilities.pricing if entry is not None else None
+        return pricing.to_json() if pricing is not None else None
+
+    def _default_model_id(self, client_key: str) -> str | None:
+        """The client's own default model, used when no model was named (FR-32).
+
+        Optional on the client: ModelClient stays send()-only. A client without
+        the attribute -- or with one that raises, or holds something no column
+        can store -- records no model id, exactly as before M9.
+        """
+        try:
+            candidate = getattr(self._clients[client_key], "default_model_id", None)
+        except Exception:  # noqa: BLE001 - a client property is caller code
+            return None
+        if not isinstance(candidate, str) or not candidate:
+            return None
+        return candidate if column_rejection_reason(candidate, "TEXT") is None else None
 
     def _model_versions(self, model_id: str | None, client_key: str) -> dict[str, str]:
         """Version fields for the manifest (FR-11, AC-6).
