@@ -7,7 +7,7 @@ persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
 > a store-hardening milestone for Phase 2 are complete, each approved by an
-> independent review; the suite has 734 tests. It is not on PyPI yet, and a lot is
+> independent review; the suite has 821 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -41,6 +41,14 @@ persisted so you can reconstruct exactly what happened afterwards.
   changes ship as versioned, checksummed migrations. Connections are pooled and
   validated, store calls stay off the event loop, concurrent writers to one run
   all commit, and a run can record the run that spawned it.
+- **Offers read-only built-in tools you opt into** (`agentsdk.builtin_tools`):
+  read, list, glob and grep confined to a root folder, checked on the file
+  actually opened so no link, junction or short name leads out; a fetch tool
+  limited to an allowlist and to public internet addresses, sending no
+  credentials and ignoring proxy settings; and web search over a backend you
+  supply. Fetched and searched content is labelled untrusted. Every tool's
+  output is capped, 50,000 characters by default. The file tools are
+  Windows-only in this release.
 - **Works entirely in memory** when you don't pass a database.
 
 ## What it does not do yet
@@ -353,6 +361,7 @@ credentials -- which is also how the test suite checks them.
 | [`07_delegating_to_a_child_run.py`](scripts/07_delegating_to_a_child_run.py) | a child run that records its parent |
 | [`08_testing_agents_offline.py`](scripts/08_testing_agents_offline.py) | behavioural checks against a scripted model, then a real one |
 | [`09_limits_and_cost.py`](scripts/09_limits_and_cost.py) | an output limit that fails a cut-off run honestly, and what a run cost from prices you supply |
+| [`10_builtin_tools.py`](scripts/10_builtin_tools.py) | built-in file tools confined to a folder, and a fetch tool confined to an allowlist and the public internet |
 
 ```bash
 python scripts/02_custom_tools.py --offline
@@ -381,7 +390,7 @@ Narrowing that is a known, recorded gap.
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (734 tests) runs against a **real database and the live gateway**,
+The full suite (821 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.

@@ -23,6 +23,7 @@ credentials.
 | [`07_delegating_to_a_child_run.py`](07_delegating_to_a_child_run.py) | a child run that records its parent |
 | [`08_testing_agents_offline.py`](08_testing_agents_offline.py) | behavioural checks against a scripted model, then a real one |
 | [`09_limits_and_cost.py`](09_limits_and_cost.py) | an output limit that fails a cut-off run honestly, and what a run cost from prices you supply |
+| [`10_builtin_tools.py`](10_builtin_tools.py) | built-in file tools confined to a folder, and a fetch tool confined to an allowlist and the public internet |
 
 ## Setup
 
@@ -46,6 +47,10 @@ model endpoint.
 - **Delegation (07).** There is no orchestrator yet (Phase 2), and a tool cannot
   see its own run id, so a child run is started by your code between runs, not
   by an agent from inside a tool.
+
+Example 10's live mode also needs internet access, to fetch one public page. Its
+file tools use Windows handle APIs in this release and refuse to construct on
+other platforms.
 
 The prices in 09 are illustrative. The SDK ships no price list: a bundled price
 goes stale, and a stale price reports a wrong number rather than an unknown one.

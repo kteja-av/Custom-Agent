@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "wheel==0.45.1"]
+test = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "wheel==0.45.1", "cryptography==50.0.1"]
 # Example-only. The SDK itself never imports these (NFR-9).
 examples = ["mcp==2.2.0"]
 

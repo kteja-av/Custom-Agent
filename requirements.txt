@@ -24,6 +24,8 @@ pytest-asyncio==1.4.0      # asyncio_mode = auto in pytest.ini
 wheel==0.45.1              # builds the wheel AC-16 installs (tests/test_distribution.py)
 setuptools==65.5.0         # the build backend for that wheel: the test builds with
                            # --no-build-isolation, so it uses this venv's copy
+cryptography==50.0.1       # M10 AC-30: a throwaway CA and certificate, so the fetch
+                           # tool's TLS path is tested with the host name checked
 
 # --- examples --------------------------------------------------------------
 # Not an SDK dependency (NFR-9): pyproject.toml keeps it in the `examples`

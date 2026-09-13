@@ -18,8 +18,10 @@ can react on its next turn (LLD 4.2, 4.3).
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import inspect
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import jsonschema
@@ -37,8 +39,33 @@ from .hooks import HookAction, RuntimeHook
 from .identity import PrincipalContext
 from .outcomes import Completed, Failed, ToolExecutionOutcome
 from .permissions import PermissionChecker
-from .primitives import ContentProvenance, ToolCall, ToolResult, unstorable_reason
-from .tools import ToolRegistry
+from .primitives import (
+    ContentProvenance,
+    InstructionAuthority,
+    Origin,
+    TaintFlag,
+    ToolCall,
+    ToolResult,
+    TrustZone,
+    unstorable_reason,
+)
+from .tools import DEFAULT_MAX_OUTPUT_CHARS, Tool, ToolOutput, ToolRegistry
+
+
+@dataclass
+class _CallState:
+    """How far one call got, for the paths that must know.
+
+    `ran` is set the moment the implementation is invoked. A failure after that
+    point -- the tool raised, timed out, returned something unstorable, or a hook
+    broke afterwards -- may carry what the tool read in its error text, so the
+    error keeps the tool's declared provenance (FR-40). Before it, the executor
+    wrote every byte of the error itself. The last-resort handler in execute()
+    reads this too, which is why it is state rather than an argument.
+    """
+
+    tool: Tool | None = None
+    ran: bool = False
 
 
 class ToolExecutor:
@@ -70,21 +97,26 @@ class ToolExecutor:
         Failed(ToolExecutionError) so the loop keeps its own promise of a
         terminal status. BaseException passes through as control flow.
         """
+        state = _CallState()
         try:
-            return await self._execute(tool_call, principal_context)
+            return await self._execute(tool_call, principal_context, state)
         except Exception as exc:  # noqa: BLE001
-            return await self._failed(tool_call, ToolExecutionError(describe_exception(exc)))
+            return await self._failed(
+                tool_call, ToolExecutionError(describe_exception(exc)), state
+            )
 
     async def _execute(
         self,
         tool_call: ToolCall,
-        principal_context: PrincipalContext | None = None,
+        principal_context: PrincipalContext | None,
+        state: _CallState,
     ) -> ToolExecutionOutcome:
         # --- 1. resolve -----------------------------------------------------
         try:
             tool = self._registry.get(tool_call.name)
         except ToolNotFound as exc:
-            return await self._failed(tool_call, exc)
+            return await self._failed(tool_call, exc, state)
+        state.tool = tool
 
         # --- 2. validate arguments ------------------------------------------
         # Must precede the permission check: an unparseable call is rejected on
@@ -98,13 +130,14 @@ class ToolExecutor:
                 ToolValidationError(
                     f"could not decode tool arguments: {tool_call.arguments_error}"
                 ),
+                state,
                 tool_reached=False,
             )
         try:
             jsonschema.validate(tool_call.arguments, tool.spec.input_schema)
         except jsonschema.ValidationError as exc:
             return await self._failed(
-                tool_call, ToolValidationError(exc.message), tool_reached=False
+                tool_call, ToolValidationError(exc.message), state, tool_reached=False
             )
         except jsonschema.SchemaError as exc:
             # The TOOL's schema is invalid, not the model's arguments -- a typo
@@ -116,6 +149,7 @@ class ToolExecutor:
                 ToolValidationError(
                     f"tool {tool_call.name!r} has an invalid input_schema: {exc.message}"
                 ),
+                state,
                 tool_reached=False,
             )
 
@@ -123,7 +157,7 @@ class ToolExecutor:
         result = self._permissions.check(tool_call, principal_context)
         if not result.allowed:
             return await self._failed(
-                tool_call, ToolPermissionDenied(result.reason), tool_reached=False
+                tool_call, ToolPermissionDenied(result.reason), state, tool_reached=False
             )
 
         # --- 4. approval ------------------------------------------------------
@@ -134,22 +168,26 @@ class ToolExecutor:
         outcome = self._hook.before_tool(tool_call)
         if outcome.action is HookAction.REJECT:
             return await self._failed(
-                tool_call, ToolPermissionDenied(outcome.reason or "rejected by hook")
+                tool_call, ToolPermissionDenied(outcome.reason or "rejected by hook"), state
             )
         if outcome.action is HookAction.MODIFY and outcome.replacement is not None:
             tool_call = outcome.replacement
 
         # --- 6. execute --------------------------------------------------------
+        state.ran = True
         try:
             value = await self._invoke(tool, tool_call.arguments)
         except asyncio.TimeoutError:
             return await self._failed(
-                tool_call, ToolTimeout(f"tool {tool_call.name!r} exceeded its timeout")
+                tool_call, ToolTimeout(f"tool {tool_call.name!r} exceeded its timeout"), state
             )
         except Exception as exc:  # noqa: BLE001 - any tool failure is a tool error
-            return await self._failed(tool_call, ToolExecutionError(str(exc)))
+            return await self._failed(tool_call, ToolExecutionError(str(exc)), state)
 
         # --- 7. assign provenance ----------------------------------------------
+        source = None
+        if isinstance(value, ToolOutput):
+            source, value = value.source_uri, value.content
         content = value if isinstance(value, str) else repr(value)
         # A tool's own output reaches the same JSONB column the model's does, so
         # it can diverge the same way: a tool returning a NUL completed in
@@ -165,9 +203,11 @@ class ToolExecutor:
                     f"tool {tool_call.name!r} returned a result that cannot be stored: "
                     f"{unstorable}"
                 ),
+                state,
             )
-        provenance = ContentProvenance.internal_tool(
-            source_uri_or_hash=tool.spec.schema_hash()
+        # The tool's declared labels (FR-40); undeclared, internal_tool as before.
+        provenance = tool.spec.result_provenance.for_source(
+            source if isinstance(source, str) and source else tool.spec.schema_hash()
         )
         tool_result = ToolResult(
             tool_call_id=tool_call.id,
@@ -177,12 +217,68 @@ class ToolExecutor:
 
         # --- 8. after_tool hook -------------------------------------------------
         after = self._hook.after_tool(tool_result)
-        if after.action is HookAction.MODIFY and after.replacement is not None:
-            tool_result = after.replacement
+        modified = after.action is HookAction.MODIFY and after.replacement is not None
+        returned = after.replacement if modified else tool_result
+        # What the hook leaves to be returned is shaped by caller code -- a
+        # replacement, or the result the hook was handed, which it can change in
+        # place -- so it is checked as if it were built here. Round 1 (C4) found
+        # anything that was not a ToolResult passing uncapped; round 2 found a
+        # ToolResult passing with values set past its constructor
+        # (object.__setattr__, or a subclass without __post_init__): a NUL that
+        # failed the run on Postgres, and an id for another call. Only a
+        # ToolResult answering this call is accepted, and it is rebuilt through
+        # the constructors, which apply the storability rule step 7 applies.
+        if not isinstance(returned, ToolResult):
+            return await self._failed(
+                tool_call,
+                ToolExecutionError(
+                    "the after_tool hook replaced the result with something that is not a ToolResult"
+                ),
+                state,
+            )
+        # Each field is read exactly once, into a local that is then checked and
+        # is the only thing used. Round 3 checked is_error on one read and built
+        # the result from a second, and a result built past its constructor can
+        # answer every read differently (rejected, KNOWLEDGE-96063b68).
+        answers = returned.tool_call_id
+        content = returned.content
+        provenance = _checked_provenance(returned.provenance)
+        is_error = returned.is_error
+        if type(answers) is not str or not str.__eq__(answers, tool_call.id) or type(is_error) is not bool:
+            return await self._failed(
+                tool_call,
+                ToolExecutionError(
+                    "the after_tool hook returned a result for another call, or one whose is_error is not a bool"
+                ),
+                state,
+            )
+        if isinstance(provenance, str):  # the reason it cannot be provenance
+            return await self._failed(tool_call, ToolExecutionError(provenance), state)
+        tool_result = ToolResult(
+            tool_call_id=tool_call.id,
+            content=_text(content),
+            provenance=provenance,
+            is_error=is_error,
+        )
+
+        # The cap applies to what is returned, so it comes after the hook: a
+        # substitution is capped too, and a redacting hook sees the whole text
+        # before any of it is cut (KNOWLEDGE-294f2901).
+        content, original_length, truncated = _cap(tool_result.content, tool.spec.max_output_chars)
+        if truncated:
+            tool_result = dataclasses.replace(tool_result, content=content)
 
         # --- 9. emit ------------------------------------------------------------
         await self._safe_emit(
-            {"tool_call_id": tool_call.id, "name": tool_call.name, "is_error": False}
+            {
+                "tool_call_id": tool_call.id,
+                "name": tool_call.name,
+                # The state of what is returned: a replacement may be an error,
+                # or be made one by its constructor (M10 review round 2, caveat 3).
+                "is_error": tool_result.is_error,
+                "original_length": original_length,
+                "truncated": truncated,
+            }
         )
         return Completed(result=tool_result)
 
@@ -226,13 +322,38 @@ class ToolExecutor:
         return await asyncio.wait_for(_run(), timeout=tool.spec.timeout_seconds)
 
     async def _failed(
-        self, tool_call: ToolCall, error: ToolError, tool_reached: bool = True
+        self,
+        tool_call: ToolCall,
+        error: ToolError,
+        state: _CallState,
+        tool_reached: bool = True,
     ) -> Failed:
-        """Every failure still yields a ToolResult, so the model sees the error."""
+        """Every failure still yields a ToolResult, so the model sees the error.
+
+        Reached from the last-resort handler, so it must not raise: what it
+        reads off the tool is read under a guard.
+        """
+        provenance = ContentProvenance.executor_error(type(error).__name__)
+        cap = DEFAULT_MAX_OUTPUT_CHARS
+        try:
+            if state.tool is not None:
+                cap = state.tool.spec.max_output_chars
+                if state.ran:
+                    # The tool ran, so this text may carry what it read (M8
+                    # review caveat 3): the declared labels apply. The bytes are
+                    # still the executor's rendering, so the source stays its
+                    # error URN.
+                    provenance = state.tool.spec.result_provenance.for_source(
+                        provenance.source_uri_or_hash
+                    )
+        except Exception:  # noqa: BLE001 - a registry may hand back anything
+            provenance = ContentProvenance.executor_error(type(error).__name__)
+            cap = DEFAULT_MAX_OUTPUT_CHARS
+        content, original_length, truncated = _cap(describe_exception(error), cap)
         result = ToolResult(
             tool_call_id=tool_call.id,
-            content=describe_exception(error),
-            provenance=ContentProvenance.executor_error(type(error).__name__),
+            content=content,
+            provenance=provenance,
             is_error=True,
         )
         await self._safe_emit(
@@ -241,6 +362,80 @@ class ToolExecutor:
                 "name": tool_call.name,
                 "is_error": True,
                 "error_type": type(error).__name__,
+                "original_length": original_length,
+                "truncated": truncated,
             }
         )
         return Failed(error=error, result=result)
+
+
+# A source is a URI or a hash. Bounded, so a result cannot carry megabytes past
+# the output cap in a field the cap does not measure (M10 review round 3).
+_MAX_SOURCE_CHARS = 8192
+
+
+def _is_member(value: Any, labels: Any) -> bool:
+    """Identity with one of the enum's real members.
+
+    An exact-type check is not membership: the labels are str-mixin enums, and
+    str.__new__(Origin, "x") builds an instance of exactly Origin that is none of
+    its members, with any _value_ or none, while every store reads .value (M10
+    review round 4, rejected). Equality is only string equality, so a forged
+    "system" valued "user" would pass it.
+    """
+    return any(value is member for member in labels)
+
+
+def _checked_provenance(value: Any) -> ContentProvenance | str:
+    """A fresh ContentProvenance built from `value`, or the reason it cannot be one.
+
+    Each field is read once and checked before it is used. ContentProvenance does
+    not check its own labels, and every store reads `.value` from them, so a
+    plain-string origin completed in memory and failed on Postgres. The labels
+    must be the enums' own members; the taint set an exact frozenset (a subclass
+    can answer iteration differently from what it holds); the source bounded text.
+    """
+    if not isinstance(value, ContentProvenance):
+        return "the result carries provenance that is not a ContentProvenance"
+    origin = value.origin
+    authority = value.instruction_authority
+    zone = value.trust_zone
+    taint = value.taint_flags
+    source = value.source_uri_or_hash
+    if not (_is_member(origin, Origin) and _is_member(authority, InstructionAuthority) and _is_member(zone, TrustZone)):
+        return "the result carries provenance whose labels are not members of their enums"
+    if type(taint) is not frozenset or not all(_is_member(flag, TaintFlag) for flag in taint):
+        return "the result carries taint flags that are not members of TaintFlag"
+    if source is not None and (type(source) is not str or len(source) > _MAX_SOURCE_CHARS):
+        return f"the result carries a source that is not text of at most {_MAX_SOURCE_CHARS} characters"
+    return ContentProvenance(
+        origin=origin, instruction_authority=authority, trust_zone=zone, taint_flags=taint, source_uri_or_hash=source
+    )
+
+
+def _text(value: Any) -> str:
+    """A result's content as exact text, read with str's own methods.
+
+    A str subclass can report any length and return anything from a slice: one
+    reporting 3 put 200000 characters through a 40-character cap (M10 review
+    round 2, caveat 1). A full slice taken with str.__getitem__ copies the
+    characters actually held into a plain str.
+    """
+    text = value if isinstance(value, str) else repr(value)
+    return text if type(text) is str else str.__getitem__(text, slice(None))
+
+
+def _cap(content: str, limit: Any) -> tuple[str, int, bool]:
+    """FR-41: cut `content` to `limit` characters and say so where the model reads.
+
+    Characters are code points, so the cut can never fall inside one: a non-BMP
+    character is one code point in a str, and cutting on UTF-16 units instead
+    would leave half a surrogate pair that no store can hold.
+    """
+    original = len(content)
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+        limit = DEFAULT_MAX_OUTPUT_CHARS
+    if original <= limit:
+        return content, original, False
+    marker = f"\n[truncated by the SDK: the result was {original} characters; the first {limit} are shown]"
+    return content[:limit] + marker, original, True

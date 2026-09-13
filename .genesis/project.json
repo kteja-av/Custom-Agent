@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-12T17:09:07.583Z"
+    "updated_at": "2026-09-13T14:01:08.794Z"
   },
   "policy": {
     "ponytail": "full",
@@ -23,11 +23,11 @@
     }
   },
   "lifecycle": {
-    "phase": "build",
-    "status": "active",
-    "active_task": "M10-safe-builtin-tools",
+    "phase": "verify",
+    "status": "ready",
+    "active_task": null,
     "blocker": null,
-    "next_action": "Run the task pre-flight."
+    "next_action": "Review completed work and choose the next bounded outcome."
   },
   "commands": {},
   "workflow": {
@@ -690,6 +690,38 @@
       "status": "accepted",
       "source": "owner decision 2026-09-12",
       "recorded_at": "2026-09-12T17:08:05.135Z"
+    },
+    {
+      "id": "DECISION-16fd5eb5",
+      "title": "M10 D11: file tools are Windows-only in this release",
+      "text": "Owner decision 2026-09-13. The file tools confine paths with Windows handle APIs: CreateFileW with backup semantics, GetFinalPathNameByHandleW on the opened handle, and directory enumeration through that same handle. This host cannot test a POSIX implementation, so on any other platform constructing a file tool raises NotImplementedError rather than shipping untested confinement code. Declared as a limitation in the README, the scripts README, example 10 and the M10 review prompt. A POSIX implementation is future work with its own tests.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T05:41:14.969Z"
+    },
+    {
+      "id": "DECISION-ea6e1daf",
+      "title": "M10 D12: an error after a tool ran carries its full declared provenance",
+      "text": "Owner decision 2026-09-13, refining FR-40. When a tool that declares provenance has run and then fails (it raised, timed out, returned unstorable content, or a hook failed after it ran), the error result carries the declared origin as well as the declared trust zone, instruction authority and taint flags, and source_uri_or_hash stays the executor error URN. FR-40 named only trust zone, authority and taint. Origin follows the existing executor rule that origin names where the call was directed. Failures before the tool ran keep executor_error provenance.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T05:41:15.130Z"
+    },
+    {
+      "id": "DECISION-ae7e223f",
+      "title": "A bounded executor for file tools is a Phase 2 prerequisite",
+      "text": "Owner decision 2026-09-13 on M10 review caveat C2. The file tools keep the shared default thread pool in M10. Before Phase 2 makes concurrent tool calls routine, the file tools get their own bounded executor or semaphore, with a test that store latency stays flat while the file tool pool is saturated.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T07:33:44.775Z"
+    },
+    {
+      "id": "DECISION-2bad84bb",
+      "title": "M10 D13: in-process forgery of objects is outside the threat model",
+      "text": "Owner decision 2026-09-13, after M10 review rounds 3 and 4 were rejected on the same seam. Tools, hooks, permission checkers, registries and other in-process caller code are trusted code. A defect that requires such code to forge objects past their constructors or the language machinery (object.__setattr__ on a frozen dataclass, __new__ without __init__, str.__new__ on a str Enum, __class__ assignment, attribute access overrides, ctypes) is outside the M10 threat model. The checks that exist stay as defence in depth, and such a finding is recorded as a caveat, not a blocker. In scope remain everything a model, a remote server or a file on disk can supply, and caller code that uses the public types as documented. The round 4 finding, a str.__new__ forged enum label, is closed anyway with an identity check against the real members, because the fix is small and the label is on the persisted path.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T13:09:04.640Z"
     }
   ],
   "knowledge": [
@@ -1148,6 +1180,110 @@
       "source": "implementing session, 2026-09-12",
       "tags": [],
       "recorded_at": "2026-09-12T17:09:07.583Z"
+    },
+    {
+      "id": "KNOWLEDGE-4b46ab69",
+      "title": "httpx drops a default or empty port when parsing, so allowlist ports must be refused by spelling",
+      "text": "Measured 2026-09-13 with httpx 0.28.1. httpx.URL reports port None for http://allowed.test:80/ and for http://allowed.test:/, and likewise for [::1]:80, so a check on the parsed port accepted allowlist entries that name a port. M10 fetch_tool now refuses any colon outside IPv6 brackets in an entry. httpx also refuses to parse numeric hosts with leading-zero octets such as 0177.0.0.1 and 127.000.000.001 (InvalidURL), while 127.1, 2130706433, 0x7f000001 and 0x7f.0.0.1 parse as names, so a numeric host spelling must be interpreted by the tool and never passed to DNS.",
+      "source": "implementing session, 2026-09-13",
+      "tags": [],
+      "recorded_at": "2026-09-13T06:01:26.222Z"
+    },
+    {
+      "id": "KNOWLEDGE-64fa6e18",
+      "title": "The venv python.exe is a launcher, so a subprocess timeout kills only the launcher",
+      "text": "Measured 2026-09-13 on this host. The venv python.exe starts a child python3.11.exe from the Store install. subprocess.run with a timeout killed only the launcher and then waited on the pipes the real interpreter still held, so an M10 mutant with a 900 second limit ran about 40 minutes. Stopping that harness mid-mutant skipped its restore and left the mutation in an untracked file with no git copy; it was found by searching for mutation markers and restored. Harnesses on this host use Popen with taskkill /T /F on timeout, and any interrupted mutation run is followed by a search for mutation markers.",
+      "source": "implementing session, 2026-09-13",
+      "tags": [],
+      "recorded_at": "2026-09-13T06:01:26.411Z"
+    },
+    {
+      "id": "KNOWLEDGE-a3eee1cd",
+      "title": "Building an httpx client costs about 0.4 seconds here, so check before connecting",
+      "text": "Measured 2026-09-13. A refused fetch that built an httpx.AsyncClient with default verification before checking the URL took 0.41 s, and the M10 corpus of about 5000 refused address answers ran for over half an hour. httpx.create_ssl_context with trust_env False took 0.28 s once and is cached; fetch_tool now builds its client only after a hop passes every check, and the corpus runs in about a second.",
+      "source": "implementing session, 2026-09-13",
+      "tags": [],
+      "recorded_at": "2026-09-13T06:01:26.595Z"
+    },
+    {
+      "id": "KNOWLEDGE-ad03ab4b",
+      "title": "An open handle without delete sharing pins a Windows directory and its parent",
+      "text": "Measured 2026-09-13 on NTFS. CreateFileW with FILE_FLAG_BACKUP_SEMANTICS and share mode read and write, without delete, opens a directory. While that handle is open, renaming the directory fails with winerror 32 and renaming its parent with winerror 5, and an open file handle also blocks renaming its parent. GetFinalPathNameByHandleW on such a handle returns the path after every symlink and junction, and GetFileInformationByHandleEx with FileFullDirectoryInfo enumerates the directory through the handle. The M10 file tools rest on these facts. Retargeting an existing junction in place was not measured.",
+      "source": "implementing session, 2026-09-13",
+      "tags": [],
+      "recorded_at": "2026-09-13T06:01:26.771Z"
+    },
+    {
+      "id": "KNOWLEDGE-0d5f3a4e",
+      "title": "File tools and every store call share one default thread pool, which a burst of file tools starves",
+      "text": "M10 independent review round 1, measured by the reviewer on this host with 20 default workers: store to_thread latency peaked at 125 ms with 19 concurrent greps, 139 s with 20 and 299 s with 28. Mechanism confirmed by the implementing session on 2026-09-13: agentsdk calls asyncio.to_thread in builtin_tools, api, loop and postgres (17 call sites) and defines no executor of its own, so every call shares the loop default pool, sized min(32, cpu_count + 4). A worker thread cannot be interrupted after the executor timeout, so a saturated pool stalls persistence for every run, including runs that call no file tool. NFR-8 still holds because it measures event loop stall, not store latency.",
+      "source": "M10 L4 review round 1 (control 158234c3), mechanism confirmed 2026-09-13",
+      "tags": [],
+      "recorded_at": "2026-09-13T07:33:44.609Z"
+    },
+    {
+      "id": "KNOWLEDGE-b4d99824",
+      "title": "A synchronous search backend iterable blocks the event loop",
+      "text": "M10 independent review caveat 3, confirmed by reading web_search_tool on 2026-09-13: the tool awaits backend.search and then iterates what it returned on the event loop, so a synchronous generator that keeps yielding malformed items, or blocks between items, holds the loop past the executor timeout. It is caller code and not reachable by a model. Recorded, not fixed in M10.",
+      "source": "M10 L4 review round 1 (control 158234c3)",
+      "tags": [],
+      "recorded_at": "2026-09-13T07:33:44.915Z"
+    },
+    {
+      "id": "KNOWLEDGE-cc627410",
+      "title": "Fetch TLS re-verification across redirects rests on redirect bodies never being read",
+      "text": "M10 independent review caveat 6. fetch_tool rewrites each request to the checked address, and the connection pool keys connections by scheme, address and port. The reviewer found that a redirect to a second allowlisted host gets a freshly verified connection today only because the redirect response is closed without its body being read. A change that drains redirect bodies, or two allowlisted hosts on one address, could serve the second host over a connection verified for the first. Recorded, not fixed in M10; a change there needs a test with two hosts on one address.",
+      "source": "M10 L4 review round 1 (control 158234c3)",
+      "tags": [],
+      "recorded_at": "2026-09-13T07:33:45.046Z"
+    },
+    {
+      "id": "KNOWLEDGE-39bcb4e5",
+      "title": "Glob and grep return no matches in a folder of more than 100000 entries",
+      "text": "M10 independent review round 2, caveat 4, measured by the reviewer: a flat folder above the 100000-entry walk limit lists 100168 entries, so glob and grep return no matches with the search stopped early note even for a file whose literal name exists. Bounded and labelled, so the model is told the search was incomplete. Recorded, not fixed in M10.",
+      "source": "M10 L4 review round 2 (control df53b27e)",
+      "tags": [],
+      "recorded_at": "2026-09-13T11:22:56.068Z"
+    },
+    {
+      "id": "KNOWLEDGE-45a11a6c",
+      "title": "Glob keeps opening matches after it has found max_results",
+      "text": "M10 independent review round 2, caveat 5, measured by the reviewer: with 30000 matching files glob took 6.7 s and ended with results cut at 1000, because it opens every match to check where it resolves until the walk ends instead of stopping once it holds more than max_results. Bounded by the walk budget. Recorded, not fixed in M10.",
+      "source": "M10 L4 review round 2 (control df53b27e)",
+      "tags": [],
+      "recorded_at": "2026-09-13T11:22:56.193Z"
+    },
+    {
+      "id": "KNOWLEDGE-96063b68",
+      "title": "A check must guard the value that is used: read an untrusted field once",
+      "text": "M10 review round 3 rejected the executor (control 4640a946), confirmed first-hand 2026-09-13. Step 8 checked type(returned.is_error) is bool on one read and built the returned ToolResult from a second read, so a ToolResult subclass built past its constructor answered True and then NOT-A-BOOL or 5 MB of text; the run completed, persisted it, and passed the 40-character output cap through a field the cap does not measure. Provenance fields were never type-checked, so a plain-string origin completed in memory and raised on origin.value in the Postgres serialiser and the context assembler. Rule for any value caller code shapes: read each field exactly once into a local, check that local for type and size, and build only from the checked locals. A test for it needs a value that changes between reads; fixed values set with object.__setattr__ cannot expose a second read.",
+      "source": "M10 L4 review round 3 (control 4640a946), reproduced 2026-09-13",
+      "tags": [],
+      "recorded_at": "2026-09-13T12:08:09.929Z"
+    },
+    {
+      "id": "KNOWLEDGE-57234fb3",
+      "title": "Fetch refuses a final URL over 8192 characters, after the request is sent",
+      "text": "M10 independent review round 5, caveat 1, measured by the reviewer. A fetched final URL of 8192 characters completes; 8193, 9000 and 50000 through redirects become a tool error naming the source bound, with the declared external labels kept (D12) and ToolCalled is_error true, identical on memory and Postgres. A model URL of 2048 code points, inside the input schema limit, can percent-encode past 8192 and is refused only after its request was sent. It fails closed. Mutant R5-D (the bound written as >= instead of >) survived the full suite: no test pins the exact 8192 to 8193 boundary. Recorded, not fixed in M10.",
+      "source": "M10 L4 review round 5 (control ff8cd80c)",
+      "tags": [],
+      "recorded_at": "2026-09-13T14:01:08.312Z"
+    },
+    {
+      "id": "KNOWLEDGE-739aca22",
+      "title": "A str subclass source is refused where it completed before M10",
+      "text": "M10 independent review round 5, caveat 2, reproduced first-hand 2026-09-13 through the public Runner on memory and Postgres. A ContentProvenance whose source_uri_or_hash is a str subclass, from an after_tool hook or a custom tool ToolOutput, completed before M10; step 8 now returns a tool error saying the source is not text of at most 8192 characters. This is ordinary caller code, not forgery under DECISION-2bad84bb: a narrow regression that fails closed. Carry to the next milestone: copy the source into an exact str as _text does for content, and add a test that pins the 8192 to 8193 boundary.",
+      "source": "M10 L4 review round 5 (control ff8cd80c), reproduced 2026-09-13",
+      "tags": [],
+      "recorded_at": "2026-09-13T14:01:08.468Z"
+    },
+    {
+      "id": "KNOWLEDGE-747e7e9e",
+      "title": "Forged enum labels pass ResultProvenance and reach the error path unchecked",
+      "text": "M10 independent review round 5, caveat 3, outside the threat model under DECISION-2bad84bb. Origin(forged) returns a str.__new__ forged instance unchanged, so ResultProvenance accepts a forged label and _failed carries it without _checked_provenance. Mutant R5-C (dropping the exact frozenset check on taint flags) survived the full suite because ContentProvenance already coerces a set to a frozenset, so only forgery reaches that check: defence in depth, not a gate gap over reachable code. Recorded, not fixed.",
+      "source": "M10 L4 review round 5 (control ff8cd80c)",
+      "tags": [],
+      "recorded_at": "2026-09-13T14:01:08.622Z"
     }
   ],
   "tasks": [
@@ -1692,7 +1828,7 @@
     {
       "id": "M10-safe-builtin-tools",
       "outcome": "A caller can opt into read-only file, fetch and web search tools that cannot leave their root folder or allowlist, cannot reach private addresses, send no credential, cap every tool output, and label external results untrusted",
-      "state": "active",
+      "state": "done",
       "risk": "high",
       "owner": null,
       "scope": [],
@@ -1721,22 +1857,37 @@
           "id": "unit",
           "command": ".venv\\Scripts\\python.exe -m pytest tests/test_builtin_tools.py -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M10-safe-builtin-tools-unit.json",
+            "source_hash": "b7951f39862eaa30915e0ac2d0790a0983710f1d30c8de343c1d2eed60356379",
+            "hash": "34811ce2f5326a5458d3a5ab3e5778b75888b8eb34c9f33d1671e361b0788f0a",
+            "observed_at": "2026-09-13T13:12:52.536Z"
+          }
         },
         {
           "id": "regression",
           "command": ".venv\\Scripts\\python.exe -m pytest -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M10-safe-builtin-tools-regression.json",
+            "source_hash": "b7951f39862eaa30915e0ac2d0790a0983710f1d30c8de343c1d2eed60356379",
+            "hash": "b85df8def5ffd3c442427d4b4c87abf2ec5d267e49f37ce386bd65e0357485cd",
+            "observed_at": "2026-09-13T13:14:44.281Z"
+          }
         },
         {
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Claude Opus 5 (independent L4 reviewer, round 5, fresh session)",
+            "reason": "Approve. Round 5 closes round 4: _is_member is identity against the real members and each refusal names its cause. Verified through the public Runner on memory and Postgres, tenant SYN-m10r5, 34 runs deleted, zero rows remain. Lead a: only fetch sets a source, file tools and search use the 64 char schema hash. A final URL of 8192 chars completes; 8193, 9000 and 50000 via redirect are a tool error naming the source, declared external labels kept per D12, ToolCalled is_error True, identical on both stores. Caveat 1, in scope, fails closed: a model URL of 2048 code points inside the schema limit percent-encodes past 8192 and is refused after the request is sent. Lead b: plain string labels, string taint flags and str subclass labels from an after_tool hook FAILED the run on both stores before M10 (AttributeError on value, reproduced with the cc2f0d6 executor); now an honest tool error, an improvement. Tuples, lists and sets of real members, with_taint and the example 06 relabel complete on both stores. Caveat 2, in scope, ordinary code, narrow regression: a str subclass source from a hook or ToolOutput completed before M10 and is now a tool error whose message says not text; normalising it as _text does would fix it. Lead c: provenance read back from Postgres and reused, deepcopy, pickle and ResultProvenance from strings keep real members and complete. Lead d: NUL and lone surrogate from a unicode_escape page, a NUL body, a search backend NUL and a surrogate file name give the same tool error on both stores; one surrogate named file makes list_directory fail for the whole folder, pre-existing. Caveat 3 under DECISION-2bad84bb, forgery: Origin(forged) returns the forged instance, so ResultProvenance accepts a str.__new__ label and _failed carries it unchecked. Mutants on executor.py, restored and SHA-256 verified: equality membership, isinstance taint, origin-only labels, source refusal blaming labels, declared labels dropped on errors all killed on the unit file. Survived the full suite, 821 passed each: dropping the exact frozenset check (reachable only by forgery since the constructor coerces, a blind spot over defence in depth) and the source bound changed to >= (boundary unpinned, cosmetic). Gates on the unmodified tree: unit 87 passed in 14.01s, regression 821 passed in 99.13s. Three full suite runs. README count 821 accurate.",
+            "source_hash": "b7951f39862eaa30915e0ac2d0790a0983710f1d30c8de343c1d2eed60356379",
+            "observed_at": "2026-09-13T13:41:42.537Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
@@ -1745,7 +1896,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-12T13:22:22.696Z",
-      "updated_at": "2026-09-12T13:22:22.696Z"
+      "updated_at": "2026-09-13T14:01:08.794Z"
     }
   ],
   "learning_proposals": [],
@@ -2137,17 +2288,80 @@
       "human": "Independent L4 reviewer (round 2, fresh)",
       "reason": "Verified independently: full suite 271/733 passed, R1 closed over a real socket for 8 body-failure shapes x 3 statuses plus a raising-body case, R2 closed for both the fault sweep (20+ injected seams, memory and Postgres) and the after_model halt shape. DB clean: 0 SYN-m9 rows, 0 m9_ schemas, 994 pre-existing orphans, 6 tables, 0 credential hits plain and percent-encoded. A10 and A13 are legitimate declared limitations though A10 is a routine consequence of default retries on ModelTimeout, not a rare edge, and should be flagged to the owner. Caveats found and confirmed by direct probe, none blocking: a recorder implementing the new finish_run signature but omitting records_accounting silently records no accounting with no error; a run cancelled after a billed call loses that cost entirely with no persisted row update, consistent with the pre-existing BaseException-passes-through design across the codebase but now with real financial stakes; the error-body read timeout can add up to attempts times error_body_timeout of wall time to a rate-limited call. Approved.",
       "revision": null
+    },
+    {
+      "id": "158234c3-fb83-4bab-b6d3-ef60f6838a9c",
+      "at": "2026-09-13T07:20:55.767Z",
+      "action": "approve",
+      "task": "M10-safe-builtin-tools",
+      "human": "Claude Fable 5.1 (independent L4 reviewer)",
+      "reason": "Re-derived FR-35..FR-42, NFR-13, NFR-14 and AC-27..AC-33 from SPEC.md. Verified: unit file 76 passed, full suite 810 passed in 93 s, example 10 live 7 of 7 with example.com labelled external_tool and untrusted. Confinement attacked with five races in throwaway folders (in-place junction retarget via FSCTL_SET_REPARSE_POINT, parent replaced by a junction mid-walk, hard link mid-walk, file and directory symlink swaps without the seam, a case-sensitive parent): 4312 calls, zero leaks. SSRF: 159 hostile resolver answer sets, 18 numeric spellings and 4 hostile names refused with zero dials; second-hop rebinding refused after one dial; stacked gzip, raw deflate, br, lying Content-Length, NUL bodies and a 100 KB Location fail closed with external labels; a redirect to a second allowlisted host is not served over the first host TLS connection. Mutants M5, M2, M27, M15 and the unclaimed glob 8.3 rule are killed; the walk directory check survives the full suite and is equivalent because every content-yielding open re-checks its own handle. Caveats to fix: (1) _media hands a server-chosen charset to codecs.lookup, which also resolves bytes-to-bytes codecs; under python -O a 65 KB body with charset=zlib_codec decompressed to 64 MiB and peaked at 899 MiB before the 50000-char cap, bypassing the FR-38 decoded-byte bound; in default mode it fails closed only because those codecs assert errors==strict; restrict charset to text encodings. (2) File tools share the default to_thread pool with the store: with 20 concurrent greps on this 20-worker host the store to_thread latency peaked at 139 s, 299 s with 28; give file tools their own bounded executor. (3) A synchronous backend generator blocks the loop past the executor timeout. (4) An after_tool replacement that is not a ToolResult or holds non-str content escapes the cap. (5) The walk time budget is checked per directory only: one flat directory of 24000 files took 20.8 s per grep. (6) TLS re-verification across hops rests on the redirect body never being consumed.",
+      "revision": null
+    },
+    {
+      "id": "df53b27e-ba7e-4879-8300-5f7e93db2bd5",
+      "at": "2026-09-13T08:25:43.680Z",
+      "action": "approve",
+      "task": "M10-safe-builtin-tools",
+      "human": "Claude Opus 5 (independent L4 reviewer, round 2)",
+      "reason": "Round 2 delta review. Gates on the restored tree: unit 81 passed, regression 815 passed. D1: 2572 charset spellings (quoted, padded, mixed case, percent-encoded, repeated parameter, two Content-Type headers, ZLIB-CODEC, zlib codec) refuse all 7 non-text codecs under default and python -O; for all 111 admitted codecs codec.name resolves back to the same decoder and no decode yields more chars than body bytes (max ratio 1.0); utf-7, unicode_escape and raw_unicode_escape NULs and surrogates become storable tool errors with external labels; idna, punycode and BOM-less utf-16 fail closed. C5: a flat folder of 100000 files stops glob and grep at 20.02 s; list_handle of 100000 entries takes 0.31 s, list_directory 0.53 s; a 1 MB one-line grep 0.09 s. C4: a non-ToolResult, a raising repr, a huge or NUL repr all end capped or as tool errors with declared labels on memory and Postgres. Mutants R1 R2 R4 R5 R6 R8 R9 R11 M2 M25 killed; R3 (probe exception trusted), R7 (entry-count clause dropped) and R10 (entries reads the flag only) survive the full suite and are near-equivalent blind spots over correct code. Caveats: (1) a tool or hook returning a str subclass that overrides __len__ escapes the FR-41 cap (200000 chars stored with cap 40 on both stores, ToolCalled original_length 3); needs hostile caller code, built-ins never return one. (2) Step 7 storability is not re-applied after after_tool: a replacement that bypasses the ToolResult constructor (object.__setattr__ or a subclass without __post_init__) holding a NUL, a lone surrogate or a non-str id completes in memory and fails the run on Postgres; normal construction sanitises it and the path predates M10. (3) A replacement sanitised by the constructor returns Completed with is_error true while ToolCalled says is_error false. (4) A flat folder above 100000 entries lists 100168, so glob and grep return no matches with the stopped note even for an existing literal name; bounded and labelled. (5) glob keeps opening matches past max_results until the walk ends (30000 files 6.7 s).",
+      "revision": null
+    },
+    {
+      "id": "4640a946-29e9-4738-a024-a0e582b24e68",
+      "at": "2026-09-13T11:57:26.025Z",
+      "action": "reject",
+      "task": "M10-safe-builtin-tools",
+      "human": "Claude Sonnet 5 (independent L4 reviewer, round 3)",
+      "reason": "Reject. The round 3 claim is that whatever an after_tool hook returns is checked as if built here: a ToolResult whose tool_call_id matches and whose is_error is a bool, or the call becomes a tool error. Step 8 reads returned.is_error TWICE: once in the guard (type(returned.is_error) is not bool) and again when building the rebuilt ToolResult (is_error=returned.is_error). A ToolResult subclass built by skipping __init__/__post_init__ (the same threat model round 2 caveat 2 and this rounds own UncheckedResult test already use) can expose is_error as a property that returns True on the first read, passing the guard, then a non-bool on the second read, which flows unchecked into the rebuilt ToolResult, the Completed outcome and the ToolCalled event. Reproduced directly against the reviewed tree: outcome is Completed, result.is_error is the literal string NOT-A-BOOL-SECOND-READ, and the emitted event carries the same string where FR-2 promises a bool on every persisted result. None of the 84 tests exercise a value that differs between the two reads; test_whatever_a_hook_returns_is_checked_as_if_it_were_built_there only sets is_error via object.__setattr__, which is stable across reads and never exposed this gap. tool_call_id does not have this problem: the rebuild uses tool_call.id, not a second read of returned.tool_call_id, so only is_error is affected. Everything else checked out: leads (a) before_tool trusting outcome.replacement and (b) ContentProvenance not validating enum-typed fields (confirmed reachable: an after_tool hook returning a plain-str origin completes in memory and raises AttributeError on p.origin.value at Postgres persistence) both reproduce identically on unmodified cc2f0d6, so they predate M10 and are caveats, not round 3 defects. Lead (c) Failed path with a raising or lying-len exception str stayed capped and exact. Lead (e) _text correctly copies real characters for both a direct str subclass and one returned via repr(). Lead (f): TidyAndRedact and MarkMCPResultsUntrusted build results only through dataclasses.replace or the plain constructor, unaffected; scripts 03 and 06 ran offline with unchanged output. Gates on the unmodified tree: unit 84 passed in 19.28s, regression 818 passed in 104.24s (one full-suite run). No files mutated, no DB rows or servers created, temp probe scripts removed.",
+      "revision": null
+    },
+    {
+      "id": "f4688bcb-f544-4f99-be2c-9dee8c3f21f9",
+      "at": "2026-09-13T12:06:51.393Z",
+      "action": "retry",
+      "task": "M10-safe-builtin-tools",
+      "human": null,
+      "reason": null,
+      "revision": null
+    },
+    {
+      "id": "94bc5480-f4d8-456a-be2e-0883d7ba9785",
+      "at": "2026-09-13T13:04:19.249Z",
+      "action": "reject",
+      "task": "M10-safe-builtin-tools",
+      "human": "Claude Fable 5.1 (independent L4 reviewer, round 4, fresh session)",
+      "reason": "Reject. Round 4 claims _checked_provenance requires by exact type Origin, InstructionAuthority and TrustZone members and a frozenset of TaintFlag members, and that anything else is a tool error. Exact type is not membership: the enums are str mixins, and str.__new__(Origin, \"x\") builds an instance whose type is exactly Origin but which is no member, carrying whatever _value_ hostile hook code sets, or none, and every store reads .value. Reproduced through the public Runner with an after_tool hook returning a ToolResult built by the plain constructor around such a provenance (tenant SYN-m10r4-a, rows deleted, zero remain). No _value_: _checked_provenance accepts it and the run FAILS on both stores with AttributeError, Origin object has no attribute _value_ (memory: the context assembler manifest; Postgres: the write). 5 MB _value_: memory completes, Postgres persists a 5000208 byte tool_results row past the 40 character cap in a field the cap does not measure, the run then fails at the read back and history() raises ValueError on that row for ever. NUL _value_: memory completes, Postgres fails with UntranslatableCharacter. A TaintFlag non member inside the exact frozenset behaves the same (5000223 bytes persisted). These are the two consequences round 3 rejected on, reached by the means round 3 used, on the same seam. is_error is airtight because bool has no other instances; an enum does. Equality is not enough either, being str equality: payload system with _value_ user passes it and relabels the result USER. Identity against the members is what the stores need. Everything else held. Lead b: ResultProvenance refuses bad labels at construction; only a declaration bypassed afterwards reaches _failed unchecked, caller configuration, caveat. Lead c: a redirect Location of 8126 chars completes, 8226 is a tool error whose message names a label of the wrong type, misleading, caveat; the initial URL is schema capped at 2048. Lead d: only the new test builds string labels; examples 03 and 06 exit 0 offline. Lead e: every shifting after shape is a tool error or a fully checked value. Lead f: a str subclass with a real NUL and lying __contains__ is sanitised by the step 8 rebuild to is_error True with the event agreeing; a subclass or 9000 char source is a tool error. Mutants M-A source unbounded, M-B is_error read twice, M-C labels unchecked: each 1 failed 84 passed, tree restored, SHA-256 verified. Gates on the unmodified tree: unit 85 passed in 18.71s, regression 819 passed in 129.25s, one full suite run. README accurate.",
+      "revision": null
+    },
+    {
+      "id": "936aca7d-b034-4c81-a870-e664de32ec74",
+      "at": "2026-09-13T13:09:04.785Z",
+      "action": "retry",
+      "task": "M10-safe-builtin-tools",
+      "human": null,
+      "reason": null,
+      "revision": null
+    },
+    {
+      "id": "ff8cd80c-aec3-4729-aad6-69d30c5d9182",
+      "at": "2026-09-13T13:41:42.537Z",
+      "action": "approve",
+      "task": "M10-safe-builtin-tools",
+      "human": "Claude Opus 5 (independent L4 reviewer, round 5, fresh session)",
+      "reason": "Approve. Round 5 closes round 4: _is_member is identity against the real members and each refusal names its cause. Verified through the public Runner on memory and Postgres, tenant SYN-m10r5, 34 runs deleted, zero rows remain. Lead a: only fetch sets a source, file tools and search use the 64 char schema hash. A final URL of 8192 chars completes; 8193, 9000 and 50000 via redirect are a tool error naming the source, declared external labels kept per D12, ToolCalled is_error True, identical on both stores. Caveat 1, in scope, fails closed: a model URL of 2048 code points inside the schema limit percent-encodes past 8192 and is refused after the request is sent. Lead b: plain string labels, string taint flags and str subclass labels from an after_tool hook FAILED the run on both stores before M10 (AttributeError on value, reproduced with the cc2f0d6 executor); now an honest tool error, an improvement. Tuples, lists and sets of real members, with_taint and the example 06 relabel complete on both stores. Caveat 2, in scope, ordinary code, narrow regression: a str subclass source from a hook or ToolOutput completed before M10 and is now a tool error whose message says not text; normalising it as _text does would fix it. Lead c: provenance read back from Postgres and reused, deepcopy, pickle and ResultProvenance from strings keep real members and complete. Lead d: NUL and lone surrogate from a unicode_escape page, a NUL body, a search backend NUL and a surrogate file name give the same tool error on both stores; one surrogate named file makes list_directory fail for the whole folder, pre-existing. Caveat 3 under DECISION-2bad84bb, forgery: Origin(forged) returns the forged instance, so ResultProvenance accepts a str.__new__ label and _failed carries it unchecked. Mutants on executor.py, restored and SHA-256 verified: equality membership, isinstance taint, origin-only labels, source refusal blaming labels, declared labels dropped on errors all killed on the unit file. Survived the full suite, 821 passed each: dropping the exact frozenset check (reachable only by forgery since the constructor coerces, a blind spot over defence in depth) and the source bound changed to >= (boundary unpinned, cosmetic). Gates on the unmodified tree: unit 87 passed in 14.01s, regression 821 passed in 99.13s. Three full suite runs. README count 821 accurate.",
+      "revision": null
     }
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-08T15:13:52.789Z",
+    "at": "2026-09-13T13:14:59.835Z",
     "revision": {
-      "commit": "317318a922ecf2a8d4773b45a7b893d42ec0ab8c",
+      "commit": "cc2f0d6a2195d28167907baa4eba6a4a76e4430d",
       "dirty": true,
-      "source_hash": "0106599ab1376ccaf424e4d17c4675ddc87a14e2f34c144a3379e23c1f13251d"
+      "source_hash": "b7951f39862eaa30915e0ac2d0790a0983710f1d30c8de343c1d2eed60356379"
     },
-    "active_task": "M6-golden-eval",
+    "active_task": "M10-safe-builtin-tools",
     "next_action": "Run the task pre-flight."
   },
   "legacy": null
