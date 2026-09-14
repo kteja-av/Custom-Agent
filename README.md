@@ -7,7 +7,7 @@ persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
 > a store-hardening milestone for Phase 2 are complete, each approved by an
-> independent review; the suite has 821 tests. It is not on PyPI yet, and a lot is
+> independent review; the suite has 925 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -49,6 +49,15 @@ persisted so you can reconstruct exactly what happened afterwards.
   supply. Fetched and searched content is labelled untrusted. Every tool's
   output is capped, 50,000 characters by default. The file tools are
   Windows-only in this release.
+- **Runs a response's tool calls in parallel when the tools say it is safe.** A
+  tool that declares `concurrency_safe=True` (the built-in read-only tools do)
+  runs beside the other safe calls of the same response, under
+  `SchedulerLimits`: at most 4 tool calls of a run at once by default, optional
+  limits per tool, and limits on concurrent model calls per model client, shared
+  by every run of a `Runner`. Results reach the model in the order it asked for
+  them, and a tool that declares nothing still runs one call at a time. The
+  file tools have their own thread pool, so a burst of searches cannot hold up
+  database calls.
 - **Works entirely in memory** when you don't pass a database.
 
 ## What it does not do yet
@@ -390,7 +399,7 @@ Narrowing that is a known, recorded gap.
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (821 tests) runs against a **real database and the live gateway**,
+The full suite (925 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.

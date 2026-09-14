@@ -8,6 +8,7 @@ the public surface is AgentSpec / RunConfig / Runner / RunResult (NFR-5).
 from .api import AgentSpec, RunConfig, Runner, RunResult, RunStatus
 from .model import ReasoningEffort
 from .persistence import Persistence
+from .scheduler import SchedulerLimits
 from .errors import (
     AgentSDKError,
     BudgetExceeded,
@@ -59,6 +60,8 @@ __all__ = [
     "RunStatus",
     # A field of AgentSpec and RunConfig (FR-28), so it belongs beside them.
     "ReasoningEffort",
+    # An argument of Runner and a field of RunConfig (FR-43), for the same reason.
+    "SchedulerLimits",
     "ContentProvenance",
     "InstructionAuthority",
     "Message",

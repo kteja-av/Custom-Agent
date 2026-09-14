@@ -1,0 +1,22 @@
+{
+  "task": "M11-concurrency-foundations",
+  "gate": "unit",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests/test_concurrency.py -q",
+  "started_at": "2026-09-14T13:13:14.308Z",
+  "observed_at": "2026-09-14T13:13:33.343Z",
+  "exit_code": 0,
+  "signal": null,
+  "stdout": "........................................................................ [ 69%]\r\n................................                                         [100%]\r\n104 passed in 18.25s\r\n",
+  "stderr": "",
+  "revision": {
+    "commit": "7abfe4758bc4def7a61248f82ec046d766eedd42",
+    "dirty": true
+  },
+  "source_hash": "ed8e3b364d8378f5ff102b8e3b388e959fe2de40ea00eea6cfa021d4a0b31524",
+  "environment": {
+    "node": "v20.10.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "hash": "9c328cf8063d5cddf2c4e1f52f7267e382b5c5d5db935abe7e0ca19757dd92dd"
+}

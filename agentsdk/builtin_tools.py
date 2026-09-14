@@ -24,14 +24,18 @@ from __future__ import annotations
 
 import asyncio
 import codecs
+import concurrent.futures
+import contextvars
 import fnmatch
 import functools
 import ipaddress
+import itertools
 import math
 import os
 import re
 import socket
 import sys
+import threading
 import time
 import zlib
 from collections.abc import Awaitable, Callable, Iterable, Sequence
@@ -40,6 +44,7 @@ from typing import Any, Protocol
 
 import httpx
 
+from .primitives import unstorable_reason
 from .tools import ResultProvenance, Tool, ToolOutput, ToolSpec
 from .version import __version__
 
@@ -52,6 +57,62 @@ def _positive(name: str, value: Any) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise ValueError(f"{name} must be a positive int, got {value!r}")
     return value
+
+
+# =============================================================================
+# The file-tool thread pool (FR-45)
+# =============================================================================
+
+# P2-D6: one pool for every file tool in the process.
+_file_tool_threads = 4
+_file_pool: concurrent.futures.ThreadPoolExecutor | None = None
+_file_pool_lock = threading.Lock()
+
+
+def set_file_tool_threads(count: int) -> None:
+    """How many threads every built-in file tool in this process shares (4 by default).
+
+    Call it before the first file tool call. After that the pool exists, and
+    this raises RuntimeError rather than resize a pool that may be running work.
+    """
+    global _file_tool_threads
+    threads = _positive("count", count)
+    with _file_pool_lock:
+        if _file_pool is not None:
+            raise RuntimeError(
+                "set_file_tool_threads must be called before the first file tool call; the pool already exists"
+            )
+        _file_tool_threads = threads
+
+
+def _file_tool_pool() -> concurrent.futures.ThreadPoolExecutor:
+    global _file_pool
+    with _file_pool_lock:
+        if _file_pool is None:
+            numbers = itertools.count(1)
+
+            def name_thread() -> None:
+                threading.current_thread().name = f"agentsdk-file-tool-{next(numbers)}"
+
+            _file_pool = concurrent.futures.ThreadPoolExecutor(
+                max_workers=_file_tool_threads, thread_name_prefix="agentsdk-file-tool", initializer=name_thread
+            )
+        return _file_pool
+
+
+async def _on_file_pool(function: Callable[..., str], *args: Any) -> str:
+    """Blocking file work, on the SDK's own pool rather than the loop's default executor.
+
+    Every store call goes through the default executor (FR-20), and in M10 review
+    round 1 twenty concurrent greps sharing it held a store call for 139 s
+    (KNOWLEDGE-0d5f3a4e). Awaiting the pool's future lets the executor's timeout
+    cancel a call still waiting for a thread, which then never starts; a call
+    already running cannot be interrupted and ends at its own walk budget.
+    """
+    context = contextvars.copy_context()
+    return await asyncio.get_running_loop().run_in_executor(
+        _file_tool_pool(), functools.partial(context.run, function, *args)
+    )
 
 
 # =============================================================================
@@ -395,12 +456,22 @@ def _notes(withheld: int, **counts: int) -> list[str]:
     if withheld:
         notes.append(
             f"[{withheld} entries withheld: they resolve outside the root folder, have more than "
-            "one hard link, or cannot be opened]"
+            "one hard link, cannot be opened, or have a name that cannot be stored]"
         )
     for label, count in counts.items():
         if count:
             notes.append(f"[{count} {label.replace('_', ' ')}]")
     return notes
+
+
+def _unstorable_name(name: str) -> bool:
+    """A name no store can hold, such as one with a lone surrogate (FR-47).
+
+    Windows allows one in a file name, and one such name used to turn a whole
+    listing, glob or grep into a tool error at the executor's storability check.
+    The entry is withheld instead, and a folder's whole subtree with it.
+    """
+    return unstorable_reason(name) is not None
 
 
 @_guarded
@@ -417,6 +488,9 @@ def _list(root: _Root, max_entries: int, seam: Seam, path: str) -> str:
         if len(lines) == max_entries:
             cut = True
             break
+        if _unstorable_name(name):
+            withheld += 1
+            continue
         found = _entry(root, final, name, attributes, None)
         if found is None:
             withheld += 1
@@ -484,6 +558,10 @@ def _glob(root: _Root, max_results: int, seam: Seam, pattern: str) -> str:
     walk = _Walk(root, seam)
     results: list[str] = []
     seen: set[str] = set()
+    # Entries withheld for an unstorable name, by (directory, name): a pattern
+    # such as '**' meets a folder once to descend into it and again to show it,
+    # and counted it twice (R3, M11 review round 1).
+    unstorable: set[tuple[str, str]] = set()
     # (directory's final path, requested names so far, pattern index, ancestors)
     stack = [(root.path, (), 0, frozenset({root.path.casefold()}))]
     while stack and len(results) <= max_results and not walk.stopped:
@@ -500,6 +578,16 @@ def _glob(root: _Root, max_results: int, seam: Seam, pattern: str) -> str:
                 break
             matched = part == "**" or fnmatch.fnmatchcase(name.casefold(), part.casefold())
             if not matched:
+                continue
+            if _unstorable_name(name):
+                # Counted where the entry would have been used: shown here, or a
+                # folder descended into. A file met by '**' is used, if at all,
+                # by the part after it, which counts it there.
+                last = index == len(parts) - 1
+                used = (part != "**" and last) or (attributes & (_DIRECTORY | _REPARSE_POINT) and (part == "**" or not last))
+                if used and (directory, name) not in unstorable:
+                    unstorable.add((directory, name))
+                    walk.withheld += 1
                 continue
             found = _entry(root, directory, name, attributes, None)
             if found is None:
@@ -583,6 +671,9 @@ def _grep(root: _Root, max_matches: int, max_file_bytes: int, seam: Seam, text: 
             for name, attributes in reversed(walk.entries(directory)):
                 if len(matches) > max_matches or walk.spent():
                     break
+                if _unstorable_name(name):  # a file or a whole folder, withheld (FR-47)
+                    walk.withheld += 1
+                    continue
                 entry_path = root.join(directory, name)
                 if attributes & _DIRECTORY or attributes & _REPARSE_POINT:
                     found = _entry(root, directory, name, attributes, None)
@@ -615,6 +706,8 @@ def _file_tool(name: str, description: str, properties: dict[str, Any], required
                 "additionalProperties": False,
             },
             configuration={"root": root.path, **configuration},
+            # Read-only and confined, so its calls may run beside each other (FR-44).
+            concurrency_safe=True,
         ),
         fn=fn,
     )
@@ -629,7 +722,7 @@ def read_file_tool(root: Any, *, max_bytes: int = 1_000_000, name: str = "read_f
     base, limit, seam = _Root(root), _positive("max_bytes", max_bytes), _between_check_and_open
 
     async def read_file(path: str) -> str:
-        return await asyncio.to_thread(_read, base, limit, seam, path)
+        return await _on_file_pool(_read, base, limit, seam, path)
 
     return _file_tool(name, "Read a text file inside the root folder. Paths are relative to that folder.",
                       {"path": _PATH}, ["path"], base, {"max_bytes": limit}, read_file)
@@ -641,7 +734,7 @@ def list_directory_tool(root: Any, *, max_entries: int = 1000, name: str = "list
     base, limit, seam = _Root(root), _positive("max_entries", max_entries), _between_check_and_open
 
     async def list_directory(path: str = ".") -> str:
-        return await asyncio.to_thread(_list, base, limit, seam, path)
+        return await _on_file_pool(_list, base, limit, seam, path)
 
     return _file_tool(name, "List a directory inside the root folder. Directories end in '/'.",
                       {"path": {**_PATH, "default": "."}}, [], base, {"max_entries": limit}, list_directory)
@@ -653,7 +746,7 @@ def glob_tool(root: Any, *, max_results: int = 1000, name: str = "glob_files",
     base, limit, seam = _Root(root), _positive("max_results", max_results), _between_check_and_open
 
     async def glob_files(pattern: str) -> str:
-        return await asyncio.to_thread(_glob, base, limit, seam, pattern)
+        return await _on_file_pool(_glob, base, limit, seam, pattern)
 
     return _file_tool(name, "Find files inside the root folder by pattern, for example '**/*.py'.",
                       {"pattern": _PATH}, ["pattern"], base, {"max_results": limit}, glob_files)
@@ -666,7 +759,7 @@ def grep_tool(root: Any, *, max_matches: int = 200, max_file_bytes: int = 1_000_
     matches, file_bytes = _positive("max_matches", max_matches), _positive("max_file_bytes", max_file_bytes)
 
     async def grep_files(text: str, path: str = ".") -> str:
-        return await asyncio.to_thread(_grep, base, matches, file_bytes, seam, text, path)
+        return await _on_file_pool(_grep, base, matches, file_bytes, seam, text, path)
 
     return _file_tool(
         name,
@@ -1028,6 +1121,8 @@ def fetch_tool(
             # The tool's own deadline is the one that reports; the executor's is a backstop.
             timeout_seconds=options.timeout + 5,
             result_provenance=ResultProvenance.external(),
+            # A read with no side effects, so its calls may run beside each other (FR-44).
+            concurrency_safe=True,
             configuration={
                 "allowlist": sorted(options.allowlist),
                 "max_bytes": options.max_bytes,
@@ -1100,6 +1195,8 @@ def web_search_tool(
             },
             result_provenance=ResultProvenance.external(),
             configuration={"max_results": cap, "max_result_chars": size},
+            # A query with no side effects, so its calls may run beside each other (FR-44).
+            concurrency_safe=True,
         ),
         fn=web_search,
     )

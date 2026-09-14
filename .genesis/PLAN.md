@@ -90,15 +90,15 @@
 
 ### M11-concurrency-foundations — Calls to tools that declare concurrency_safe run in parallel under per-run, per-tool and per-provider limits, file tools stop starving the store on their own thread pool, and the M10 carry-overs are closed
 
-- state/risk: active / high
+- state/risk: done / high
 - requirements: FR-43, FR-44, FR-45, FR-46, FR-47, NFR-15, NFR-16, NFR-17, NFR-18, AC-34, AC-35, AC-36, AC-37, AC-38, AC-43, AC-44
 - scope: not bounded
-- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_concurrency.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending
+- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_concurrency.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pass
 - next: Run the task pre-flight.
 
 ### M12-run-handles-and-cancellation — A caller can start a run, stream its events in order and cancel it, and a cancelled run ends cancelled with a complete record, RunCancelled as its last event, and no run left running
 
-- state/risk: queued / high
+- state/risk: active / high
 - requirements: FR-48, FR-49, FR-50, FR-51, FR-52, NFR-15, NFR-17, AC-39, AC-40, AC-41
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_run_handles.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending

@@ -31,6 +31,7 @@ from .permissions import AllowlistPermissionChecker, PermissionChecker
 from .persistence import Persistence
 from .postgres import RunScope, column_rejection_reason
 from .registry import ModelRegistry, call_cost, default_registry
+from .scheduler import ProviderSlots, RunSlots, SchedulerLimits
 from .session import InMemorySessionStore, SessionStore
 from .tools import Tool, ToolRegistry
 from .version import __version__
@@ -78,6 +79,14 @@ def _reasoning_effort(value: object, owner: str) -> ReasoningEffort | None:
         f"{owner}.reasoning_effort must be one of "
         f"{[effort.value for effort in ReasoningEffort]} or None, got {value!r}"
     )
+
+
+def _refuse_bad_scheduler_limits(value: object, owner: str) -> None:
+    """scheduler_limits (FR-43): a SchedulerLimits or None, refused by name."""
+    if value is not None and not isinstance(value, SchedulerLimits):
+        raise ValueError(
+            f"{owner} scheduler_limits must be a SchedulerLimits or None, got {type(value).__name__}"
+        )
 
 
 @dataclass(frozen=True)
@@ -138,6 +147,9 @@ class RunConfig:
     # FR-27 / FR-28: override the agent's values for this run only.
     max_output_tokens: int | None = None
     reasoning_effort: ReasoningEffort | str | None = None
+    # FR-43: this run's per-run and per-tool limits, replacing the Runner's as a
+    # whole. None runs under the Runner's.
+    scheduler_limits: SchedulerLimits | None = None
 
     def __post_init__(self) -> None:
         # Before the range checks: a bool passes every one of them (True >= 1,
@@ -176,6 +188,14 @@ class RunConfig:
         object.__setattr__(
             self, "reasoning_effort", _reasoning_effort(self.reasoning_effort, "RunConfig")
         )
+        _refuse_bad_scheduler_limits(self.scheduler_limits, "RunConfig")
+        if self.scheduler_limits is not None and self.scheduler_limits.provider_concurrency_limits:
+            # A provider limit is shared by every run of a Runner, so one run
+            # cannot set it.
+            raise ValueError(
+                "RunConfig.scheduler_limits cannot carry provider_concurrency_limits: a provider "
+                "limit is shared by every run of a Runner, so it is set on the Runner"
+            )
 
 
 @dataclass(frozen=True)
@@ -210,6 +230,7 @@ class Runner:
         assembler: ContextAssembler | None = None,
         persistence: Persistence | None = None,
         model_registry: ModelRegistry | None = None,
+        scheduler_limits: SchedulerLimits | None = None,
     ) -> None:
         if not model_clients:
             raise ValueError("Runner requires at least one model client")
@@ -218,6 +239,17 @@ class Runner:
         self._persistence = persistence
         self._models = model_registry if model_registry is not None else default_registry()
         self._clients = dict(model_clients)
+        # FR-43: the provider limits every run of this Runner shares, and the
+        # per-run limits a run uses unless its RunConfig sets its own.
+        _refuse_bad_scheduler_limits(scheduler_limits, "Runner")
+        self._limits = scheduler_limits if scheduler_limits is not None else SchedulerLimits()
+        unknown = sorted(set(self._limits.provider_concurrency_limits) - set(self._clients))
+        if unknown:
+            raise ValueError(
+                f"provider_concurrency_limits names {unknown}, which are not model clients of this "
+                f"Runner; registered: {sorted(self._clients)}"
+            )
+        self._provider_slots = ProviderSlots(self._limits.provider_concurrency_limits)
         self._sessions = session_store if session_store is not None else InMemorySessionStore()
         # `or` would be wrong here: ToolRegistry defines __len__, so an EMPTY
         # caller-supplied registry is falsy and would be silently discarded and
@@ -369,6 +401,7 @@ class Runner:
         meter: RunMeter,
     ) -> RunResult:
         run_id = scope.run_id
+        limits = self._limits_for(config)
         sessions = self._sessions
         if self._persistence is not None:
             sessions = self._persistence.session_store_for(scope)
@@ -397,6 +430,7 @@ class Runner:
                     max_output_tokens=max_output_tokens,
                     reasoning_effort=reasoning_effort.value if reasoning_effort is not None else None,
                     pricing=self._pricing_record(recorded_model),
+                    scheduler_limits=limits.to_json(),
                 ),
             )
 
@@ -423,14 +457,29 @@ class Runner:
             },
         )
 
+        # FR-44: the calls of a parallel batch can finish together, and an event
+        # sink numbers an event in two steps (M12 moves that under each sink's
+        # own lock, FR-52). Emitting one ToolCalled of this run at a time keeps
+        # sequence_no unique and contiguous on both stores. Each carries its
+        # call's id in the envelope, which had stayed NULL since Phase 0.
+        tool_events = asyncio.Lock()
+
+        async def emit_tool_called(event_type: str, payload: dict[str, Any]) -> None:
+            call_id = payload.get("tool_call_id")
+            async with tool_events:
+                await asyncio.to_thread(
+                    events.emit,
+                    EventType.TOOL_CALLED,
+                    payload,
+                    tool_call_id=call_id if isinstance(call_id, str) else None,
+                )
+
         executor = ToolExecutor(
             registry=self._registry,
             permission_checker=spec.checker(),
             hook=self._hook,
             # A coroutine, which the executor awaits: see ToolExecutor._safe_emit.
-            emit=lambda event_type, payload: asyncio.to_thread(
-                events.emit, EventType.TOOL_CALLED, payload
-            ),
+            emit=emit_tool_called,
         )
 
         def cost_of(request: ModelRequest, usage: Usage) -> Decimal | None:
@@ -450,6 +499,8 @@ class Runner:
             hook=self._hook,
             cost_of=cost_of,
             meter=meter,
+            tool_slot=RunSlots(limits).slot,
+            model_slot=partial(self._provider_slots.slot, client_key),
         )
 
         # Only what the caller set: a run that sets none of M9's options sends
@@ -491,6 +542,19 @@ class Runner:
             run_id=run_id,
             error=error,
             cost_usd=meter.cost_usd,
+        )
+
+    def _limits_for(self, config: RunConfig) -> SchedulerLimits:
+        """The limits a run executes under (FR-43): its own per-run and per-tool
+        limits as a whole when its RunConfig sets them, and always the Runner's
+        provider limits."""
+        chosen = config.scheduler_limits
+        if chosen is None:
+            return self._limits
+        return SchedulerLimits(
+            max_concurrent_tools=chosen.max_concurrent_tools,
+            tool_concurrency_limits=chosen.tool_concurrency_limits,
+            provider_concurrency_limits=self._limits.provider_concurrency_limits,
         )
 
     def _cost(self, model_id: str | None, usage: Usage) -> Decimal | None:

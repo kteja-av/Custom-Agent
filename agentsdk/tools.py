@@ -132,6 +132,11 @@ class ToolSpec:
     # tool's allowlist -- so a manifest's tool hash names it. Never sent to the
     # model: schemas() does not read it.
     configuration: dict[str, Any] = field(default_factory=dict)
+    # FR-44, P2-D14: whether calls to this tool may run in parallel with other
+    # calls of the same response. Opt-in, never inferred: read_only defaults to
+    # True, so a batch keyed on it would have run every undeclared tool in
+    # parallel, deleting ones included.
+    concurrency_safe: bool = False
 
     def __post_init__(self) -> None:
         """A schema that cannot be serialised is refused at REGISTRATION.
@@ -172,13 +177,18 @@ class ToolSpec:
         reason = unstorable_reason(self.configuration)
         if reason is not None:
             raise ToolError(f"tool {self.name!r} has a configuration that cannot be stored: {reason}")
+        # Exactly a bool: a truthy "no" would otherwise decide parallelism.
+        if type(self.concurrency_safe) is not bool:
+            raise ToolError(
+                f"tool {self.name!r} has concurrency_safe={self.concurrency_safe!r}: it must be True or False"
+            )
 
     def schema_hash(self) -> str:
         """Feeds ExecutionManifest.tool_spec_hashes (FR-11).
 
-        The M10 fields enter the hash only when they differ from their defaults,
-        so every tool that declares none of them keeps the hash every manifest
-        before M10 recorded for it (AC-32).
+        The M10 fields, and M11's concurrency_safe, enter the hash only when they
+        differ from their defaults, so every tool that declares none of them
+        keeps the hash every manifest before M10 recorded for it (AC-32, AC-35).
         """
         fields: dict[str, Any] = {
             "name": self.name,
@@ -192,6 +202,8 @@ class ToolSpec:
             fields["max_output_chars"] = self.max_output_chars
         if self.configuration:
             fields["configuration"] = self.configuration
+        if self.concurrency_safe is True:
+            fields["concurrency_safe"] = True
         payload = json.dumps(fields, sort_keys=True)
         return hashlib.sha256(payload.encode()).hexdigest()
 

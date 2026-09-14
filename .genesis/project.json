@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-14T07:24:06.642Z"
+    "updated_at": "2026-09-14T13:19:13.017Z"
   },
   "policy": {
     "ponytail": "full",
@@ -25,7 +25,7 @@
   "lifecycle": {
     "phase": "build",
     "status": "active",
-    "active_task": "M11-concurrency-foundations",
+    "active_task": "M12-run-handles-and-cancellation",
     "blocker": null,
     "next_action": "Run the task pre-flight."
   },
@@ -898,6 +898,22 @@
       "status": "accepted",
       "source": "owner decision 2026-09-14",
       "recorded_at": "2026-09-14T07:21:28.760Z"
+    },
+    {
+      "id": "DECISION-7a0b4459",
+      "title": "A1: NFR-15 amended for batch ordering under max_concurrent_tools 1",
+      "text": "Owner decision 2026-09-14 on author issue A1 of the M11 review. NFR-15 said a run with max_concurrent_tools 1 produces the same events as before Phase 2, while FR-44 and AC-35 pass every call of a batch of concurrency_safe calls through steps 1 to 5 before the first executes, and AC-45 (M14) depends on that queueing. So under max_concurrent_tools 1, before_tool sees every call of such a batch first, and a call refused at steps 1 to 5 records its ToolCalled before the events of calls issued ahead of it; history and the results the model receives keep issue order, and tools that do not declare concurrency_safe are unchanged. NFR-15 now names this ordering as an exception. The code is unchanged.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T12:05:20.407Z"
+    },
+    {
+      "id": "DECISION-1a5942ea",
+      "title": "The development database password printed by an M10 probe is not rotated",
+      "text": "Owner decision 2026-09-14. An M10 verification probe printed the password of the local development Postgres on 2026-09-13. The database is for development only and is not going to production, so the owner declined rotation for now. Probes must still never print a password or a connection string. Revisit if the database becomes reachable from other machines, the password is used anywhere else, or the database moves toward shared or production use. Measured 2026-09-14: Postgres listens on all interfaces on port 5432, and no enabled inbound Windows Firewall allow rule names it. The SPEC.md Risks entry is updated to match.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T12:05:20.564Z"
     }
   ],
   "knowledge": [
@@ -1468,6 +1484,22 @@
       "source": "Phase 2 increment 1 spec reviews, 2026-09-14",
       "tags": [],
       "recorded_at": "2026-09-14T07:21:28.942Z"
+    },
+    {
+      "id": "KNOWLEDGE-0b28bdb9",
+      "title": "M11 pre-flight: baseline suite, carry-over reproductions and runs left behind",
+      "text": "Measured 2026-09-14 at commit 7abfe47, before any M11 change. The full suite passed 821 tests in 132.8 s on Python 3.11.9. A probe on the unchanged code reproduced the FR-47 carry-overs: over a folder holding a file and a subfolder named with a lone surrogate, list_directory, glob and grep each returned a ToolExecutionError naming UnicodeEncodeError at the executor storability check; a ToolOutput whose source is a str subclass was refused as not text of at most 8192 characters; sources of 8192 characters passed and 8193 were refused. After that full run, 13 runs written in the previous 20 minutes remained in the store, all from tests/test_golden_eval.py: t-ac1 to t-ac4, t-nfr3, t-nfr4 and t-seams one each, t-principal four and t-live two. The M11 tests written first then failed 88 and passed 6 against the unchanged code; the 6 were the existing source bound checks on both stores.",
+      "source": "M11 pre-flight probe and red run, 2026-09-14",
+      "tags": [],
+      "recorded_at": "2026-09-14T08:36:10.738Z"
+    },
+    {
+      "id": "KNOWLEDGE-fc11fe96",
+      "title": "M11 round 1 review: R1 to R3 repaired, R1 judged blocking by the owner",
+      "text": "Round 1 (Claude Fable 5.1, 2026-09-14, control 0e6eca38) approved M11 with caveats R1 to R5. The owner reran the reviewer probes and judged R1 blocking, because FR-44 states that a BaseException escaping a call cancels and awaits its siblings, and CancelledError is one. R1: asyncio.wait with FIRST_EXCEPTION does not wake for a task that ends cancelled, so a call ending in CancelledError left its siblings running to their own end; a sibling with no timeout held the run open without bound and kept running after the run failed. R2: a second cancel landing in the finally await left the cancelled siblings unawaited, 4 tasks pending after the run ended. R3: glob with ** or **/* counted a withheld folder twice, 3 where there are 2. Repairs: the batch wait uses FIRST_COMPLETED and treats a cancelled task as an escape; a new cancel-and-wait absorbs further cancellation until every sibling has finished, then re-raises the original; glob counts an unstorable entry once per directory and name. Tests written first failed against the round 1 code: TimeoutError at a 5 s bound for R1, cleaned [] for R2, 3 withheld for R3. R4 (the AC-44 check keyed on run ids, the golden-eval cleanup by t- tenant and start time) and R5 (KeyboardInterrupt and SystemExit left to asyncio.run) are unchanged and declared. The round 1 approval covered source hash 76d9c077 only; a round 2 review on a different model is required before M11 is marked done.",
+      "source": "M11 review round 1 control 0e6eca38 and the owner recheck, 2026-09-14",
+      "tags": [],
+      "recorded_at": "2026-09-14T11:39:47.152Z"
     }
   ],
   "tasks": [
@@ -2085,7 +2117,7 @@
     {
       "id": "M11-concurrency-foundations",
       "outcome": "Calls to tools that declare concurrency_safe run in parallel under per-run, per-tool and per-provider limits, file tools stop starving the store on their own thread pool, and the M10 carry-overs are closed",
-      "state": "active",
+      "state": "done",
       "risk": "high",
       "owner": null,
       "scope": [],
@@ -2113,22 +2145,37 @@
           "id": "unit",
           "command": ".venv\\Scripts\\python.exe -m pytest tests/test_concurrency.py -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M11-concurrency-foundations-unit.json",
+            "source_hash": "ed8e3b364d8378f5ff102b8e3b388e959fe2de40ea00eea6cfa021d4a0b31524",
+            "hash": "9c328cf8063d5cddf2c4e1f52f7267e382b5c5d5db935abe7e0ca19757dd92dd",
+            "observed_at": "2026-09-14T13:13:33.343Z"
+          }
         },
         {
           "id": "regression",
           "command": ".venv\\Scripts\\python.exe -m pytest -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M11-concurrency-foundations-regression.json",
+            "source_hash": "ed8e3b364d8378f5ff102b8e3b388e959fe2de40ea00eea6cfa021d4a0b31524",
+            "hash": "f374fdc7e5f49bb25bccaaf60379d28b418ff66614ea5c9be6f794026f1d4ce2",
+            "observed_at": "2026-09-14T13:15:59.508Z"
+          }
         },
         {
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Claude Sonnet 5 (independent L4 reviewer, M11 round 2, fresh session)",
+            "reason": "Fresh independent review, round 2 of M11, never reviewed this project before. Verified the R1, R2 and R3 repairs first hand against agentsdk/loop.py and agentsdk/builtin_tools.py (git diff 7abfe47), byte identical to the diff captured at the start of this session. FR-44 checks beyond the authors own tests: a tool that cancels its own task via asyncio.current_task().cancel() while a sibling with no timeout waits -- CancelledError raised in 0.06s, both siblings cleaned, zero leftover tasks. Several tasks finishing in one asyncio.wait wakeup, one raising a bare BaseException and one self cancelling -- one exception propagates, no crash, both siblings cleaned. Five repeated cancellations of the batch task while a 0.3s cleanup runs -- absorbed correctly, every sibling cleaned, CancelledError raised exactly once, no hang. A caller wrapping Runner.run in asyncio.wait_for and separately in asyncio.timeout -- both convert to TimeoutError correctly under Python 3.11 uncancel counting, confirmed the current tasks cancelling count returns to 0 afterward. R3 checked under a real directory junction reaching one unstorable named file through two different directory spellings -- withheld count stayed 1, not 2. Caveat, not blocking: a sibling that swallows CancelledError forever blocks wait_all_or_cancel indefinitely, confirmed with a hard external kill after 5s; this is inherent cooperative cancellation behaviour that round 1 FIRST_EXCEPTION also could not resolve for a never completing sibling, so it is not a round 2 regression. Full suite 925 passed twice outside the gate (140s, 123s) and inside a clean gate rerun with no other process on the machine (unit 104 passed 16.50s, regression 925 passed 122.70s, both exit 0); DB row counts unchanged before and after every run (runs 10332, messages 54909, run_events 65046, execution_manifests 10310). NFR-15 was amended 2026-09-14 to name the batching order explicitly, settling A1; the code matches the amended text. No blocking defect found.",
+            "source_hash": "ed8e3b364d8378f5ff102b8e3b388e959fe2de40ea00eea6cfa021d4a0b31524",
+            "observed_at": "2026-09-14T12:59:43.310Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
@@ -2137,12 +2184,12 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-14T07:21:29.482Z",
-      "updated_at": "2026-09-14T07:21:29.483Z"
+      "updated_at": "2026-09-14T13:19:13.017Z"
     },
     {
       "id": "M12-run-handles-and-cancellation",
       "outcome": "A caller can start a run, stream its events in order and cancel it, and a cancelled run ends cancelled with a complete record, RunCancelled as its last event, and no run left running",
-      "state": "queued",
+      "state": "active",
       "risk": "high",
       "owner": null,
       "scope": [],
@@ -2788,6 +2835,24 @@
       "task": "M10-safe-builtin-tools",
       "human": "Claude Opus 5 (independent L4 reviewer, round 5, fresh session)",
       "reason": "Approve. Round 5 closes round 4: _is_member is identity against the real members and each refusal names its cause. Verified through the public Runner on memory and Postgres, tenant SYN-m10r5, 34 runs deleted, zero rows remain. Lead a: only fetch sets a source, file tools and search use the 64 char schema hash. A final URL of 8192 chars completes; 8193, 9000 and 50000 via redirect are a tool error naming the source, declared external labels kept per D12, ToolCalled is_error True, identical on both stores. Caveat 1, in scope, fails closed: a model URL of 2048 code points inside the schema limit percent-encodes past 8192 and is refused after the request is sent. Lead b: plain string labels, string taint flags and str subclass labels from an after_tool hook FAILED the run on both stores before M10 (AttributeError on value, reproduced with the cc2f0d6 executor); now an honest tool error, an improvement. Tuples, lists and sets of real members, with_taint and the example 06 relabel complete on both stores. Caveat 2, in scope, ordinary code, narrow regression: a str subclass source from a hook or ToolOutput completed before M10 and is now a tool error whose message says not text; normalising it as _text does would fix it. Lead c: provenance read back from Postgres and reused, deepcopy, pickle and ResultProvenance from strings keep real members and complete. Lead d: NUL and lone surrogate from a unicode_escape page, a NUL body, a search backend NUL and a surrogate file name give the same tool error on both stores; one surrogate named file makes list_directory fail for the whole folder, pre-existing. Caveat 3 under DECISION-2bad84bb, forgery: Origin(forged) returns the forged instance, so ResultProvenance accepts a str.__new__ label and _failed carries it unchecked. Mutants on executor.py, restored and SHA-256 verified: equality membership, isinstance taint, origin-only labels, source refusal blaming labels, declared labels dropped on errors all killed on the unit file. Survived the full suite, 821 passed each: dropping the exact frozenset check (reachable only by forgery since the constructor coerces, a blind spot over defence in depth) and the source bound changed to >= (boundary unpinned, cosmetic). Gates on the unmodified tree: unit 87 passed in 14.01s, regression 821 passed in 99.13s. Three full suite runs. README count 821 accurate.",
+      "revision": null
+    },
+    {
+      "id": "0e6eca38-fe99-4f22-b497-0957fd82d9c3",
+      "at": "2026-09-14T10:48:24.834Z",
+      "action": "approve",
+      "task": "M11-concurrency-foundations",
+      "human": "Claude Fable 5.1 (independent L4 reviewer, M11 round 1, fresh session)",
+      "reason": "Verified first-hand: gate rerun passed (unit 94, regression 915 in 138 s, source hash 76d9c077, AC-44 session check included); NFR-15 equivalence against a 7abfe47 worktree is exact apart from the ToolCalled envelope tool_call_id; RunSlots stress under random cancellation leaked no permit and violated no limit; cancelling a batch while siblings wait for a slot or inside the ToolCalled lock, tools that swallow CancelledError, and a BaseException while a sibling waits for a slot leave no task behind; FR-47 withheld counts confirmed on a tree with lone-surrogate names; no probe run left in the store. Caveats, none blocking: R1 _wait_all_or_cancel waits with FIRST_EXCEPTION, which asyncio does not raise for a task that ends cancelled, so a CancelledError escaping one call leaves its siblings running to completion before the run raises instead of cancelling them; R2 a second cancel that lands in the finally await leaves the already-cancelled siblings unawaited; R3 glob counts a withheld folder twice when a pattern both descends into and shows it, for example ** or **/*; R4 the AC-44 check is keyed on run ids per table and the golden-eval cleanup deletes every t- run started after the module began, so a row added to a pre-existing run or a concurrent writer under t- would be missed or removed; R5 KeyboardInterrupt and SystemExit end the loop and leave sibling teardown to asyncio.run, which cannot be done better inside the batch",
+      "revision": null
+    },
+    {
+      "id": "208e2c24-99b4-4112-8987-2017a87f7063",
+      "at": "2026-09-14T12:59:43.310Z",
+      "action": "approve",
+      "task": "M11-concurrency-foundations",
+      "human": "Claude Sonnet 5 (independent L4 reviewer, M11 round 2, fresh session)",
+      "reason": "Fresh independent review, round 2 of M11, never reviewed this project before. Verified the R1, R2 and R3 repairs first hand against agentsdk/loop.py and agentsdk/builtin_tools.py (git diff 7abfe47), byte identical to the diff captured at the start of this session. FR-44 checks beyond the authors own tests: a tool that cancels its own task via asyncio.current_task().cancel() while a sibling with no timeout waits -- CancelledError raised in 0.06s, both siblings cleaned, zero leftover tasks. Several tasks finishing in one asyncio.wait wakeup, one raising a bare BaseException and one self cancelling -- one exception propagates, no crash, both siblings cleaned. Five repeated cancellations of the batch task while a 0.3s cleanup runs -- absorbed correctly, every sibling cleaned, CancelledError raised exactly once, no hang. A caller wrapping Runner.run in asyncio.wait_for and separately in asyncio.timeout -- both convert to TimeoutError correctly under Python 3.11 uncancel counting, confirmed the current tasks cancelling count returns to 0 afterward. R3 checked under a real directory junction reaching one unstorable named file through two different directory spellings -- withheld count stayed 1, not 2. Caveat, not blocking: a sibling that swallows CancelledError forever blocks wait_all_or_cancel indefinitely, confirmed with a hard external kill after 5s; this is inherent cooperative cancellation behaviour that round 1 FIRST_EXCEPTION also could not resolve for a never completing sibling, so it is not a round 2 regression. Full suite 925 passed twice outside the gate (140s, 123s) and inside a clean gate rerun with no other process on the machine (unit 104 passed 16.50s, regression 925 passed 122.70s, both exit 0); DB row counts unchanged before and after every run (runs 10332, messages 54909, run_events 65046, execution_manifests 10310). NFR-15 was amended 2026-09-14 to name the batching order explicitly, settling A1; the code matches the amended text. No blocking defect found.",
       "revision": null
     }
   ],

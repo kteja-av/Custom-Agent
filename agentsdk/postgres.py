@@ -751,23 +751,25 @@ class PostgresRunStore:
     ) -> None:
         """Takes the caller's connection so it can join an open transaction.
 
-        The last three columns arrived with migration 0003 (FR-31): the
-        effective output limit, the reasoning effort, and the prices the run
-        was costed with -- NULL for a manifest built without them.
+        Three columns arrived with migration 0003 (FR-31): the effective output
+        limit, the reasoning effort, and the prices the run was costed with.
+        The last arrived with 0004 (FR-43): the scheduler limits the run
+        executed under. Each is NULL for a manifest built without it.
         """
         pricing = manifest.get("pricing")
+        scheduler_limits = manifest.get("scheduler_limits")
         conn.execute(
             """
                 INSERT INTO execution_manifests (
                     run_id, tenant_id, project_id, sdk_version, agent_spec_hash,
                     instructions_hash, model_id, model_version,
                     model_adapter_version, tool_spec_hashes, policy_version,
-                    max_output_tokens, reasoning_effort, pricing
+                    max_output_tokens, reasoning_effort, pricing, scheduler_limits
                 )
                 -- Tenancy from the run row, as everywhere else. Inside
                 -- start_run the row is written in this same transaction, so
                 -- the SELECT sees it.
-                SELECT r.run_id, r.tenant_id, r.project_id, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+                SELECT r.run_id, r.tenant_id, r.project_id, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 FROM runs r
                 WHERE r.run_id = %s AND r.tenant_id = %s AND r.project_id = %s
             """,
@@ -783,6 +785,7 @@ class PostgresRunStore:
                 manifest.get("max_output_tokens"),
                 manifest.get("reasoning_effort"),
                 Jsonb(pricing) if pricing is not None else None,
+                Jsonb(scheduler_limits) if scheduler_limits is not None else None,
                 scope.run_id,
                 scope.tenant_id,
                 scope.project_id,

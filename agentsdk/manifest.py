@@ -3,7 +3,7 @@
 A per-run snapshot of exactly what configuration produced it: SDK version, spec
 and instruction hashes, model and adapter versions, tool schema hashes, policy
 version -- and, since M9, the output limit, reasoning effort and prices the run
-used (FR-31).
+used (FR-31), and since M11 the scheduler limits it executed under (FR-43).
 
 Nothing reads it in Phase 0. It is written from the start so that "what
 produced this run" is answerable during debugging today, and so Phase 8's
@@ -35,6 +35,7 @@ def build_manifest(
     max_output_tokens: int | None = None,
     reasoning_effort: str | None = None,
     pricing: dict[str, str | None] | None = None,
+    scheduler_limits: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     # The spec hash covers what actually changes behaviour: identity,
     # instructions and the tool profile. A spec whose display name changed is
@@ -55,4 +56,6 @@ def build_manifest(
         "max_output_tokens": max_output_tokens,
         "reasoning_effort": reasoning_effort,
         "pricing": pricing,
+        # FR-43, beside the spec hash for the same reason.
+        "scheduler_limits": scheduler_limits,
     }

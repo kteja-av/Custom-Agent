@@ -140,6 +140,30 @@ def schema():
         apply_schema(DSN)
 
 
+@pytest.fixture(scope="module", autouse=True)
+def remove_the_runs_this_module_wrote(schema):
+    """NFR-16 / AC-44 (M11). Every run here, scripted or live, is filed under a
+    tenant starting "t-", and before M11 all 13 of them stayed in the store after
+    every full run. They are removed when the module ends rather than after each
+    test, because the live runs are cached and read back by later tests."""
+    if not DSN:
+        yield
+        return
+    with psycopg.connect(DSN) as conn:
+        started = conn.execute("SELECT clock_timestamp()").fetchone()[0]
+    yield
+    with psycopg.connect(DSN, autocommit=True) as conn:
+        ids = [
+            row[0]
+            for row in conn.execute(
+                "SELECT run_id FROM runs WHERE tenant_id LIKE 't-%%' AND started_at >= %s", (started,)
+            ).fetchall()
+        ]
+        for table in ("run_events", "messages", "execution_manifests"):
+            conn.execute(f"DELETE FROM {table} WHERE run_id = ANY(%s)", (ids,))
+        conn.execute("DELETE FROM runs WHERE run_id = ANY(%s)", (ids,))
+
+
 class Spy:
     """Records whether a tool implementation actually ran. AC-2 and AC-3 both
     hinge on 'provably never invoked', which no status code can show."""

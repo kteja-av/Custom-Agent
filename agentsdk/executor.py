@@ -1,4 +1,4 @@
-"""The tool-call lifecycle (FR-5, LLD 3.5).
+"""The tool-call lifecycle (FR-5, FR-44, LLD 3.5).
 
 Nine steps, fixed order:
 
@@ -10,6 +10,11 @@ a denied call never reaches execution. That ordering is the difference between
 "we checked" and "we checked in time", so it is asserted in the tests rather
 than trusted to code reading.
 
+Since M11 the steps are also reachable as two halves: `prepare` runs 1 to 5 and
+`run_prepared` runs 6 to 9, because a parallel batch prepares every one of its
+calls before any of them executes (FR-44). `execute` is the two halves in a row,
+which is the lifecycle it always was. Each half is a total boundary of its own.
+
 A failed tool call is a normal turn outcome, not a run failure: every failure
 below still produces a ToolResult with is_error=True so the model sees it and
 can react on its next turn (LLD 4.2, 4.3).
@@ -18,6 +23,7 @@ can react on its next turn (LLD 4.2, 4.3).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import dataclasses
 import inspect
 from collections.abc import Callable
@@ -60,12 +66,28 @@ class _CallState:
     point -- the tool raised, timed out, returned something unstorable, or a hook
     broke afterwards -- may carry what the tool read in its error text, so the
     error keeps the tool's declared provenance (FR-40). Before it, the executor
-    wrote every byte of the error itself. The last-resort handler in execute()
-    reads this too, which is why it is state rather than an argument.
+    wrote every byte of the error itself. The last-resort handlers read this
+    too, which is why it is state rather than an argument.
     """
 
     tool: Tool | None = None
     ran: bool = False
+
+
+@dataclass
+class PreparedCall:
+    """A call that has passed steps 1 to 5 and waits for step 6 (FR-44).
+
+    `issued` is the call the model issued, which a last-resort failure answers,
+    as it always did; `tool_call` is the call that runs, which a before_tool hook
+    may have replaced; `tool` is the tool step 1 resolved, whose name selects
+    the call's slots.
+    """
+
+    issued: ToolCall
+    tool_call: ToolCall
+    tool: Tool
+    state: _CallState
 
 
 class ToolExecutor:
@@ -97,20 +119,59 @@ class ToolExecutor:
         Failed(ToolExecutionError) so the loop keeps its own promise of a
         terminal status. BaseException passes through as control flow.
         """
+        prepared = await self.prepare(tool_call, principal_context)
+        if not isinstance(prepared, PreparedCall):
+            return prepared
+        return await self.run_prepared(prepared)
+
+    async def prepare(
+        self,
+        tool_call: ToolCall,
+        principal_context: PrincipalContext | None = None,
+    ) -> PreparedCall | ToolExecutionOutcome:
+        """Steps 1 to 5: the call, ready for step 6, or the outcome of a call that
+        stopped before it. Total, as execute is."""
         state = _CallState()
         try:
-            return await self._execute(tool_call, principal_context, state)
+            return await self._prepare(tool_call, principal_context, state)
         except Exception as exc:  # noqa: BLE001
             return await self._failed(
                 tool_call, ToolExecutionError(describe_exception(exc)), state
             )
 
-    async def _execute(
+    async def run_prepared(
+        self,
+        prepared: PreparedCall,
+        slot: Callable[[str], Any] | None = None,
+    ) -> ToolExecutionOutcome:
+        """Steps 6 to 9, holding the call's slots (FR-44). Total, as execute is.
+
+        `slot(tool_name)` gives an async context manager entered immediately
+        before step 6 and left after step 9. Waiting for it is no part of the
+        tool's timeout, and until it is granted the tool has not run, so an error
+        before then is still wholly the executor's own (FR-40).
+        """
+        try:
+            async with slot(prepared.tool.name) if slot is not None else contextlib.nullcontext():
+                try:
+                    return await self._run(prepared)
+                except Exception as exc:  # noqa: BLE001
+                    return await self._failed(
+                        prepared.issued, ToolExecutionError(describe_exception(exc)), prepared.state
+                    )
+        except Exception as exc:  # noqa: BLE001 - a slot that could not be taken or left
+            return await self._failed(
+                prepared.issued, ToolExecutionError(describe_exception(exc)), prepared.state
+            )
+
+    async def _prepare(
         self,
         tool_call: ToolCall,
         principal_context: PrincipalContext | None,
         state: _CallState,
-    ) -> ToolExecutionOutcome:
+    ) -> PreparedCall | ToolExecutionOutcome:
+        issued = tool_call
+
         # --- 1. resolve -----------------------------------------------------
         try:
             tool = self._registry.get(tool_call.name)
@@ -173,6 +234,11 @@ class ToolExecutor:
         if outcome.action is HookAction.MODIFY and outcome.replacement is not None:
             tool_call = outcome.replacement
 
+        return PreparedCall(issued=issued, tool_call=tool_call, tool=tool, state=state)
+
+    async def _run(self, prepared: PreparedCall) -> ToolExecutionOutcome:
+        tool_call, tool, state = prepared.tool_call, prepared.tool, prepared.state
+
         # --- 6. execute --------------------------------------------------------
         state.ran = True
         try:
@@ -188,6 +254,10 @@ class ToolExecutor:
         source = None
         if isinstance(value, ToolOutput):
             source, value = value.source_uri, value.content
+        if isinstance(source, str):
+            # The text it holds, read with str's own methods: a subclass decides
+            # its own truthiness and length (FR-47, KNOWLEDGE-739aca22).
+            source = _exact(source)
         content = value if isinstance(value, str) else repr(value)
         # A tool's own output reaches the same JSONB column the model's does, so
         # it can diverge the same way: a tool returning a NUL completed in
@@ -330,7 +400,7 @@ class ToolExecutor:
     ) -> Failed:
         """Every failure still yields a ToolResult, so the model sees the error.
 
-        Reached from the last-resort handler, so it must not raise: what it
+        Reached from the last-resort handlers, so it must not raise: what it
         reads off the tool is read under a guard.
         """
         provenance = ContentProvenance.executor_error(type(error).__name__)
@@ -394,6 +464,11 @@ def _checked_provenance(value: Any) -> ContentProvenance | str:
     plain-string origin completed in memory and failed on Postgres. The labels
     must be the enums' own members; the taint set an exact frozenset (a subclass
     can answer iteration differently from what it holds); the source bounded text.
+
+    A source that is a str subclass is copied into the exact text it holds and
+    bounded on the copy (FR-47): refusing it was a regression M10 introduced for
+    ordinary caller code (KNOWLEDGE-739aca22), and a subclass reporting a false
+    length is measured by what it holds.
     """
     if not isinstance(value, ContentProvenance):
         return "the result carries provenance that is not a ContentProvenance"
@@ -406,23 +481,29 @@ def _checked_provenance(value: Any) -> ContentProvenance | str:
         return "the result carries provenance whose labels are not members of their enums"
     if type(taint) is not frozenset or not all(_is_member(flag, TaintFlag) for flag in taint):
         return "the result carries taint flags that are not members of TaintFlag"
-    if source is not None and (type(source) is not str or len(source) > _MAX_SOURCE_CHARS):
-        return f"the result carries a source that is not text of at most {_MAX_SOURCE_CHARS} characters"
+    if source is not None:
+        source = _exact(source) if isinstance(source, str) else None
+        if source is None or len(source) > _MAX_SOURCE_CHARS:
+            return f"the result carries a source that is not text of at most {_MAX_SOURCE_CHARS} characters"
     return ContentProvenance(
         origin=origin, instruction_authority=authority, trust_zone=zone, taint_flags=taint, source_uri_or_hash=source
     )
 
 
-def _text(value: Any) -> str:
-    """A result's content as exact text, read with str's own methods.
+def _exact(text: str) -> str:
+    """The characters `text` holds, as an exact str.
 
     A str subclass can report any length and return anything from a slice: one
     reporting 3 put 200000 characters through a 40-character cap (M10 review
     round 2, caveat 1). A full slice taken with str.__getitem__ copies the
     characters actually held into a plain str.
     """
-    text = value if isinstance(value, str) else repr(value)
     return text if type(text) is str else str.__getitem__(text, slice(None))
+
+
+def _text(value: Any) -> str:
+    """A result's content as exact text, read with str's own methods (see _exact)."""
+    return _exact(value if isinstance(value, str) else repr(value))
 
 
 def _cap(content: str, limit: Any) -> tuple[str, int, bool]:
