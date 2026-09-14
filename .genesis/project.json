@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-14T13:19:13.017Z"
+    "updated_at": "2026-09-14T15:36:17.263Z"
   },
   "policy": {
     "ponytail": "full",
@@ -914,6 +914,14 @@
       "status": "accepted",
       "source": "owner decision 2026-09-14",
       "recorded_at": "2026-09-14T12:05:20.564Z"
+    },
+    {
+      "id": "DECISION-a3c77601",
+      "title": "GitHub receives a filtered copy of the history; the local repository keeps the full record",
+      "text": "Owner decision 2026-09-14. A scan of all 52 commits found no credential, token or private key, but found local Windows paths with the username, one account email, and the database user and name. GitHub siva-rgb/Custom-Agent now receives a copy of main and phase-2 in which every file version and commit message has those values replaced with placeholders (owner, <repo>, <user>, owner account, <db_user>, <db_name>); the local repository is never rewritten. The copy is built by git-filter-repo 2.47.0 from scripts under .git/publish-filter, which git never pushes, and a verifier refuses to publish if any listed value or any .env credential value is left in history, if any file outside .genesis and SPEC.md changed, or if an author, committer or date changed. Verified to fail on the unfiltered history (7 problems) and to produce identical commit ids on two builds, so later pushes fast-forward. The commit author siva-rgb keeps the existing email by owner choice. Pushed 2026-09-14: main force-updated with lease from cc2f0d6 to 51e48e7, and phase-2 created at d3d819d. GitHub may keep the replaced commits reachable by direct link for a while. Direct pushes from the local repository are disabled through the origin pushurl.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T14:54:55.323Z"
     }
   ],
   "knowledge": [
@@ -1500,6 +1508,14 @@
       "source": "M11 review round 1 control 0e6eca38 and the owner recheck, 2026-09-14",
       "tags": [],
       "recorded_at": "2026-09-14T11:39:47.152Z"
+    },
+    {
+      "id": "KNOWLEDGE-cafaf03b",
+      "title": "Assumption review 2026-09-14: three resolved, two still open",
+      "text": "Genesis records assumptions without a command to change their status, so this note records their state. Resolved: ASSUMPTION-bba5b3f6 (the Postgres superuser password unknown to the harness) is superseded by ASSUMPTION-6c8f0f59, whose own text says so. ASSUMPTION-6c8f0f59 (the development database exists and is reachable) is verified: every database-backed gate since M5 has run against it, and SPEC.md already lists it as resolved. ASSUMPTION-75110765 (two M3 limitations) was closed in M9 under FR-33 and AC-26: _error_text in providers/openai_compatible.py treats any failure to read an error body as unreadable, so a 429 is ModelRateLimited and retried whatever its body, and _scrub removes the credential from 2xx bodies as well as error bodies, citing this assumption by id. Rerun 2026-09-14: the AC-26 tests in tests/test_honest_results.py, 54 passed. Still open: ASSUMPTION-53240ce4 (the Docker daemon is not running; not needed while the native Postgres service works) and ASSUMPTION-b7463ca2 (a billed call with no usage reported is not counted; to be closed with the native Anthropic adapter per DECISION-0e3ed41b).",
+      "source": "assumption review 2026-09-14, code read and AC-26 rerun",
+      "tags": [],
+      "recorded_at": "2026-09-14T15:36:17.263Z"
     }
   ],
   "tasks": [
