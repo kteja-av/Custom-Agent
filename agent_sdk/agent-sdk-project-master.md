@@ -93,15 +93,16 @@ The actual enforcement boundary is structural: `PolicyEngine → ToolExecutor �
 |---|---|---|
 | **0** | Single-agent loop end to end | Primitives + `ContentProvenance`, `ModelRequest`/`ModelResponse`, `ToolExecutor`, `ToolExecutionOutcome`, `RunInterruption` (type only), lean `RuntimeHook`, `AgentSpec`/`RunConfig`/`Runner`, error taxonomy, `RunEvent`, `ModelRegistry`, lean `ExecutionManifest`, `PrincipalContext` (metadata only) |
 | **0/1** | Model-agnosticism actually proven | Second `ModelClient` adapter (blocked on BYO wire format); native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns; the `ModelClient` contract reports every attempt that received, or may have received, a response, so a call billed inside `send()` is no longer uncounted (DECISION-0e3ed41b) |
-| **M9** *(before 2)* | Honest results | Scope specified separately by the owner; not yet in `SPEC.md` |
-| **M10** *(before 2)* | Safe built-in tools | Scope specified separately by the owner; not yet in `SPEC.md` |
-| **2** | Orchestration, DAG planning, replanning | `Orchestrator`, `PlanVersion` + `ReplanRequest` policy, `PlanNode` acceptance criteria, `SchedulerLimits`, budget model (ADR-06, accepted: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens), `ArtifactRef`/`ArtifactStore`, `RunHandle` + event streaming, `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits |
+| **M9** *(before 2)* | Honest results | Built: `SPEC.md` FR-26..FR-34 |
+| **M10** *(before 2)* | Safe built-in tools | Built: `SPEC.md` FR-35..FR-42 |
+| **2** | Orchestration, DAG planning, replanning | `Orchestrator`, `PlanVersion` + `ReplanRequest` policy, `PlanNode` acceptance criteria, `SchedulerLimits`, budget model (ADR-06, accepted: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens), `ArtifactRef`/`ArtifactStore`, `RunHandle` + event streaming, `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits. Increment 1 (M11–M15) also adds per-call timings and a minimal OpenTelemetry exporter (M14, pulled forward from Phase 8) and the first ADR-12 comparison (M15); increment 2 adds context compaction (`ContextCompactor`, moved from Phase 7) |
 | **3** | Evidence substrate, conditional verification | `EvidenceStore`/`EvidenceLedger`/`EvidenceClaim`/`EvidenceVersion`/`EvidenceVerification`, claim-lock + backoff, `EvidenceSourceVersion`, tenant/auth-scoped caching, ADR-15 calibration fix |
 | **4** | MCP, identity, basic interruptions | Full MCP 2026-07-28 conformance, `ToolCatalog`/`ToolResolver`/`QualifiedToolName`, basic non-durable `ApprovalManager`, `DelegationGrant`/`CredentialBroker`; tenant-scoped skills and instruction bundles (versioned, stored, hashed into the `ExecutionManifest`, loaded on demand through a tool, never read from the local filesystem); Tier 2 built-in write/edit tools behind the `ApprovalManager` |
 | **5** | Sandboxed execution | `WorkspaceManager`/`WorkspaceSpec` (defined before the provider), microVM provider, sandbox-produced artifacts/snapshots; Tier 3 built-in shell and code-execution tools, only inside the sandbox |
+| **5A** *(added 2026-09-14)* | General agent | A default general `AgentSpec` preset with tuned instructions, a general-purpose subagent, and a model-driven autonomous mode alongside the DAG, all inside budgets, sandbox and permissions: a consumer of Phases 2–5, not a replacement for their governance (`docs/07`, option B) |
 | **6** | Durable, sequential, destructive execution | Full `RunState` replay/idempotency, durable/restart-surviving `RunInterruption` and approvals |
-| **7** | Context compaction | `ContextCompactor` — only once a subagent actually needs it |
-| **8** | Production hardening | Full OpenTelemetry mapping, full `ExecutionManifest`-based compatibility enforcement, full eval matrix, finalized LangGraph adapter |
+| **7** | *(moved)* | Context compaction moved to Phase 2 increment 2 on 2026-09-14; the number is kept so references to Phase 8 stay valid |
+| **8** | Production hardening | Full OpenTelemetry mapping (a minimal exporter lands in M14), full `ExecutionManifest`-based compatibility enforcement, full eval matrix, finalized LangGraph adapter |
 
 Each phase's exit signal and detailed rationale: `agent-sdk-master-design-v0.3.md` §7.
 
@@ -116,8 +117,32 @@ Each phase's exit signal and detailed rationale: `agent-sdk-master-design-v0.3.m
 | Explicit prompt-cache markers; thinking blocks returned between turns | Phase 0/1, native Anthropic Messages adapter |
 | Counting calls billed inside `send()` (an attempt that timed out after the provider processed it, a 2xx whose body cannot be read): the `ModelClient` contract reports every attempt that received, or may have received, a response | Phase 0/1, native Anthropic Messages adapter (DECISION-0e3ed41b; closes ASSUMPTION-b7463ca2) |
 | Voice and realtime agents | Non-goal: not planned |
+| Context compaction (`ContextCompactor`), moved from Phase 7; screenshot pruning once images exist | Phase 2 increment 2 |
+| Per-call timings in events and a minimal OpenTelemetry exporter (run, model call and tool call spans), pulled forward from Phase 8 | M14, Phase 2 increment 1 |
+| The first ADR-12 comparison against the raw Claude Agent SDK | M15, before the Phase 2 increment 2 spec |
+| General-agent preset: a default general `AgentSpec`, a general-purpose subagent, a model-driven autonomous mode alongside the DAG | Phase 5A |
+| Bounded loop nodes in the plan, or every loop through replanning | Phase 2 increment 2 spec (open question) |
+| Staggering sibling subagents that share a prompt prefix, so they read one cache | Phase 2 increment 2, or the native Anthropic adapter |
+| Scanning child output for instruction-shaped text, beside taint labels | Phase 2 increment 2 or Phase 4 |
+| A pricing source for USD budgets (the registry ships no prices) | Before the Phase 2 increment 2 spec |
+| Tool visibility by profile (revisits DECISION-ca1ad3e0) | `ContextPolicy`, Phase 2 increment 2 |
+| Budgets for plain single-agent runs (a `max_budget_usd` equivalent) | After Phase 2 increment 2 |
+| Publishing to PyPI or a private index | Any time after Phase 2 |
+| Studying OpenAI's `RunState` (serialised interruptions, resume after restart) | Before the Phase 4 spec |
+| Publishing agents as an MCP server | After Phase 4 |
+| Storing reasoning (thinking) text, with provenance and retention | Native Anthropic adapter (open question) |
+| Multimodal content: image content parts stored as artifacts, provenance on every image | After M13, with the native Anthropic adapter |
+| A workspace per subagent chosen by policy, a pluggable provider, compute cost in budgets, `max_concurrent_workspaces` (amends ADR-09) | Phase 5 spec |
+| Browser (DOM) and computer-use tools, behind the sandbox and approvals | Phase 5 |
+| An approval surface for durable approvals (web page, Slack, email) | Phase 6 / Stage 2 |
+| Governed learning: run memory, skill distillation, parameter tuning; tenant-scoped, taint-aware, recorded in the manifest, eval-gated | After Phases 3 and 4 |
+| The form of each Stage 2 product (service, CLI or CI step, pipeline with an approval screen) | Stage 2 |
+| Symlink tests off the dev host: fail everywhere, or skip with an explicit marker | Before CI exists (open question) |
+| Dashboard backend: SQL dashboards over Postgres now; MLflow and/or Langfuse through the exporter | Local development setup; M14 chooses no backend |
 
 Recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-79f09566 (a response cut off at the output-token limit ends the run as failed, reason max_tokens), DECISION-e6228dd4 (Phase 2 parallel read-only tool calls), DECISION-37bcac5b (Phase 4 skills and Tier 2 tools), DECISION-6a8204d0 (Phase 5 Tier 3 tools), DECISION-67b65b89 (Anthropic Messages adapter), DECISION-09edb52b (voice and realtime non-goal) and DECISION-f39da722 (ADR-06 timing, superseded by DECISION-e1bf0327: ADR-06 accepted).
+
+Rows from *Context compaction* down were added 2026-09-14 from the owner's review of the ideas backlog and the general-agent question (local notes `docs/06`, `docs/07`, `docs/08`), recorded in Genesis as DECISION-dd87feb8 (Phase 5A), DECISION-9dd6115c (compaction moved), DECISION-8793bdd7 (M14), DECISION-4d435ed5 (M15) and DECISION-b86c33e3 (backlog placement).
 
 ---
 
@@ -126,17 +151,17 @@ Recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-7
 | ADR | Decision | Status |
 |---|---|---|
 | 01 | Subagent spawning: framework-first, LangGraph as optional adapter | Accepted |
-| 02 | Plan representation: DAG-only, no classifier | Accepted |
+| 02 | Plan representation: DAG-only, no classifier | Accepted — scope reopened in Phase 5A for a model-driven autonomous mode alongside the DAG *(2026-09-14)* |
 | 03 | Plan mutability: immutable versioned plans + policy-controlled replanning | Accepted *(reversed from fixed-upfront)* |
 | 04 | Project identity: personal product development | Accepted |
 | 05 | Session/audit store: Postgres | Accepted |
 | 06 | Recursion budget: run ceiling + per-child reservation + reclaim of unused budget, in USD and tokens, enforced softly (overshoot bounded by one model call per concurrently running agent) | Accepted — Phase 2 *(2026-09-12; inherited/split and flat cap rejected)* |
 | 07 | Ledger versioning: supersede pointers | Accepted |
 | 08 | Claim-lock: retry-on-failure + required backoff | Accepted |
-| 09 | Sandbox: microVM, behind a `WorkspaceManager` abstraction | Accepted |
+| 09 | Sandbox: microVM, behind a `WorkspaceManager` abstraction | Accepted — a workspace per subagent, chosen by policy, is proposed for the Phase 5 spec |
 | 10 | Cost governor: per-subagent nested in per-session; global deferred | Accepted |
 | 11 | Multi-tenancy: tag every record from day one | Accepted |
-| 12 | Model-harness gap: test after every major phase | Accepted |
+| 12 | Model-harness gap: test after every major phase | Accepted — never run through M10; first comparison is M15, before the Phase 2 increment 2 spec *(2026-09-14)* |
 | 13 | Second provider: bring-your-own endpoint | **Proposed — needs wire format** |
 | 14 | Tool-profile assignment: ad hoc per spawn | Accepted |
 | 15 | Confidence threshold: adaptive, calibrated against externally validated outcomes (critic outcome is a signal, not the training label) | Accepted |
@@ -146,7 +171,7 @@ Recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-7
 | 19 | Durable run state & replay semantics | Deferred — Phase 6 |
 | 20 | Tool execution lifecycle (`ToolExecutor`) | Accepted — Phase 0 |
 | 21 | Unified event/streaming model | Accepted (basic) — Phase 0; full taxonomy through Phase 8 |
-| 22 | Observability / OpenTelemetry mapping | Deferred — Phase 8 |
+| 22 | Observability / OpenTelemetry mapping | Deferred — Phase 8; per-call timings and a minimal exporter pulled forward to M14 *(2026-09-14)* |
 | 23 | Durable human approval model | Resequenced — basic Phase 4, durable Phase 6 |
 | 24 | Workspace, sandbox, artifact lifecycle | Split — `ArtifactRef` Phase 2, `WorkspaceManager` Phase 5 |
 | 25 | Version pinning & compatibility | Clarified — lean `ExecutionManifest` Phase 0, full enforcement Phase 8 |

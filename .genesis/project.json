@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-13T14:01:08.794Z"
+    "updated_at": "2026-09-14T07:24:06.642Z"
   },
   "policy": {
     "ponytail": "full",
@@ -23,19 +23,19 @@
     }
   },
   "lifecycle": {
-    "phase": "verify",
-    "status": "ready",
-    "active_task": null,
+    "phase": "build",
+    "status": "active",
+    "active_task": "M11-concurrency-foundations",
     "blocker": null,
-    "next_action": "Review completed work and choose the next bounded outcome."
+    "next_action": "Run the task pre-flight."
   },
   "commands": {},
   "workflow": {
     "type": "new-product",
     "started_at": "2026-09-05T14:48:57.897Z",
     "spec_check": {
-      "at": "2026-09-12T13:14:28.640Z",
-      "source_hash": "6a261e8b88ba6f632c7571ddd984818a5c5c77f0bd6c440e556a09d41e99b4c7",
+      "at": "2026-09-14T07:21:29.107Z",
+      "source_hash": "a87de13b9d75e5b0b0f327d21110fd5c9d02d72ce2a35655ef25fb9f4ecbf993",
       "requirements": [
         "AC-1",
         "AC-10",
@@ -64,8 +64,25 @@
         "AC-31",
         "AC-32",
         "AC-33",
+        "AC-34",
+        "AC-35",
+        "AC-36",
+        "AC-37",
+        "AC-38",
+        "AC-39",
         "AC-4",
+        "AC-40",
+        "AC-41",
+        "AC-42",
+        "AC-43",
+        "AC-44",
+        "AC-45",
+        "AC-46",
+        "AC-47",
+        "AC-48",
+        "AC-49",
         "AC-5",
+        "AC-50",
         "AC-6",
         "AC-7",
         "AC-8",
@@ -107,8 +124,29 @@
         "FR-40",
         "FR-41",
         "FR-42",
+        "FR-43",
+        "FR-44",
+        "FR-45",
+        "FR-46",
+        "FR-47",
+        "FR-48",
+        "FR-49",
         "FR-5",
+        "FR-50",
+        "FR-51",
+        "FR-52",
+        "FR-53",
+        "FR-54",
+        "FR-55",
+        "FR-56",
+        "FR-57",
+        "FR-58",
+        "FR-59",
         "FR-6",
+        "FR-60",
+        "FR-61",
+        "FR-62",
+        "FR-63",
         "FR-7",
         "FR-8",
         "FR-9",
@@ -118,7 +156,13 @@
         "NFR-12",
         "NFR-13",
         "NFR-14",
+        "NFR-15",
+        "NFR-16",
+        "NFR-17",
+        "NFR-18",
+        "NFR-19",
         "NFR-2",
+        "NFR-20",
         "NFR-3",
         "NFR-4",
         "NFR-5",
@@ -129,14 +173,14 @@
       ]
     },
     "plan_check": {
-      "at": "2026-09-12T13:22:22.902Z",
-      "source_hash": "8d5819f8def851651343038df35e9bf172ee1a732bb2a28219356d76d8489110"
+      "at": "2026-09-14T07:21:30.367Z",
+      "source_hash": "4a7a77de8da22daf36885781ff1d83dd639af34f7ba135d66bf41bd83fb22005"
     },
     "plan_approval": {
       "human": "owner",
-      "reason": "M9-honest-results and M10-safe-builtin-tools carry all 35 new requirements with unit, regression and independent-review gates; M1 to M8 are done",
-      "at": "2026-09-12T13:39:10.415Z",
-      "source_hash": "8d5819f8def851651343038df35e9bf172ee1a732bb2a28219356d76d8489110"
+      "reason": "Owner approved the Phase 2 increment 1 plan on 2026-09-14: M11 concurrency foundations, M12 run handles and cancellation, M13 artifacts, M14 timings and telemetry, M15 ADR-12 comparison, in that order, each with unit, regression and independent-review gates",
+      "at": "2026-09-14T07:24:06.445Z",
+      "source_hash": "4a7a77de8da22daf36885781ff1d83dd639af34f7ba135d66bf41bd83fb22005"
     }
   },
   "artifacts": [
@@ -173,8 +217,25 @@
         "AC-31",
         "AC-32",
         "AC-33",
+        "AC-34",
+        "AC-35",
+        "AC-36",
+        "AC-37",
+        "AC-38",
+        "AC-39",
         "AC-4",
+        "AC-40",
+        "AC-41",
+        "AC-42",
+        "AC-43",
+        "AC-44",
+        "AC-45",
+        "AC-46",
+        "AC-47",
+        "AC-48",
+        "AC-49",
         "AC-5",
+        "AC-50",
         "AC-6",
         "AC-7",
         "AC-8",
@@ -216,8 +277,29 @@
         "FR-40",
         "FR-41",
         "FR-42",
+        "FR-43",
+        "FR-44",
+        "FR-45",
+        "FR-46",
+        "FR-47",
+        "FR-48",
+        "FR-49",
         "FR-5",
+        "FR-50",
+        "FR-51",
+        "FR-52",
+        "FR-53",
+        "FR-54",
+        "FR-55",
+        "FR-56",
+        "FR-57",
+        "FR-58",
+        "FR-59",
         "FR-6",
+        "FR-60",
+        "FR-61",
+        "FR-62",
+        "FR-63",
         "FR-7",
         "FR-8",
         "FR-9",
@@ -227,7 +309,13 @@
         "NFR-12",
         "NFR-13",
         "NFR-14",
+        "NFR-15",
+        "NFR-16",
+        "NFR-17",
+        "NFR-18",
+        "NFR-19",
         "NFR-2",
+        "NFR-20",
         "NFR-3",
         "NFR-4",
         "NFR-5",
@@ -236,12 +324,12 @@
         "NFR-8",
         "NFR-9"
       ],
-      "source_hash": "6a261e8b88ba6f632c7571ddd984818a5c5c77f0bd6c440e556a09d41e99b4c7",
+      "source_hash": "a87de13b9d75e5b0b0f327d21110fd5c9d02d72ce2a35655ef25fb9f4ecbf993",
       "approval": {
         "human": "owner",
-        "reason": "M9 and M10 requirements FR-26 to FR-42, NFR-11 to NFR-14 and AC-20 to AC-33 approved with decisions D1 to D10 as recommended",
-        "at": "2026-09-12T13:22:22.184Z",
-        "source_hash": "6a261e8b88ba6f632c7571ddd984818a5c5c77f0bd6c440e556a09d41e99b4c7"
+        "reason": "Owner approved Phase 2 increment 1 on 2026-09-14 after four read-only reviews against the code: M11 to M15, FR-43 to FR-63, NFR-15 to NFR-20, AC-34 to AC-50, with decisions P2-D5 to P2-D14 and the backlog placement",
+        "at": "2026-09-14T07:21:29.293Z",
+        "source_hash": "a87de13b9d75e5b0b0f327d21110fd5c9d02d72ce2a35655ef25fb9f4ecbf993"
       }
     }
   ],
@@ -722,6 +810,94 @@
       "status": "accepted",
       "source": "owner decision 2026-09-13",
       "recorded_at": "2026-09-13T13:09:04.640Z"
+    },
+    {
+      "id": "DECISION-ce3b0e78",
+      "title": "Phase 2 D1: the Phase 2 specification is written in two increments",
+      "text": "Owner decision 2026-09-13. The first increment specifies in full requirements M11 concurrency foundations (a bounded executor for file tools, SchedulerLimits, parallel read-only tool calls, the M10 carry-overs), M12 RunHandle with runtime event streaming and cancellation, and M13 ArtifactRef and ArtifactStore. The Orchestrator, PlanVersion DAG, PlanNode acceptance criteria, the ADR-06 budget governor, ContextPolicy and replanning are outlined with their open decisions and specified in a second increment once M11 to M13 exist, following the design rule of not specifying components before the ones they depend on exist.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T14:15:50.634Z"
+    },
+    {
+      "id": "DECISION-c2da306d",
+      "title": "Phase 2 D2: read-only tool calls in one turn run in parallel by default, bounded",
+      "text": "Owner decision 2026-09-13, refining DECISION-e6228dd4. When a model response carries several tool calls, the calls whose tools declare read_only True run concurrently by default, capped by SchedulerLimits defaults and any per-tool limits; every other call runs sequentially. Tool results are appended to history in the order the model issued the calls, whatever order they finish in, so history stays deterministic.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T14:15:50.898Z"
+    },
+    {
+      "id": "DECISION-a44db7e4",
+      "title": "Phase 2 D3: a cancelled run ends with a new terminal status cancelled",
+      "text": "Owner decision 2026-09-13. RunHandle.cancel() ends a run with a new terminal RunStatus.CANCELLED, persisted through a migration and announced by a RunCancelled event, with usage and cost recorded as on every other terminal path. Reusing failed with reason cancelled was rejected because a cancelled run could then not be told apart from a failure without parsing the error.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T14:15:51.077Z"
+    },
+    {
+      "id": "DECISION-64360826",
+      "title": "Phase 2 D4: Phase 2 work happens on a phase-2 branch",
+      "text": "Owner decision 2026-09-13. main was fast-forwarded to the M10 commit aa146f3 with no merge commit and nothing pushed, and Phase 2 specification and milestone work continues on the branch phase-2.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-13",
+      "recorded_at": "2026-09-13T14:15:51.256Z"
+    },
+    {
+      "id": "DECISION-103f30f6",
+      "title": "Phase 2 increment 1 decisions P2-D5 to P2-D11 accepted",
+      "text": "Owner decision 2026-09-14. Accepted as proposed in SPEC.md: P2-D5 a default of 4 concurrent tool calls per run with no per-tool or per-provider limit unless set; P2-D6 one SDK-owned file-tool thread pool of 4 threads; P2-D7 a run cancelled with a model call in flight reports cost None; P2-D8 artifacts in Postgres with content capped at 10485760 bytes; P2-D9 ToolCalled events of a batch emitted as each call finishes, their order among themselves unspecified; P2-D10 migrations 0004 scheduler limits, 0005 cancelled status, 0006 artifacts; P2-D11 examples 11, 12 and 13.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T07:21:27.576Z"
+    },
+    {
+      "id": "DECISION-976c5942",
+      "title": "P2-D14: parallel tool calls are opt-in per tool through ToolSpec.concurrency_safe",
+      "text": "Owner decision 2026-09-14 after the M11 spec review. A tool call joins a parallel batch only when its tool declares concurrency_safe True, a new ToolSpec field defaulting to False that enters schema_hash only when True; the built-in read-only tools declare it. ToolSpec.read_only defaults to True, so keying batches on it would have made every undeclared tool parallel, including the golden eval tool that deletes records. SPEC FR-44, AC-35.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T07:21:27.764Z"
+    },
+    {
+      "id": "DECISION-8793bdd7",
+      "title": "M14: per-call timings and a minimal OpenTelemetry exporter, pulled forward from Phase 8",
+      "text": "Owner decision 2026-09-14 on backlog I-18. Phase 2 increment 1 gains M14: model, tool and terminal events record timings, and agentsdk.telemetry exports a run as invoke_agent, chat and execute_tool spans following OpenTelemetry semantic conventions v1.40.0, exporting no content and a cost only when it is known, through an optional otel extra pinned at 1.44.0 (P2-D12). The full mapping stays in Phase 8 (ADR-22). SPEC FR-57 to FR-60.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T07:21:27.940Z"
+    },
+    {
+      "id": "DECISION-4d435ed5",
+      "title": "M15: the first ADR-12 comparison runs before the Phase 2 increment 2 spec",
+      "text": "Owner decision 2026-09-14 on backlog I-16. ADR-12 had never run. M15 compares this SDK with the raw Claude Agent SDK on 12 file tasks, 3 runs each, both with bedrock.anthropic.claude-haiku-4-5 through the same gateway, read-only tools on both sides, costed from one ModelPricing; web tasks are left out, and claude-agent-sdk 0.2.152 is only an eval dependency (P2-D13). A pre-flight must show the Claude Agent SDK works against the gateway, or M15 stops for an owner decision. SPEC FR-61 to FR-63.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T07:21:28.136Z"
+    },
+    {
+      "id": "DECISION-dd87feb8",
+      "title": "General agent: option B, a general-agent preset in a new Phase 5A",
+      "text": "Owner decision 2026-09-14 on the general agent question (local note docs/07, backlog I-15). The SDK stays a framework and adds, in a new Phase 5A after Phase 5, a default general AgentSpec preset with tuned instructions, a general-purpose subagent, and a model-driven autonomous mode alongside the DAG, all inside budgets, sandbox and permissions. Phases 6 to 8 keep their numbers. This reopens the scope of ADR-02 for Phase 5A.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T07:21:28.347Z"
+    },
+    {
+      "id": "DECISION-9dd6115c",
+      "title": "Context compaction moves from Phase 7 to Phase 2 increment 2",
+      "text": "Owner decision 2026-09-14 on backlog I-17 and I-24. ContextCompactor is specified with Phase 2 increment 2, beside ContextPolicy, instead of Phase 7, so long subagent runs and later screenshot-heavy runs have it in time. Phase 7 keeps its number with no scope of its own.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T07:21:28.566Z"
+    },
+    {
+      "id": "DECISION-b86c33e3",
+      "title": "Every ideas-backlog item placed in the roadmap register before Phase 2",
+      "text": "Owner decision 2026-09-14. Each item of the local ideas backlog (docs/06, I-01 to I-24) has a landing point in the deferred-capabilities register of agent-sdk-project-master.md section 5 and agent-sdk-master-design-v0.3.md section 9, and the questions a later spec must decide (bounded loop nodes, prompt-cache staggering, child-output scanning, a pricing source, tool visibility) are listed in the SPEC.md increment 2 outline. Open questions stay open until their phase spec decides them.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T07:21:28.760Z"
     }
   ],
   "knowledge": [
@@ -1284,6 +1460,14 @@
       "source": "M10 L4 review round 5 (control ff8cd80c)",
       "tags": [],
       "recorded_at": "2026-09-13T14:01:08.622Z"
+    },
+    {
+      "id": "KNOWLEDGE-e22f787f",
+      "title": "Facts the Phase 2 increment 1 spec reviews measured in the code",
+      "text": "Read-only reviews on 2026-09-14. ToolSpec.read_only defaults to True. InMemoryEventSink.emit numbers events with len() and then appends, and 8 threads produced duplicate sequence_no values. The Postgres event sink appends to its local list after the insert commits, so events() can be out of sequence_no order. runs.status has an unnamed column CHECK; run_events.event_type has none. Cancelling an asyncio.to_thread store write does not stop a thread already running and drops one still queued. Every store call and every file tool share the default executor. psycopg reads BYTEA as text by default. On this host time.monotonic has 15.625 ms resolution and time.perf_counter 100 ns. The released OpenTelemetry semantic conventions name the cache attribute gen_ai.usage.cache_creation.input_tokens.",
+      "source": "Phase 2 increment 1 spec reviews, 2026-09-14",
+      "tags": [],
+      "recorded_at": "2026-09-14T07:21:28.942Z"
     }
   ],
   "tasks": [
@@ -1306,9 +1490,9 @@
           "status": "pass",
           "evidence": {
             "human": "owner",
-            "reason": "M9 and M10 requirements FR-26 to FR-42, NFR-11 to NFR-14 and AC-20 to AC-33 approved with decisions D1 to D10 as recommended",
-            "source_hash": "a7c603fe1a0f8dc882cbf506aeba871c6d5819950657f715d069824bdae1908b",
-            "observed_at": "2026-09-12T13:22:22.184Z"
+            "reason": "Owner approved Phase 2 increment 1 on 2026-09-14 after four read-only reviews against the code: M11 to M15, FR-43 to FR-63, NFR-15 to NFR-20, AC-34 to AC-50, with decisions P2-D5 to P2-D14 and the backlog placement",
+            "source_hash": "f7950438ebe0344174ff7ea7418f0d30c08b78d4457f5793719ad70fc8b4e54f",
+            "observed_at": "2026-09-14T07:21:29.293Z"
           }
         }
       ],
@@ -1318,7 +1502,7 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-05T14:48:57.897Z",
-      "updated_at": "2026-09-12T13:22:22.184Z"
+      "updated_at": "2026-09-14T07:21:29.293Z"
     },
     {
       "id": "M1-primitives",
@@ -1897,6 +2081,260 @@
       "limitations": [],
       "created_at": "2026-09-12T13:22:22.696Z",
       "updated_at": "2026-09-13T14:01:08.794Z"
+    },
+    {
+      "id": "M11-concurrency-foundations",
+      "outcome": "Calls to tools that declare concurrency_safe run in parallel under per-run, per-tool and per-provider limits, file tools stop starving the store on their own thread pool, and the M10 carry-overs are closed",
+      "state": "active",
+      "risk": "high",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-43",
+        "FR-44",
+        "FR-45",
+        "FR-46",
+        "FR-47",
+        "NFR-15",
+        "NFR-16",
+        "NFR-17",
+        "NFR-18",
+        "AC-34",
+        "AC-35",
+        "AC-36",
+        "AC-37",
+        "AC-38",
+        "AC-43",
+        "AC-44"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_concurrency.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-14T07:21:29.482Z",
+      "updated_at": "2026-09-14T07:21:29.483Z"
+    },
+    {
+      "id": "M12-run-handles-and-cancellation",
+      "outcome": "A caller can start a run, stream its events in order and cancel it, and a cancelled run ends cancelled with a complete record, RunCancelled as its last event, and no run left running",
+      "state": "queued",
+      "risk": "high",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-48",
+        "FR-49",
+        "FR-50",
+        "FR-51",
+        "FR-52",
+        "NFR-15",
+        "NFR-17",
+        "AC-39",
+        "AC-40",
+        "AC-41"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_run_handles.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-14T07:21:29.672Z",
+      "updated_at": "2026-09-14T07:21:29.673Z"
+    },
+    {
+      "id": "M13-artifacts",
+      "outcome": "Runs and callers can store, read, expire and delete tenant-scoped artifacts that verify their content hash, identically in memory and on Postgres",
+      "state": "queued",
+      "risk": "high",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-53",
+        "FR-54",
+        "FR-55",
+        "FR-56",
+        "NFR-16",
+        "AC-42",
+        "AC-44"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_artifacts.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-14T07:21:29.852Z",
+      "updated_at": "2026-09-14T07:21:29.852Z"
+    },
+    {
+      "id": "M14-timings-and-telemetry",
+      "outcome": "Every model and tool call records its timings, and an optional OpenTelemetry exporter turns a run into a span tree without ever affecting the run",
+      "state": "queued",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-57",
+        "FR-58",
+        "FR-59",
+        "FR-60",
+        "NFR-15",
+        "NFR-19",
+        "AC-45",
+        "AC-46",
+        "AC-47"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_telemetry.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-14T07:21:30.024Z",
+      "updated_at": "2026-09-14T07:21:30.024Z"
+    },
+    {
+      "id": "M15-adr12-comparison",
+      "outcome": "The first ADR-12 comparison measures this SDK against the raw Claude Agent SDK on 12 file tasks with the same model and gateway, and records what it found",
+      "state": "queued",
+      "risk": "medium",
+      "owner": null,
+      "scope": [],
+      "dependencies": [],
+      "requirements": [
+        "FR-61",
+        "FR-62",
+        "FR-63",
+        "NFR-20",
+        "AC-48",
+        "AC-49",
+        "AC-50"
+      ],
+      "gates": [
+        {
+          "id": "unit",
+          "command": ".venv\\Scripts\\python.exe -m pytest tests/test_adr12_comparison.py -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "regression",
+          "command": ".venv\\Scripts\\python.exe -m pytest -q",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        },
+        {
+          "id": "independent-review",
+          "command": "",
+          "mandatory": true,
+          "status": "pending",
+          "evidence": null
+        }
+      ],
+      "next_action": "Run the task pre-flight.",
+      "blocker": null,
+      "notes": [],
+      "failures": [],
+      "limitations": [],
+      "created_at": "2026-09-14T07:21:30.187Z",
+      "updated_at": "2026-09-14T07:21:30.188Z"
     }
   ],
   "learning_proposals": [],
@@ -2355,13 +2793,13 @@
   ],
   "discovery": null,
   "checkpoint": {
-    "at": "2026-09-13T13:14:59.835Z",
+    "at": "2026-09-14T07:24:06.583Z",
     "revision": {
-      "commit": "cc2f0d6a2195d28167907baa4eba6a4a76e4430d",
+      "commit": "aa146f33b37faf166bd08488c122e23e99178898",
       "dirty": true,
-      "source_hash": "b7951f39862eaa30915e0ac2d0790a0983710f1d30c8de343c1d2eed60356379"
+      "source_hash": "ef833c1abc8cfa8fb3f613cfeedf70319464a4c6f2193ab937b6722bdeaff835"
     },
-    "active_task": "M10-safe-builtin-tools",
+    "active_task": "M11-concurrency-foundations",
     "next_action": "Run the task pre-flight."
   },
   "legacy": null

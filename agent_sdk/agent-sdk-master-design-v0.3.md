@@ -390,15 +390,16 @@ Unchanged from v0.2.
 |---|---|
 | **0 — Skeleton** | `ModelRequest`/`ModelResponse`; `ContentProvenance` reframed (informs, doesn't enforce) + taint propagation rule; minimal `ContextAssembler`; `ToolExecutionOutcome` type (`Completed`/`Failed` implemented); `RunInterruption` type (concept only); lean `RuntimeHook`; strengthened `RunEvent`; `PrincipalContext` metadata; restored `ModelRegistry`; lean `ExecutionManifest` |
 | **0/1 — Multi-provider** | Proves neutrality via the new `ModelRequest`/`ModelResponse` contract instead of the old positional one; native Anthropic Messages adapter adds explicit prompt-cache markers and returns thinking blocks between turns *(added 2026-09-12)*; the `ModelClient` contract reports every attempt that received, or may have received, a response, so a call billed inside `send()` is no longer uncounted *(added 2026-09-12, DECISION-0e3ed41b, closes ASSUMPTION-b7463ca2)* |
-| **M9 — Honest results** *(before Phase 2, added 2026-09-12)* | Scope specified separately by the owner; not yet in `SPEC.md` |
-| **M10 — Safe built-in tools** *(before Phase 2, added 2026-09-12)* | Scope specified separately by the owner; not yet in `SPEC.md` |
-| **2 — Orchestrator + DAG + replanning** | + `PlanNode` acceptance criteria; `SchedulerLimits` (separate from budget); ADR-06 budget model *(accepted 2026-09-12: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens; see §4.7)*; `ArtifactRef`/`ArtifactStore` interface *(moved here from Phase 5)*; `RunHandle` + runtime event streaming; `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits *(added 2026-09-12)* |
+| **M9 — Honest results** *(before Phase 2, added 2026-09-12)* | Built: `SPEC.md` FR-26..FR-34 |
+| **M10 — Safe built-in tools** *(before Phase 2, added 2026-09-12)* | Built: `SPEC.md` FR-35..FR-42 |
+| **2 — Orchestrator + DAG + replanning** | + `PlanNode` acceptance criteria; `SchedulerLimits` (separate from budget); ADR-06 budget model *(accepted 2026-09-12: run ceiling + per-child reservation + reclaim, soft enforcement in USD and tokens; see §4.7)*; `ArtifactRef`/`ArtifactStore` interface *(moved here from Phase 5)*; `RunHandle` + runtime event streaming; `ContextPolicy`; parallel execution of read-only tool calls under ADR-30 per-run/provider/tool concurrency limits *(added 2026-09-12)*; increment 1 adds per-call timings and a minimal OpenTelemetry exporter (M14) and the first ADR-12 comparison (M15), and increment 2 adds context compaction, moved from Phase 7 *(added 2026-09-14)* |
 | **3 — Evidence + conditional critic** | + `EvidenceSourceVersion` (immutable); tenant/auth-scoped evidence caching; ADR-15 correction actually applied |
 | **4 — MCP + identity + basic interruptions** *(expanded)* | Full MCP 2026-07-28 conformance (not just a feature list); `ToolCatalog`/`ToolResolver`/`QualifiedToolName`/catalog snapshots; **basic non-durable `ApprovalManager`** *(moved here from Phase 5)*; `RunInterruption` handling for MCP input-required/MRTR flows; `DelegationGrant`/`CredentialBroker`; tenant-scoped skills and instruction bundles (versioned, stored, hashed into the `ExecutionManifest`, loaded on demand through a tool, never read from the local filesystem); Tier 2 built-in write/edit tools behind the `ApprovalManager` *(added 2026-09-12)* |
 | **5 — Sandbox + workspace** | WorkspaceManager/WorkspaceSpec before microVM (unchanged principle); sandbox-produced artifacts/snapshots build on the artifact model from Phase 2; Tier 3 built-in shell and code-execution tools, only inside the sandbox *(added 2026-09-12)* |
+| **5A — General agent** *(added 2026-09-14)* | A default general `AgentSpec` preset with tuned instructions, a general-purpose subagent, and a model-driven autonomous mode alongside the DAG, all inside budgets, sandbox and permissions (`docs/07`, option B; reopens ADR-02's scope) |
 | **6 — Sequential/dependent execution + durable approvals** | Full `RunState` replay/idempotency; `RunInterruption` becomes durable/restart-surviving |
-| **7 — Context compaction** | `ContextCompactor`, unchanged, only when needed |
-| **8 — Production hardening** | Full OTel mapping; full `ExecutionManifest`-based compatibility enforcement; full eval matrix |
+| **7 — (moved)** | Context compaction moved to Phase 2 increment 2 *(2026-09-14)*; the number is kept |
+| **8 — Production hardening** | Full OTel mapping (a minimal exporter lands in M14); full `ExecutionManifest`-based compatibility enforcement; full eval matrix |
 
 ---
 
@@ -406,11 +407,15 @@ Unchanged from v0.2.
 
 | ADR | Status |
 |---|---|
+| 02 | **Scope reopened for Phase 5A** *(2026-09-14)*. DAG-only stays for orchestrated plans; a model-driven autonomous mode alongside the DAG, inside budgets, sandbox and permissions, arrives with the general-agent preset. |
 | 06 | **Accepted** 2026-09-12 (was: Proposed in v0.3). Run ceiling + per-child reservation + reclaim of unused budget, in USD and tokens; soft enforcement, with overshoot bounded by one model call per concurrently running agent; inherited/split and flat cap rejected. Phase 2. See §4.7. |
+| 09 | **Amendment proposed** for the Phase 5 spec: a workspace per subagent chosen by policy, not only per session *(2026-09-14)*. |
+| 12 | **Scheduled.** Not run through M10; the first comparison is M15, before the Phase 2 increment 2 spec *(2026-09-14)*. |
 | 15 | **Modified** (v0.2 left this unapplied by oversight). Calibrate from externally validated outcomes; critic is a signal, not the training label. Phase 3. |
 | 17 | **Clarified.** Added: "Provenance labels are policy inputs and do not themselves create a hard instruction/data boundary. Taint propagates through model-derived outputs until explicitly cleared by deterministic policy or verification logic." |
 | 19 | **Expanded.** Durable run state now explicitly includes generic interruptions, external task references, execution attempts, and resumable approval/input state. |
 | 21 | **Expanded.** Events require ordering, schema version, correlation, and causal identifiers from Phase 0; runtime event streaming starts Phase 2 even though token-level model streaming stays deferred. |
+| 22 | **Partly pulled forward.** Per-call timings and a minimal exporter land in M14 (Phase 2 increment 1); the full mapping stays in Phase 8 *(2026-09-14)*. |
 | 23 | **Resequenced.** Basic approval/interruption: Phase 4 (was Phase 5). Durable, restart-surviving approval: Phase 6 (unchanged). |
 | 24 | **Split.** `ArtifactRef`/`ArtifactStore`: Phase 2 (was Phase 5). `WorkspaceManager`/sandbox/snapshots: Phase 5 (unchanged). |
 | 25 | **Clarified.** Minimal `ExecutionManifest` and hashes begin Phase 0; full compatibility *enforcement* stays Phase 8. |
@@ -439,8 +444,32 @@ Unchanged from v0.2.
 | Explicit prompt-cache markers; thinking blocks returned between turns | Phase 0/1, native Anthropic Messages adapter |
 | Counting calls billed inside `send()` (an attempt that timed out after the provider processed it, a 2xx whose body cannot be read): the `ModelClient` contract reports every attempt that received, or may have received, a response | Phase 0/1, native Anthropic Messages adapter (DECISION-0e3ed41b; closes ASSUMPTION-b7463ca2) |
 | Voice and realtime agents | Not planned — non-goal |
+| Context compaction (`ContextCompactor`), moved from Phase 7; screenshot pruning once images exist | Phase 2 increment 2 |
+| Per-call timings in events and a minimal OpenTelemetry exporter, pulled forward from Phase 8 | M14, Phase 2 increment 1 |
+| The first ADR-12 comparison against the raw Claude Agent SDK | M15, before the Phase 2 increment 2 spec |
+| General-agent preset, general-purpose subagent, model-driven autonomous mode alongside the DAG | Phase 5A |
+| Bounded loop nodes, or every loop through replanning | Phase 2 increment 2 spec |
+| Staggering sibling subagents that share a prompt prefix | Phase 2 increment 2, or the native Anthropic adapter |
+| Scanning child output for instruction-shaped text | Phase 2 increment 2 or Phase 4 |
+| A pricing source for USD budgets | Before the Phase 2 increment 2 spec |
+| Tool visibility by profile (revisits DECISION-ca1ad3e0) | `ContextPolicy`, Phase 2 increment 2 |
+| Budgets for plain single-agent runs | After Phase 2 increment 2 |
+| Publishing to PyPI or a private index | Any time after Phase 2 |
+| Studying OpenAI's `RunState` | Before the Phase 4 spec |
+| Publishing agents as an MCP server | After Phase 4 |
+| Storing reasoning (thinking) text | Native Anthropic adapter |
+| Multimodal content parts, images stored as artifacts | After M13, with the native Anthropic adapter |
+| A workspace per subagent, pluggable provider, compute in budgets (amends ADR-09) | Phase 5 spec |
+| Browser (DOM) and computer-use tools | Phase 5 |
+| An approval surface for durable approvals | Phase 6 / Stage 2 |
+| Governed learning: run memory, skill distillation, parameter tuning, eval-gated | After Phases 3 and 4 |
+| The form of each Stage 2 product | Stage 2 |
+| Symlink tests off the dev host | Before CI exists |
+| Dashboard backend (SQL over Postgres; MLflow and/or Langfuse through the exporter) | Local development setup |
 
 Rows from *Parallel execution* down were added 2026-09-12 by the owner's roadmap review against the Claude Agent SDK and the OpenAI Agents SDK, recorded in Genesis as DECISION-f04449c9 (M9 and M10 before Phase 2), DECISION-79f09566 (a response cut off at the output-token limit ends the run as failed, reason max_tokens), DECISION-e6228dd4 (Phase 2 parallel read-only tool calls), DECISION-37bcac5b (Phase 4 skills and Tier 2 tools), DECISION-6a8204d0 (Phase 5 Tier 3 tools), DECISION-67b65b89 (Anthropic Messages adapter), DECISION-09edb52b (voice and realtime non-goal) and DECISION-f39da722 (ADR-06 timing, superseded by DECISION-e1bf0327: ADR-06 accepted).
+
+Rows from *Context compaction* down were added 2026-09-14 from the owner's review of the ideas backlog and the general-agent question (local notes `docs/06`, `docs/07`, `docs/08`), recorded in Genesis as DECISION-dd87feb8 (Phase 5A), DECISION-9dd6115c (compaction moved), DECISION-8793bdd7 (M14), DECISION-4d435ed5 (M15) and DECISION-b86c33e3 (backlog placement).
 
 ---
 
