@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-15T07:40:24.413Z"
+    "updated_at": "2026-09-15T07:55:05.312Z"
   },
   "policy": {
     "ponytail": "full",
@@ -1554,6 +1554,14 @@
       "source": "M12 L4 review round 1 control and owner recheck, 2026-09-15",
       "tags": [],
       "recorded_at": "2026-09-15T07:40:24.227Z"
+    },
+    {
+      "id": "KNOWLEDGE-53f7da84",
+      "title": "M12 review caveat C1 fixed: cancel() from another thread is handed to the run loop",
+      "text": "Owner-approved follow-up to the M12 round 1 review (KNOWLEDGE-a23d69bd), fixed on 2026-09-15 with no new review round. RunControl.request, called off the run event loop thread, now hands the cancel to that loop with call_soon_threadsafe, and the scheduled callback cancels the task only if the run has not ended or begun its terminal write; Runner.start records the loop, and RunHandle.cancel says it may be called from any thread. Written first, test_cancel_called_from_another_thread_takes_effect_promptly failed against the unchanged handle on both stores: in normal mode the run did not end within 5 s, and in asyncio debug mode cancel() raised RuntimeError on the calling thread. Its first version ran in the test event loop and hung the session at teardown for more than 300 s in debug mode, because a task whose awaited future was cancelled from another thread under debug mode can never be woken; that session was killed and left no runs behind, and the test now runs its scenario on its own event loop in a daemon thread joined with a bound. After the fix: test_run_handles and test_concurrency 168 passed, full suite 989 passed in 189 s.",
+      "source": "M12 C1 follow-up, 2026-09-15",
+      "tags": [],
+      "recorded_at": "2026-09-15T07:55:05.310Z"
     }
   ],
   "tasks": [

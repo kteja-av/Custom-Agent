@@ -909,3 +909,52 @@ async def test_the_cancellation_reason_is_recorded_when_it_can_be_stored(backend
     handle.cancel(reason)
     result = await asyncio.wait_for(handle.result(), 10)
     assert_cancelled(result, backend, in_flight=True, reason=recorded)
+
+
+@pytest.mark.parametrize("debug", [False, True], ids=["normal mode", "asyncio debug mode"])
+def test_cancel_called_from_another_thread_takes_effect_promptly(backend, debug):
+    """C1, M12 review round 1 (KNOWLEDGE-a23d69bd). RunControl.request called
+    Task.cancel directly, which asyncio allows only on the loop's own thread. Called
+    from another thread, the cancel took effect only when the loop next woke for
+    some other reason, so a run waiting on a model call was not abandoned; under
+    asyncio debug mode Task.cancel raised RuntimeError and the run could never end.
+
+    The thread calls cancel() only after the loop is already waiting with nothing
+    scheduled but a 5 s bound, so nothing else wakes it. The scenario runs on its
+    own event loop in a daemon thread: a run that can never end then fails this
+    test at the join, where in the test's own loop it hung the session at teardown
+    (the first red run of this test was killed after 300 s)."""
+    raised, outcome = [], {}
+
+    async def scenario():
+        loop = asyncio.get_running_loop()
+        loop.set_debug(debug)
+        hold = Hold()
+        handle = await make_runner(Script(hold), backend).start(agent(), "go", config())
+        await until(hold.entered.is_set, "the model call to begin")
+
+        def cancel_from_another_thread():
+            time.sleep(0.2)
+            try:
+                handle.cancel("cancelled from another thread")
+            except BaseException as exc:  # noqa: BLE001 - what the calling thread saw is the finding
+                raised.append(type(exc).__name__)
+
+        waiting = asyncio.ensure_future(handle.result())
+        canceller = threading.Thread(target=cancel_from_another_thread)
+        canceller.start()
+        done, _ = await asyncio.wait({waiting}, timeout=5)
+        canceller.join(5)
+        outcome["ended"] = waiting in done
+        if outcome["ended"]:
+            outcome["result"] = waiting.result()
+        else:
+            hold.released.set()
+            await asyncio.wait({waiting}, timeout=5)
+
+    worker = threading.Thread(target=lambda: asyncio.run(scenario()), daemon=True)
+    worker.start()
+    worker.join(30)
+    assert not raised, f"cancel() raised on the calling thread: {raised}"
+    assert outcome.get("ended"), "the run did not end within 5 s of cancel() being called from another thread"
+    assert_cancelled(outcome["result"], backend, in_flight=True, reason="cancelled from another thread")

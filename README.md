@@ -7,7 +7,7 @@ persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
 > a store-hardening milestone for Phase 2 are complete, each approved by an
-> independent review; the suite has 985 tests. It is not on PyPI yet, and a lot is
+> independent review; the suite has 989 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -410,7 +410,7 @@ Narrowing that is a known, recorded gap.
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (985 tests) runs against a **real database and the live gateway**,
+The full suite (989 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.

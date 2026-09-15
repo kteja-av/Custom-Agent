@@ -340,9 +340,13 @@ class Runner:
         belongs to the event loop that started it.
         """
         opened = self._open(spec, config)
+        loop = asyncio.get_running_loop()
         control = RunControl()
+        # So a cancel() called from another thread can hand the cancellation to
+        # the run's own loop (M12 review round 1, C1).
+        control.loop = loop
         handle = RunHandle(opened.scope.run_id, control, opened.meter)
-        events = PublishingSink(opened.events, handle._publish, asyncio.get_running_loop())
+        events = PublishingSink(opened.events, handle._publish, loop)
         control.task = asyncio.ensure_future(self._drive(spec, task, config, opened, events, control))
         control.task.add_done_callback(handle._finished)
         return handle

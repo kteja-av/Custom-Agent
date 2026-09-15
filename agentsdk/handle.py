@@ -49,10 +49,12 @@ class RunControl:
         self.in_flight = False
         self.cancelled_in_flight = False
         self.turns = 0
+        # The event loop the run belongs to (FR-48), set by Runner.start.
+        self.loop: asyncio.AbstractEventLoop | None = None
 
     def request(self, reason: object = None) -> None:
         """Ask the run to stop. Idempotent; no effect once the run has ended or its
-        terminal event is being written."""
+        terminal event is being written. Safe to call from any thread."""
         task = self.task
         if self.requested or self.terminal or (task is not None and task.done()):
             return
@@ -60,13 +62,31 @@ class RunControl:
         self.reason = reason
         if task is None or not self.started:
             return
+        loop = self.loop
         try:
-            current = asyncio.current_task()
+            running = asyncio.get_running_loop()
         except RuntimeError:
-            current = None
+            running = None
+        if loop is not None and running is not loop:
+            # Called from another thread (M12 review round 1, C1). asyncio lets a
+            # task be cancelled only on its own loop's thread: from elsewhere the
+            # cancel took effect only when the loop next woke for some other
+            # reason, and under asyncio debug mode Task.cancel raised RuntimeError
+            # and left the run unable to end. The loop is handed the cancel instead,
+            # which also wakes it, as PublishingSink hands it events.
+            try:
+                loop.call_soon_threadsafe(self._cancel, task)
+            except RuntimeError:  # the loop has closed, and the run with it
+                pass
+            return
         # Asked from inside the run itself -- a hook -- there is nothing to interrupt:
         # the next checkpoint stops it, before the next model or tool call.
-        if task is not current:
+        if task is not asyncio.current_task():
+            task.cancel()
+
+    def _cancel(self, task: asyncio.Task[Any]) -> None:
+        """A cancel handed over from another thread, run on the loop's own thread."""
+        if not task.done() and not self.terminal:
             task.cancel()
 
     def checkpoint(self) -> None:
@@ -192,7 +212,11 @@ class RunHandle:
 
     def cancel(self, reason: object = None) -> None:
         """Ask the run to stop (FR-50). Idempotent; no effect on a run that has ended or
-        whose terminal event is being written. Await result() for its outcome."""
+        whose terminal event is being written. Await result() for its outcome.
+
+        May be called from any thread: off the run's own event loop thread, the
+        cancellation is handed to that loop rather than applied from the calling
+        thread (M12 review round 1, C1)."""
         self._control.request(reason)
 
     async def _settled(self) -> None:
