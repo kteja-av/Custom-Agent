@@ -49,6 +49,10 @@ class RunControl:
         self.in_flight = False
         self.cancelled_in_flight = False
         self.turns = 0
+        # When the run's coroutine began (FR-57): wall clock for the terminal event, and
+        # the performance counter its duration is measured from.
+        self.started_at: str | None = None
+        self.started_ns: int | None = None
         # The event loop the run belongs to (FR-48), set by Runner.start.
         self.loop: asyncio.AbstractEventLoop | None = None
 
@@ -242,7 +246,33 @@ class RunHandle:
         self._wake()
 
     def _wake(self) -> None:
+        """Wake every iterator waiting for the next event.
+
+        Called on the run's own loop. An iterator can be waiting on another loop -- FR-48 keeps
+        a run on one loop, not its readers -- so each waiter is resolved on the loop it belongs
+        to, and one whose loop has closed is skipped. Before round 2 a waiter that could not be
+        resolved raised out of this loop and stranded every waiter after it (M14 review round
+        1, C1).
+        """
         waiters, self._waiters = self._waiters, []
+        try:
+            here = asyncio.get_running_loop()
+        except RuntimeError:
+            here = None
         for waiter in waiters:
-            if not waiter.done():
-                waiter.set_result(None)
+            try:
+                if waiter.done():
+                    continue
+                owner = waiter.get_loop()
+                if owner is here:
+                    waiter.set_result(None)
+                else:
+                    owner.call_soon_threadsafe(_resolve, waiter)
+            except Exception:  # noqa: BLE001 - its loop has closed: no one is left to wake
+                continue
+
+
+def _resolve(waiter: asyncio.Future[None]) -> None:
+    """Resolve a waiter on its own loop, unless it was cancelled meanwhile."""
+    if not waiter.done():
+        waiter.set_result(None)

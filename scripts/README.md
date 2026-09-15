@@ -26,6 +26,7 @@ credentials.
 | [`10_builtin_tools.py`](10_builtin_tools.py) | built-in file tools confined to a folder, and a fetch tool confined to an allowlist and the public internet |
 | [`11_run_handle.py`](11_run_handle.py) | a run's events streamed through its handle as they happen, and a second run cancelled mid-flight |
 | [`12_artifacts.py`](12_artifacts.py) | an artifact put, read back and checked against its hash, kept within its tenant, expired and deleted |
+| [`13_telemetry.py`](13_telemetry.py) | per-call timings on every event, and the same run as an OpenTelemetry span tree sent over OTLP/HTTP |
 
 ## Setup
 
@@ -39,6 +40,16 @@ cp .env.example .env                           # then fill it in, for live mode
 
 Examples 04, 07 and 12 need `DATABASE_URL` in live mode; the rest need only the
 model endpoint.
+
+Example 13 needs the `otel` extra, in both modes (`scripts/requirements.txt`
+installs it). In live mode it also sends spans to a collector at
+`OTEL_EXPORTER_OTLP_ENDPOINT`. For a local Jaeger, start one in Docker, set
+`OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` in `.env`, and open
+http://localhost:16686 after the run:
+
+```bash
+docker run --rm -d --name jaeger -p 16686:16686 -p 4318:4318 jaegertracing/jaeger:2.20.0
+```
 
 ## Two things the examples do by hand, and say so
 

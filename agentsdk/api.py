@@ -29,7 +29,7 @@ from .executor import ToolExecutor
 from .handle import PublishingSink, RunControl, RunHandle, RunState
 from .hooks import RuntimeHook
 from .identity import PrincipalContext
-from .loop import AgentLoop, RunMeter
+from .loop import AgentLoop, RunMeter, sent_model
 from .manifest import build_manifest
 from .model import ModelClient, ModelRequest, ReasoningEffort, Usage
 from .permissions import AllowlistPermissionChecker, PermissionChecker
@@ -39,6 +39,7 @@ from .primitives import unstorable_reason
 from .registry import ModelRegistry, call_cost, default_registry
 from .scheduler import ProviderSlots, RunSlots, SchedulerLimits
 from .session import InMemorySessionStore, SessionStore
+from .timings import elapsed_ms, now_ns, wall_clock
 from .tools import Tool, ToolRegistry
 from .version import __version__
 
@@ -252,6 +253,15 @@ class _OpenedRun:
     max_output_tokens: int | None
     reasoning_effort: ReasoningEffort | None
     meter: RunMeter
+    # The provider name the model client declares, read once per run (FR-57).
+    provider_name: str | None = None
+
+
+def _run_timing(control: RunControl) -> dict[str, Any]:
+    """FR-57: the run's start and duration, for its terminal event."""
+    if control.started_ns is None:
+        return {"started_at": None, "duration_ms": 0.0}
+    return {"started_at": control.started_at, "duration_ms": elapsed_ms(control.started_ns)}
 
 
 class Runner:
@@ -386,6 +396,7 @@ class Runner:
         # loop raises: the failure path reports what the meter recorded, not what
         # the events happened to capture (R2).
         meter = RunMeter(no_call_cost=self._cost(recorded_model, Usage()))
+        provider_name = self._provider_name(client_key)
         return _OpenedRun(
             scope=scope,
             events=events,
@@ -395,6 +406,7 @@ class Runner:
             max_output_tokens=max_output_tokens,
             reasoning_effort=reasoning_effort,
             meter=meter,
+            provider_name=provider_name,
         )
 
     async def _drive(
@@ -408,6 +420,7 @@ class Runner:
     ) -> RunResult:
         """The run itself, to a terminal status: the total boundary run() documents."""
         control.started = True
+        control.started_at, control.started_ns = wall_clock(), now_ns()
         scope, meter = opened.scope, opened.meter
         try:
             return await self._run(
@@ -423,6 +436,7 @@ class Runner:
                 reasoning_effort=opened.reasoning_effort,
                 meter=meter,
                 control=control,
+                provider_name=opened.provider_name,
             )
         except asyncio.CancelledError:
             return await self._cancelled(scope, events, meter, control)
@@ -433,7 +447,7 @@ class Runner:
                 return await self._cancelled(scope, events, meter, control)
             reason = describe_exception(exc)
             control.terminal = True
-            await self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason}, control)
+            await self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason, **_run_timing(control)}, control)
             await self._safe_finish(scope, RunStatus.FAILED, meter.usage, meter.cost_usd, control)
             return RunResult(
                 status=RunStatus.FAILED,
@@ -465,7 +479,7 @@ class Runner:
         await self._safe_emit(
             events,
             EventType.RUN_CANCELLED,
-            {"status": RunStatus.CANCELLED.value, "turns": control.turns, "reason": reason},
+            {"status": RunStatus.CANCELLED.value, "turns": control.turns, "reason": reason, **_run_timing(control)},
             control,
         )
         await self._safe_finish(scope, RunStatus.CANCELLED, meter.usage, cost, control)
@@ -541,6 +555,7 @@ class Runner:
         reasoning_effort: ReasoningEffort | None,
         meter: RunMeter,
         control: RunControl,
+        provider_name: str | None = None,
     ) -> RunResult:
         run_id = scope.run_id
         limits = self._limits_for(config)
@@ -592,6 +607,8 @@ class Runner:
                 "model": recorded_model,
                 "provider": client_key,
                 "max_turns": config.max_turns,
+                # FR-57: so a run's own events name its parent (FR-21), None at the top.
+                "parent_run_id": config.parent_run_id,
                 # Recorded, never read in Phase 0 (ADR-27).
                 "principal_context": (
                     config.principal_context.to_json() if config.principal_context else None
@@ -626,10 +643,9 @@ class Runner:
 
         def cost_of(request: ModelRequest, usage: Usage) -> Decimal | None:
             # Priced by the model the request was actually sent with, which a
-            # before_model hook may have changed (FR-30).
-            settings = getattr(request, "model_settings", None)
-            sent = settings.get("model") if isinstance(settings, dict) else None
-            return self._cost(sent if isinstance(sent, str) and sent else recorded_model, usage)
+            # before_model hook may have changed (FR-30): decided by the same function
+            # that names it in ModelCalled (FR-57; M14 review round 1, C2).
+            return self._cost(sent_model(request, recorded_model), usage)
 
         loop = AgentLoop(
             model_client=self._clients[client_key],
@@ -644,6 +660,9 @@ class Runner:
             tool_slot=RunSlots(limits).slot,
             model_slot=partial(self._provider_slots.slot, client_key),
             control=control,
+            provider=client_key,
+            provider_name=provider_name,
+            recorded_model=recorded_model,
         )
 
         # Only what the caller set: a run that sets none of M9's options sends
@@ -679,7 +698,7 @@ class Runner:
         await control.store(
             events.emit,
             EventType.RUN_COMPLETED if status is RunStatus.COMPLETED else EventType.RUN_FAILED,
-            {"status": status.value, "turns": outcome.turns, "reason": error},
+            {"status": status.value, "turns": outcome.turns, "reason": error, **_run_timing(control)},
         )
         if self._persistence is not None:
             await control.store(self._finish, scope, status, meter.usage, meter.cost_usd)
@@ -736,6 +755,21 @@ class Runner:
         except Exception:  # noqa: BLE001 - a client property is caller code
             return None
         if not isinstance(candidate, str) or not candidate:
+            return None
+        return candidate if column_rejection_reason(candidate, "TEXT") is None else None
+
+    def _provider_name(self, client_key: str) -> str | None:
+        """The provider name the client declares, read once per run (FR-57).
+
+        Optional, as default_model_id is (FR-32): ModelClient stays send()-only. A client
+        without the attribute, or with one that raises or holds something no column can
+        store, records None.
+        """
+        try:
+            candidate = getattr(self._clients[client_key], "provider_name", None)
+        except Exception:  # noqa: BLE001 - a client property is caller code
+            return None
+        if type(candidate) is not str or not candidate:
             return None
         return candidate if column_rejection_reason(candidate, "TEXT") is None else None
 

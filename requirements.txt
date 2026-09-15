@@ -34,3 +34,12 @@ cryptography==50.0.1       # M10 AC-30: a throwaway CA and certificate, so the f
 # MCP server. Must stay below the `# --- test` line, which is where the FR-22
 # test stops reading runtime dependencies.
 mcp==2.2.0
+
+# --- telemetry -------------------------------------------------------------
+# Not an SDK dependency (NFR-19, P2-D12): pyproject.toml keeps these in the
+# `otel` extra, only agentsdk.telemetry imports them, and `import agentsdk`
+# never does. Listed here because the M14 gate exercises the exporter and
+# scripts/13_telemetry.py needs them. Below the `# --- test` line, like mcp.
+opentelemetry-api==1.44.0
+opentelemetry-sdk==1.44.0
+opentelemetry-exporter-otlp-proto-http==1.44.0

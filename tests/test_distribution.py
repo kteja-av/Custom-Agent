@@ -21,7 +21,7 @@ from dotenv import dotenv_values
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
-CONFIG_VARS = ("BASE_URL", "MODEL_API_KEY", "DATABASE_URL", "DEFAULT_MODEL")
+CONFIG_VARS = ("BASE_URL", "MODEL_API_KEY", "DATABASE_URL", "DEFAULT_MODEL", "OTEL_EXPORTER_OTLP_ENDPOINT")
 EXPECTED_EXAMPLES = {
     "01_minimal_agent.py",
     "02_custom_tools.py",
@@ -36,6 +36,7 @@ EXPECTED_EXAMPLES = {
     "10_builtin_tools.py",
     "11_run_handle.py",
     "12_artifacts.py",
+    "13_telemetry.py",
 }
 
 

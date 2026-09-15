@@ -537,6 +537,11 @@ ENDINGS = [
 ]
 
 
+# M14, NFR-15: the timings FR-57 adds differ between any two runs by nature, so they are
+# left out of the comparison; every other field of every event must still match.
+FR57_TIMINGS = ("started_at", "duration_ms", "queued_ms")
+
+
 def shape(result):
     return (
         result.status,
@@ -544,7 +549,15 @@ def shape(result):
         result.error,
         result.usage,
         result.cost_usd,
-        [(e.event_type, e.sequence_no, e.tool_call_id, json.dumps(e.payload, sort_keys=True, default=str)) for e in result.events],
+        [
+            (
+                e.event_type,
+                e.sequence_no,
+                e.tool_call_id,
+                json.dumps({k: v for k, v in e.payload.items() if k not in FR57_TIMINGS}, sort_keys=True, default=str),
+            )
+            for e in result.events
+        ],
     )
 
 

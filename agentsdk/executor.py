@@ -53,6 +53,7 @@ from .primitives import (
     checked_provenance,
     unstorable_reason,
 )
+from .timings import elapsed_ms, now_ns, wall_clock
 from .tools import DEFAULT_MAX_OUTPUT_CHARS, Tool, ToolOutput, ToolRegistry
 
 
@@ -70,6 +71,12 @@ class _CallState:
 
     tool: Tool | None = None
     ran: bool = False
+    # FR-57: when step 6 was asked for, the wait from then until the call's slots were
+    # granted, and when step 6 began. A call that never reaches step 6 records None and 0.
+    received_ns: int | None = None
+    queued_ms: float = 0.0
+    started_at: str | None = None
+    started_ns: int | None = None
 
 
 @dataclass
@@ -149,8 +156,12 @@ class ToolExecutor:
         tool's timeout, and until it is granted the tool has not run, so an error
         before then is still wholly the executor's own (FR-40).
         """
+        # FR-57: the executor receives the call for step 6 here; it waits from now until
+        # its slots are granted.
+        prepared.state.received_ns = now_ns()
         try:
             async with slot(prepared.tool.name) if slot is not None else contextlib.nullcontext():
+                prepared.state.queued_ms = elapsed_ms(prepared.state.received_ns)
                 try:
                     return await self._run(prepared)
                 except Exception as exc:  # noqa: BLE001
@@ -259,6 +270,7 @@ class ToolExecutor:
 
         # --- 6. execute --------------------------------------------------------
         state.ran = True
+        state.started_at, state.started_ns = wall_clock(), now_ns()
         try:
             value = await self._invoke(tool, tool_call.arguments)
         except asyncio.TimeoutError:
@@ -366,6 +378,7 @@ class ToolExecutor:
                 "is_error": tool_result.is_error,
                 "original_length": original_length,
                 "truncated": truncated,
+                **_timings(state),
             }
         )
         return Completed(result=tool_result)
@@ -452,9 +465,18 @@ class ToolExecutor:
                 "error_type": type(error).__name__,
                 "original_length": original_length,
                 "truncated": truncated,
+                **_timings(state),
             }
         )
         return Failed(error=error, result=result)
+
+
+def _timings(state: _CallState) -> dict[str, Any]:
+    """FR-57: a call that reached step 6 records when it began, how long it took to its
+    event, and its wait for slots; one that did not records None and 0."""
+    if state.started_ns is None:
+        return {"started_at": None, "duration_ms": 0.0, "queued_ms": 0.0}
+    return {"started_at": state.started_at, "duration_ms": elapsed_ms(state.started_ns), "queued_ms": state.queued_ms}
 
 
 def _exact(text: str) -> str:

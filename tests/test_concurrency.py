@@ -819,7 +819,12 @@ async def test_max_concurrent_tools_1_reproduces_a_run_whose_tools_do_not_declar
         return (
             [shape([dataclasses.asdict(m) for m in r.messages] + [list(r.tools), r.model_settings, r.instructions]) for r in client.requests],
             shape([dataclasses.asdict(m) for m in sessions.history(result.run_id)]),
-            [(e.event_type, shape(e.payload), e.tool_call_id) for e in result.events],
+            # M14, NFR-15: FR-57's timings differ between any two runs by nature; the rest
+            # of every payload must not.
+            [
+                (e.event_type, shape({k: v for k, v in e.payload.items() if k not in ("started_at", "duration_ms", "queued_ms")}), e.tool_call_id)
+                for e in result.events
+            ],
         )
 
     assert await run(safe=True) == await run(safe=False)

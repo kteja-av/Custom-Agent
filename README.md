@@ -7,7 +7,7 @@ persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
 > a store-hardening milestone for Phase 2 are complete, each approved by an
-> independent review; the suite has 1110 tests. It is not on PyPI yet, and a lot is
+> independent review; the suite has 1199 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -364,6 +364,56 @@ print(trace["run"]["status"], "|", len(trace["messages"]), "messages |", len(tra
 print("configuration manifest recorded:", trace["manifest"] is not None)
 ```
 
+## Timings and telemetry
+
+Every `ModelCalled` and `ToolCalled` event records when the call started, its
+`duration_ms`, and `queued_ms`, the time it waited for a provider or tool slot. Every
+terminal event records the whole run's `started_at` and `duration_ms`. With Postgres
+persistence that is already a dashboard, and no exporter is needed:
+
+```sql
+-- The slowest model and tool calls of the last day, per tenant and project.
+SELECT tenant_id,
+       project_id,
+       event_type,
+       COALESCE(payload->>'model', payload->>'name')     AS called,
+       count(*)                                          AS calls,
+       round(avg((payload->>'duration_ms')::numeric), 1) AS avg_ms,
+       round(max((payload->>'duration_ms')::numeric), 1) AS max_ms,
+       round(avg((payload->>'queued_ms')::numeric), 1)   AS avg_queued_ms
+FROM run_events
+WHERE event_type IN ('ModelCalled', 'ToolCalled')
+  AND payload ? 'duration_ms'
+  AND "timestamp" > now() - interval '1 day'
+GROUP BY tenant_id, project_id, event_type, called
+ORDER BY max_ms DESC;
+```
+
+To see a run as a trace instead, install the `otel` extra and hand the run to the
+exporter. It follows the run from a thread of its own, so a slow or unreachable
+collector never slows or changes the run:
+
+```python
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from agentsdk.telemetry import OpenTelemetryExporter
+
+provider = TracerProvider()
+provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))  # OTEL_EXPORTER_OTLP_ENDPOINT
+exporter = OpenTelemetryExporter(provider)
+
+handle = await runner.start(agent, "What is 2 + 2?", config)
+exporter.export(handle)
+result = await handle.result()
+```
+
+Each run becomes an `invoke_agent` span, with a `chat` span per model call and an
+`execute_tool` span per tool call beneath it, carrying token counts, and a cost when
+it is known. No message content, tool argument or tool result is exported.
+[`scripts/13_telemetry.py`](scripts/13_telemetry.py) shows it end to end.
+
 ## Examples
 
 [`scripts/`](scripts/) holds runnable examples, one activity each. Every one runs
@@ -384,6 +434,7 @@ credentials -- which is also how the test suite checks them.
 | [`10_builtin_tools.py`](scripts/10_builtin_tools.py) | built-in file tools confined to a folder, and a fetch tool confined to an allowlist and the public internet |
 | [`11_run_handle.py`](scripts/11_run_handle.py) | a run's events streamed through its handle as they happen, and a second run cancelled mid-flight |
 | [`12_artifacts.py`](scripts/12_artifacts.py) | an artifact put, read back and checked against its hash, kept within its tenant, expired and deleted |
+| [`13_telemetry.py`](scripts/13_telemetry.py) | per-call timings on every event, and the same run as an OpenTelemetry span tree sent over OTLP/HTTP |
 
 ```bash
 python scripts/02_custom_tools.py --offline
@@ -412,7 +463,7 @@ Narrowing that is a known, recorded gap.
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (1110 tests) runs against a **real database and the live gateway**,
+The full suite (1199 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.

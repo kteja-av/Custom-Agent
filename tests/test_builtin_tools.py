@@ -2218,7 +2218,14 @@ def test_no_module_imports_a_search_vendor_or_any_dependency_beyond_the_declared
                 imported |= {alias.name.split(".")[0] for alias in node.names}
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
                 imported.add(node.module.split(".")[0])
-        limit = set(sys.stdlib_module_names) | {"httpx", "agentsdk"} if path.name == "builtin_tools.py" else allowed_everywhere
+        if path.name == "builtin_tools.py":
+            limit = set(sys.stdlib_module_names) | {"httpx", "agentsdk"}
+        elif path.name == "telemetry.py":
+            # M14, P2-D12, NFR-19: the optional otel extra, imported by this module
+            # alone and only when an exporter is built.
+            limit = allowed_everywhere | {"opentelemetry"}
+        else:
+            limit = allowed_everywhere
         if imported - limit:
             offenders[path.name] = sorted(imported - limit)
     assert (REPO / "agentsdk" / "builtin_tools.py").is_file()

@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-15T13:13:07.142Z"
+    "updated_at": "2026-09-15T17:32:23.141Z"
   },
   "policy": {
     "ponytail": "full",
@@ -25,7 +25,7 @@
   "lifecycle": {
     "phase": "build",
     "status": "active",
-    "active_task": "M14-timings-and-telemetry",
+    "active_task": "M15-adr12-comparison",
     "blocker": null,
     "next_action": "Run the task pre-flight."
   },
@@ -944,6 +944,38 @@
       "status": "accepted",
       "source": "owner decision 2026-09-15",
       "recorded_at": "2026-09-15T09:40:01.373Z"
+    },
+    {
+      "id": "DECISION-7fcb7b1f",
+      "title": "M14: live example 13 sends its spans to a local Jaeger container",
+      "text": "Owner decision 2026-09-15 at the M14 readiness check. The live mode of scripts/13_telemetry.py (FR-60) sends its spans over OTLP/HTTP to a local Jaeger container run in Docker, with OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 set in .env and named in .env.example, and the Jaeger UI on localhost:16686; the image and its version are pinned when the live run is prepared. The owner starts Docker Desktop, whose daemon was not running at the check (ASSUMPTION-53240ce4). The M14 tests need no collector: AC-47 points an exporter at a closed port. Also decided: the SPEC.md decision-table heading is corrected to show P2-D12 accepted on 2026-09-14 (DECISION-8793bdd7), with P2-D13 still proposed.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-15T13:27:37.522Z"
+    },
+    {
+      "id": "DECISION-ea07ecbd",
+      "title": "M14: parent_run_id is recorded in RunStarted and a declared provider name in ModelCalled",
+      "text": "Owner decisions 2026-09-15 at the M14 pre-flight, closing two gaps found against the code. FR-58 and FR-59 need a run parent_run_id and a declared provider name, but the exporter consumes only a RunHandle or a RunResult; no event payload, RunResult or RunHandle carries parent_run_id (it lives in RunConfig and the runs row only), and no model client declares a provider name. (1) RunStarted gains parent_run_id, None for a top-level run, listed in FR-57 so that NFR-15 covers it; the exporter reads a run parent from its own RunStarted event. Rejected: the caller passing it to the exporter, which fails silently when omitted. (2) A model client may declare an optional read-only provider_name, read once per run as default_model_id is (FR-32); ModelCalled records it as provider_name, None when undeclared, and gen_ai.provider.name is set from it. OpenAICompatibleModelClient declares none, because the gateway fronts several providers. Rejected: a mapping given to the exporter, and leaving the attribute out of M14. SPEC FR-57, FR-58, FR-59, AC-45 and AC-46 amended.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-15T13:33:41.793Z"
+    },
+    {
+      "id": "DECISION-95a84cb0",
+      "title": "M14 round 1: C1 and C2 are fixed before M14 is completed, with a round 2 review of that change",
+      "text": "Owner decision 2026-09-15 after the M14 round 1 review. C2 is treated as a defect rather than a caveat: a before_model hook naming the model as a StrEnum member or a str subclass made ModelCalled.model record the run model (priced) while the client received the named model (other) and the call was priced as it (cost 2.000 beside model priced), against AC-45, reproduced by the owner and in memory by the implementing session. Cause: loop.py _sent_model accepts only an exact str while the Runner cost_of prices any str. C1 is fixed with it although FR-48 already calls a cross-loop export misuse. Both fixes are written test first, the mutation run covers the changed code, both gates are rerun, and a round 2 review covers only this change. C3 to C9 stay recorded caveats. M14 is not completed until round 2 approves.",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-15T15:26:23.422Z"
+    },
+    {
+      "id": "DECISION-cf76a855",
+      "title": "M14 completed after round 2, with R1 as a follow-up",
+      "text": "Owner decision 2026-09-15: M14 is completed on the round 2 approval without a round 3, because R1 needs a reader on another thread event loop, which FR-48 already excludes, the exporter follows on the run loop, and no run was affected in any trial. Follow-up, before any later milestone relies on readers on other loops: in handle.py _stream, check _ended and the next event again after appending the waiter; add a Postgres version of the cross-loop iterator test; add tests for a str subclass overriding __str__ or __len__ as a model name, for the done check in _resolve, for flush with several followed handles, and for a stopped but unclosed run loop; and correct the _wake docstring, which overstates cross-loop safety. R2 stays a recorded caveat. The commit is not published to GitHub (owner decision).",
+      "status": "accepted",
+      "source": null,
+      "recorded_at": "2026-09-15T17:32:22.994Z"
     }
   ],
   "knowledge": [
@@ -1594,6 +1626,30 @@
       "source": null,
       "tags": [],
       "recorded_at": "2026-09-15T13:12:59.592Z"
+    },
+    {
+      "id": "KNOWLEDGE-a18764bf",
+      "title": "M14 pre-flight: baseline, telemetry packages, semantic conventions and two spec gaps",
+      "text": "Baseline at 22d71c6 with no other python or node process: 1110 passed in 136.07 s. Installed opentelemetry-sdk and opentelemetry-exporter-otlp-proto-http 1.44.0 (opentelemetry-api 1.44.0 was already present as a dependency of mcp); the resolver added opentelemetry-proto and opentelemetry-exporter-otlp-proto-common 1.44.0, opentelemetry-semantic-conventions 0.65b0, protobuf 7.36.1, googleapis-common-protos 1.75.3, requests 2.34.2, urllib3 2.7.0 and charset-normalizer 3.5.1, upgrading nothing, and pip check is clean. The three pins are in requirements.txt below the test line, in scripts/requirements.txt and in a new otel extra; tests/test_distribution.py checks only the examples extra, so the new extra needs no test edit. Semantic conventions: the 0.65b0 package carries schema versions up to 1.43.0, including 1.40.0, and all twelve attribute names FR-59 lists and the operation values invoke_agent, chat and execute_tool are present in it (checked in the package, not against the v1.40.0 registry). Code facts for FR-57: ModelRequest has no model field; the model travels in model_settings under model and is priced from there (cost_of in api.py); the provider slot wait and send are adjacent in loop.py; a tool call enters its slots in ToolExecutor.run_prepared immediately before step 6; the three terminal emits are in Runner._drive (failed), Runner._cancelled and Runner._run; RunEvent already carries a timestamp; no test compares a whole event payload. Two gaps were found and decided by the owner in the M14 parent and provider decision. The Docker daemon is now running (29.6.2), so ASSUMPTION-53240ce4 no longer holds.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-15T13:33:42.252Z"
+    },
+    {
+      "id": "KNOWLEDGE-0c0a96f9",
+      "title": "M14 round 1 review: approved with caveats C1 to C9",
+      "text": "Opus 5 in a fresh session approved M14-timings-and-telemetry round 1 with nine caveats and no blocker, reporting every Attack item as probed, and reran both gates on a clean tree (unit 78, regression 1188, source hash 6ce35a78). The owner reran eight of its saved probe scripts and matched every result (the C8 loop stall measured 30 ms against the reviewer 60 ms), queried Jaeger for the live trace (5 spans under invoke_agent calendar), and found no repo file, database row, process or container left behind. Caveats: C1 export of a RunHandle from another thread event loop can hang that loop events iterator and flush when the loop ends or runs in debug mode, because handle.py _wake empties its waiter list and then wakes each waiter, so one raising strands the rest; C2 a before_model hook naming the model as a StrEnum member or a str subclass is recorded as the run model while the call is priced as the named one, against AC-45; C3 a tool name the model invents is exported as gen_ai.tool.name; C4 exceeding MAX_OPEN_RUNS exports empty spans; C5 a dropped RunStarted also loses one child span; C6 exporting a run twice duplicates or garbles its span tree; C7 a SystemExit raised in a span processor stops the worker without counting an error; C8 a CPU-heavy span processor stalls the event loop; C9 export(handle) with no running loop raises RuntimeError to the caller.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-15T15:26:23.293Z"
+    },
+    {
+      "id": "KNOWLEDGE-7fce6d49",
+      "title": "M14 round 2 review: approved with caveats R1 and R2 and five test gaps",
+      "text": "Fable 5.1 in a fresh session approved M14-timings-and-telemetry round 2 (the C1 and C2 fixes of DECISION-95a84cb0) at source hash f131773d, with caveats R1 and R2 and five test gaps, and reported every attack item and bullet as probed. The owner reran items 1 to 4 on the intact tree: the C2 fix consistent in 26 of 28 probe cases on both stores, as the reviewer found (a StrEnum member, str subclasses overriding __str__, __eq__, __len__ and __getitem__, and unstorable, whitespace, non-text and empty names), with event, result, runs row and wire payload agreeing; the C1 fix through the exporter 20 of 20; and a foreign-loop follow leaving results, events and stored rows identical on both stores 4 of 4. Nothing was left behind. During the review the reviewer stalled once and was resumed, reported completed while its own mutation run was still mutating a repo file (the owner waited for that process to exit and checked file hashes before resuming it), needed three gate runs (a gateway connection reset in a live test, then a unit gate made stale by .pytest_cache), and ran example 13 live once, adding a Jaeger trace and no database rows. R1: an events() iterator on another thread event loop can receive every event and never end, because handle.py _stream checks _ended and then appends its waiter without checking again; the owner saw it hang in 7 and 6 of 10 trials on Postgres with a debug-mode loop and 3 in 400 in memory; no run was affected, FR-48 keeps readers on the run loop, and the exporter follows on that loop. The round 2 _wake docstring and author issue B4 overstate that iterators on other loops are safe, and the test pinning it runs only in memory, where the timing hides the race. R2: a before_model hook that replaces model_settings with a MappingProxyType is recorded and priced as the run model while the client sends the model it names; model_settings is typed dict, and round 1 behaved the same. Test gaps where the code is correct: a str subclass overriding __str__ or __len__; the done check in _resolve; flush with several followed handles; and a stopped but unclosed run loop treated as running, which went undetected except as a 599 s suite instead of about 170 s.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-15T17:32:22.866Z"
     }
   ],
   "tasks": [
@@ -2412,7 +2468,7 @@
     {
       "id": "M14-timings-and-telemetry",
       "outcome": "Every model and tool call records its timings, and an optional OpenTelemetry exporter turns a run into a span tree without ever affecting the run",
-      "state": "active",
+      "state": "done",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -2433,22 +2489,37 @@
           "id": "unit",
           "command": ".venv\\Scripts\\python.exe -m pytest tests/test_telemetry.py -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M14-timings-and-telemetry-unit.json",
+            "source_hash": "f131773d43351f2348f546e05a4eab9d72e55827e02dee04fabe615f2d8290d3",
+            "hash": "995a6e758c46286f8f91b8cf2f1a7a6a85d50e1bf41099175cd286e1fd0498b9",
+            "observed_at": "2026-09-15T17:14:30.909Z"
+          }
         },
         {
           "id": "regression",
           "command": ".venv\\Scripts\\python.exe -m pytest -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M14-timings-and-telemetry-regression.json",
+            "source_hash": "f131773d43351f2348f546e05a4eab9d72e55827e02dee04fabe615f2d8290d3",
+            "hash": "67ee1071b4942767eecc81acd801dd3d2beadcd29958cde05e77696eb6983d6a",
+            "observed_at": "2026-09-15T17:18:04.165Z"
+          }
         },
         {
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Claude Fable 5.1 (independent L4 reviewer, M14 round 2, fresh session)",
+            "reason": "Round 2 change verified. C2 fix sound on both stores for a StrEnum member, str subclasses overriding str, eq, len and getitem, unstorable, whitespace, non-text and empty names: ModelCalled.model, its cost_usd, RunResult.cost_usd, the runs row and the OpenAI-compatible wire payload agree, an unstorable name records None and is unpriced, non-text and empty fall back to the run model as B3 declares. C1 fix sound: export(handle) from another thread loop with debug on and off, that loop ending before, during and after the run, from no loop at all, 40 handles at once, closed and stopped run loops, follow cancellation before and after its first step, flush and shutdown timeouts; B5 and B6 behave as declared. FR-49 and FR-50 unchanged on the run loop on both backends, and a foreign-loop follower changes no status, result, event or stored row. Gates rerun: unit 89, regression 1199, both at hash f131773d; one earlier regression run failed on a transient gateway connection reset in the live golden eval, unrelated to the change. Mutants: all 10 author round 2 mutants killed; of 10 own mutants 3 killed, 2 equivalent, 5 survived the full suite as gate blind spots where the code is correct (a str subclass overriding str or len, the _resolve done check, flush with several followed handles, a stopped unclosed run loop treated as running which makes the suite wait 599 s but stay green). Caveat R1, pre-existing M12 race, not a blocker: a callers own events() iterator on another thread loop can hang after receiving every event when the run loop final wake lands between _stream reading _ended and appending its waiter, since _waiters has no lock; seen on Postgres with a debug-mode foreign loop 4 and 5 of 10 trials and once in 400 on memory. The run, its run-loop iterators and the exporter, which now follows on the run loop, are unaffected in every probe, and FR-48 keeps readers outside the contract, but the round 2 _wake docstring and B4 overclaim cross-loop reader support and the new foreign-iterator test covers only the memory store. Caveat R2, pre-existing, not a blocker: a hook replacing model_settings with a non-dict Mapping is ignored by sent_model, which then records and prices the run model while the client sends the mapping model; the field is typed dict and round 1 behaved the same.",
+            "source_hash": "f131773d43351f2348f546e05a4eab9d72e55827e02dee04fabe615f2d8290d3",
+            "observed_at": "2026-09-15T17:18:58.312Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
@@ -2457,12 +2528,12 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-14T07:21:30.024Z",
-      "updated_at": "2026-09-14T07:21:30.024Z"
+      "updated_at": "2026-09-15T17:32:23.141Z"
     },
     {
       "id": "M15-adr12-comparison",
       "outcome": "The first ADR-12 comparison measures this SDK against the raw Claude Agent SDK on 12 file tasks with the same model and gateway, and records what it found",
-      "state": "queued",
+      "state": "active",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -2995,6 +3066,24 @@
       "task": "M13-artifacts",
       "human": "Claude Sonnet 5 (independent L4 reviewer, M13 round 1, fresh session)",
       "reason": "Re-derived FR-53..FR-56, NFR-16, AC-42, AC-44 from SPEC.md. Read the full diff against e366ded and the new files. Ran the full suite twice (once as-is, once after the live examples) at 1110 passed each time, matching the gate evidence source hash 883c13df with no staleness. Ran genesis gate, both gates pass, KICKOFF gates line reads unit pass regression pass independent-review pending before this call. Probed beyond the authors own tests using probe tenant SYN-m13r1 and throwaway schema m13r1: a memoryview of non-bytes format and a non-contiguous memoryview both measure and store correctly; the in-memory admission callable is refused unless it returns exactly True, truthy non-bool values are rejected; a cancellation landing while the Postgres insert itself raises ValueError still surfaces CancelledError with no row left; asyncio.timeout around a held-checkout put converts to TimeoutError and still leaves zero rows, the shielded write completing and then being rolled back by the put cleanup; deleting a run an artifact still names is refused by the foreign key as the migration comment promises; expires_at with a non-UTC aware offset is accepted identically on both stores; content_hash tampering is caught by get as ArtifactIntegrityError while size tampering is a declared, not a blocking, gap since get checks only the hash. Independently reapplied migration 0006 in a throwaway schema at 0005 holding a real run row: idempotent, correct NOT NULL and tenant_id project_id leading index, run row undisturbed, schema dropped. Ran both examples offline and live from outside the repository; all checks passed. Confirmed the provenance check moved to primitives.checked_provenance is byte-for-byte the same logic the executor used, with M10s provenance tests unchanged in the full suite. Store counts returned to the stated baseline exactly after cleanup: artifacts 0, runs 10333, messages 54911, run_events 65049, execution_manifests 10311, model_registry 0, schema_migrations 5, 0 runs running, no non-public schemas left. No blocking defect found; G9 (text cursor mutant survives) and the size-tamper gap are correctly declared, not findings.",
+      "revision": null
+    },
+    {
+      "id": "ec35a405-215a-45df-92f4-6fed1fb55779",
+      "at": "2026-09-15T14:46:29.205Z",
+      "action": "approve",
+      "task": "M14-timings-and-telemetry",
+      "human": "Claude Opus 5 (independent L4 reviewer, M14 round 1, fresh session)",
+      "reason": "Approved with caveats. Gates run fresh by the reviewer: unit 78 passed in 19.15s, regression 1188 passed in 154.21s, both at source hash 6ce35a78. All nine attack items probed with scripts in the m14r1-probes scratchpad folder. A blocking, raising, stalling or full telemetry path never stalled the loop beyond the no-exporter baseline and left status, result, events and stored rows identical on both stores under 11 setups, the 5 of AC-47 plus 6 more. No marker or credential reached any span text or the OTLP bytes for completed, failed, model-error, max_tokens and cancelled runs. Every FR-57 timing matched its definition on both stores, and duration never included the slot wait. 25 scenarios matched HEAD 22d71c6 apart from the FR-57 fields. NFR-19 holds. Example 13 passed offline from outside the repo and live against Jaeger, and the README SQL and snippet work. Caveats: C1 export of a RunHandle from another thread whose loop ends, or runs in debug mode, hangs every other events iterator of that run and flush never completes. C2 a before_model hook naming the model as a str subclass or StrEnum records the run model while the call is sent and priced as the other model, and an unstorable name records the run model with cost None. C3 a model-authored unknown tool name and call id are exported. C4 MAX_OPEN_RUNS eviction later exports childless invoke_agent spans without attributes, and a late terminal event evicts another open run. C5 a dropped RunStarted silently drops the first child span. C6 exporting one run twice, or as handle and result, duplicates or malforms its tree. C7 a BaseException in a span processor kills the worker with errors still 0. C8 a CPU-bound span processor causes loop stalls of 60 ms through the GIL. C9 exporting a RunHandle with no running loop raises RuntimeError to the caller.",
+      "revision": null
+    },
+    {
+      "id": "36c2c815-fa73-4a21-ba33-2e7955f14bbd",
+      "at": "2026-09-15T17:18:58.312Z",
+      "action": "approve",
+      "task": "M14-timings-and-telemetry",
+      "human": "Claude Fable 5.1 (independent L4 reviewer, M14 round 2, fresh session)",
+      "reason": "Round 2 change verified. C2 fix sound on both stores for a StrEnum member, str subclasses overriding str, eq, len and getitem, unstorable, whitespace, non-text and empty names: ModelCalled.model, its cost_usd, RunResult.cost_usd, the runs row and the OpenAI-compatible wire payload agree, an unstorable name records None and is unpriced, non-text and empty fall back to the run model as B3 declares. C1 fix sound: export(handle) from another thread loop with debug on and off, that loop ending before, during and after the run, from no loop at all, 40 handles at once, closed and stopped run loops, follow cancellation before and after its first step, flush and shutdown timeouts; B5 and B6 behave as declared. FR-49 and FR-50 unchanged on the run loop on both backends, and a foreign-loop follower changes no status, result, event or stored row. Gates rerun: unit 89, regression 1199, both at hash f131773d; one earlier regression run failed on a transient gateway connection reset in the live golden eval, unrelated to the change. Mutants: all 10 author round 2 mutants killed; of 10 own mutants 3 killed, 2 equivalent, 5 survived the full suite as gate blind spots where the code is correct (a str subclass overriding str or len, the _resolve done check, flush with several followed handles, a stopped unclosed run loop treated as running which makes the suite wait 599 s but stay green). Caveat R1, pre-existing M12 race, not a blocker: a callers own events() iterator on another thread loop can hang after receiving every event when the run loop final wake lands between _stream reading _ended and appending its waiter, since _waiters has no lock; seen on Postgres with a debug-mode foreign loop 4 and 5 of 10 trials and once in 400 on memory. The run, its run-loop iterators and the exporter, which now follows on the run loop, are unaffected in every probe, and FR-48 keeps readers outside the contract, but the round 2 _wake docstring and B4 overclaim cross-loop reader support and the new foreign-iterator test covers only the memory store. Caveat R2, pre-existing, not a blocker: a hook replacing model_settings with a non-dict Mapping is ignored by sent_model, which then records and prices the run model while the client sends the mapping model; the field is typed dict and round 1 behaved the same.",
       "revision": null
     }
   ],

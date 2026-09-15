@@ -3,3 +3,8 @@
 #   python -m pip install -r scripts/requirements.txt
 #
 mcp==2.2.0     # 06_mcp_tools.py: MCP client and a demo server (the mcp 2.x API)
+
+# 13_telemetry.py: a run's spans, in memory offline and over OTLP/HTTP live
+opentelemetry-api==1.44.0
+opentelemetry-sdk==1.44.0
+opentelemetry-exporter-otlp-proto-http==1.44.0

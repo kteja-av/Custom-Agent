@@ -41,7 +41,9 @@ from .identity import PrincipalContext
 from .model import ModelClient, ModelRequest, ModelResponse, StopReason, Usage
 from .outcomes import Completed, Failed, ToolExecutionOutcome
 from .primitives import Message, Role, ToolCall, ToolResult
+from .primitives import unstorable_reason
 from .registry import add_costs
+from .timings import elapsed_ms, now_ns, wall_clock
 from .tools import ToolRegistry
 
 # FR-26. A response that stopped for one of these reasons is not the answer the
@@ -121,6 +123,9 @@ class AgentLoop:
         tool_slot: Callable[[str], Any] | None = None,
         model_slot: Callable[[], Any] | None = None,
         control: RunControl | None = None,
+        provider: str | None = None,
+        provider_name: str | None = None,
+        recorded_model: str | None = None,
     ) -> None:
         self._model = model_client
         self._sessions = session_store
@@ -138,6 +143,11 @@ class AgentLoop:
         # provider slot (FR-46). A loop built without them limits nothing.
         self._tool_slot = tool_slot
         self._model_slot = model_slot if model_slot is not None else nullcontext
+        # What every ModelCalled names (FR-57): the model client's key, the provider name
+        # the client declares, and the run's recorded model for a request naming none.
+        self._provider = provider
+        self._provider_name = provider_name
+        self._recorded_model = recorded_model
         # The run's cancellation state and progress (FR-50). A loop built without
         # one is never cancelled.
         self._control = control if control is not None else RunControl()
@@ -200,13 +210,19 @@ class AgentLoop:
                 # FR-46: the wait for a provider slot is outside send, so it is
                 # no part of the client's own timeout, and the slot is held
                 # through the retries the client makes inside send (FR-15).
+                # FR-57: the wait for the slot, then when send was entered and how long
+                # it took, retries inside the client included.
+                waiting = now_ns()
                 async with self._model_slot():
+                    queued_ms = elapsed_ms(waiting)
                     sending = True
                     control.in_flight = True
+                    started_at, sent = wall_clock(), now_ns()
                     try:
                         response = await self._model.send(request)
                     finally:
                         control.in_flight = False
+                    duration_ms = elapsed_ms(sent)
             except ModelError as exc:
                 # The client's own retries are exhausted, or the error is not
                 # transient. The run fails; it does not raise past Runner.
@@ -241,6 +257,12 @@ class AgentLoop:
                     # A string: JSON has no decimal, and a float would drift.
                     "cost_usd": None if call_cost is None else str(call_cost),
                     "provider_response_id": response.provider_response_id,
+                    "started_at": started_at,
+                    "duration_ms": duration_ms,
+                    "queued_ms": queued_ms,
+                    "model": _recordable(sent_model(request, self._recorded_model)),
+                    "provider": self._provider,
+                    "provider_name": self._provider_name,
                 },
             )
 
@@ -398,6 +420,31 @@ class AgentLoop:
     # ModelRateLimited are classified in the first place and where FR-15's
     # numbers live. A client that chooses not to retry is making a policy
     # decision the loop must not silently override.
+
+
+def sent_model(request: ModelRequest, recorded: str | None) -> str | None:
+    """The model a request was sent with (FR-57, FR-30): the text model_settings names, which a
+    before_model hook may have changed, or else the run's recorded model (FR-32).
+
+    One function decides it for ModelCalled.model and for the call's price alike, so the two
+    cannot name different models. Before round 2 the event accepted only an exact str while
+    the price accepted any, and a StrEnum member was recorded as the run's model but priced as
+    the one it named (M14 review round 1, C2). A str subclass is the text it holds, as a client
+    sends it on the wire; a value that is not non-empty text names no model.
+    """
+    settings = getattr(request, "model_settings", None)
+    named = settings.get("model") if isinstance(settings, dict) else None
+    if isinstance(named, str):
+        text = named if type(named) is str else str.__getitem__(named, slice(None))
+        if text:
+            return text
+    return recorded
+
+
+def _recordable(model: str | None) -> str | None:
+    """A model name as ModelCalled records it: one no column can hold is unknown, never
+    replaced by another model's name."""
+    return model if model is None or unstorable_reason(model) is None else None
 
 
 def _results(outcomes: dict[int, ToolExecutionOutcome], count: int) -> list[ToolResult]:

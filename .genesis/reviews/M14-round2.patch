@@ -1,0 +1,196 @@
+--- a/agentsdk/loop.py (round 1, source hash 6ce35a78)
++++ b/agentsdk/loop.py (round 2)
+@@ -260,7 +260,7 @@
+                     "started_at": started_at,
+                     "duration_ms": duration_ms,
+                     "queued_ms": queued_ms,
+-                    "model": _sent_model(request, self._recorded_model),
++                    "model": _recordable(sent_model(request, self._recorded_model)),
+                     "provider": self._provider,
+                     "provider_name": self._provider_name,
+                 },
+@@ -422,15 +422,29 @@
+     # decision the loop must not silently override.
+ 
+ 
+-def _sent_model(request: ModelRequest, recorded: str | None) -> str | None:
+-    """The model a request was sent with (FR-57): the one it names, which a before_model
+-    hook may have changed, or else the run's recorded model (FR-32), as FR-30 prices it.
+-    A named model no store could hold is not recorded as the model."""
++def sent_model(request: ModelRequest, recorded: str | None) -> str | None:
++    """The model a request was sent with (FR-57, FR-30): the text model_settings names, which a
++    before_model hook may have changed, or else the run's recorded model (FR-32).
++
++    One function decides it for ModelCalled.model and for the call's price alike, so the two
++    cannot name different models. Before round 2 the event accepted only an exact str while
++    the price accepted any, and a StrEnum member was recorded as the run's model but priced as
++    the one it named (M14 review round 1, C2). A str subclass is the text it holds, as a client
++    sends it on the wire; a value that is not non-empty text names no model.
++    """
+     settings = getattr(request, "model_settings", None)
+-    sent = settings.get("model") if isinstance(settings, dict) else None
+-    if type(sent) is str and sent and unstorable_reason(sent) is None:
+-        return sent
++    named = settings.get("model") if isinstance(settings, dict) else None
++    if isinstance(named, str):
++        text = named if type(named) is str else str.__getitem__(named, slice(None))
++        if text:
++            return text
+     return recorded
++
++
++def _recordable(model: str | None) -> str | None:
++    """A model name as ModelCalled records it: one no column can hold is unknown, never
++    replaced by another model's name."""
++    return model if model is None or unstorable_reason(model) is None else None
+ 
+ 
+ def _results(outcomes: dict[int, ToolExecutionOutcome], count: int) -> list[ToolResult]:
+--- a/agentsdk/api.py (round 1, source hash 6ce35a78)
++++ b/agentsdk/api.py (round 2)
+@@ -29,7 +29,7 @@
+ from .handle import PublishingSink, RunControl, RunHandle, RunState
+ from .hooks import RuntimeHook
+ from .identity import PrincipalContext
+-from .loop import AgentLoop, RunMeter
++from .loop import AgentLoop, RunMeter, sent_model
+ from .manifest import build_manifest
+ from .model import ModelClient, ModelRequest, ReasoningEffort, Usage
+ from .permissions import AllowlistPermissionChecker, PermissionChecker
+@@ -643,10 +643,9 @@
+ 
+         def cost_of(request: ModelRequest, usage: Usage) -> Decimal | None:
+             # Priced by the model the request was actually sent with, which a
+-            # before_model hook may have changed (FR-30).
+-            settings = getattr(request, "model_settings", None)
+-            sent = settings.get("model") if isinstance(settings, dict) else None
+-            return self._cost(sent if isinstance(sent, str) and sent else recorded_model, usage)
++            # before_model hook may have changed (FR-30): decided by the same function
++            # that names it in ModelCalled (FR-57; M14 review round 1, C2).
++            return self._cost(sent_model(request, recorded_model), usage)
+ 
+         loop = AgentLoop(
+             model_client=self._clients[client_key],
+--- a/agentsdk/handle.py (round 1, source hash 6ce35a78)
++++ b/agentsdk/handle.py (round 2)
+@@ -246,7 +246,33 @@
+         self._wake()
+ 
+     def _wake(self) -> None:
++        """Wake every iterator waiting for the next event.
++
++        Called on the run's own loop. An iterator can be waiting on another loop -- FR-48 keeps
++        a run on one loop, not its readers -- so each waiter is resolved on the loop it belongs
++        to, and one whose loop has closed is skipped. Before round 2 a waiter that could not be
++        resolved raised out of this loop and stranded every waiter after it (M14 review round
++        1, C1).
++        """
+         waiters, self._waiters = self._waiters, []
++        try:
++            here = asyncio.get_running_loop()
++        except RuntimeError:
++            here = None
+         for waiter in waiters:
+-            if not waiter.done():
+-                waiter.set_result(None)
++            try:
++                if waiter.done():
++                    continue
++                owner = waiter.get_loop()
++                if owner is here:
++                    waiter.set_result(None)
++                else:
++                    owner.call_soon_threadsafe(_resolve, waiter)
++            except Exception:  # noqa: BLE001 - its loop has closed: no one is left to wake
++                continue
++
++
++def _resolve(waiter: asyncio.Future[None]) -> None:
++    """Resolve a waiter on its own loop, unless it was cancelled meanwhile."""
++    if not waiter.done():
++        waiter.set_result(None)
+--- a/agentsdk/telemetry.py (round 1, source hash 6ce35a78)
++++ b/agentsdk/telemetry.py (round 2)
+@@ -104,18 +104,15 @@
+     def export(self, run: Any) -> None:
+         """Hand a run to the exporter and return at once.
+ 
+-        A finished RunResult's events are queued now. A RunHandle's are followed from the
+-        running event loop as the run records them, by a task that only queues them.
++        A finished RunResult's events are queued now. A RunHandle's are followed as the run
++        records them, by a task on the run's own event loop that only queues them, whichever
++        thread or loop export is called from.
+         """
+         from .api import RunResult
+         from .handle import RunHandle
+ 
+         if isinstance(run, RunHandle):
+-            task = asyncio.get_running_loop().create_task(self._follow(run))
+-            with self._state:
+-                self._following += 1
+-            self._feeds.add(task)
+-            task.add_done_callback(self._feeds.discard)
++            self._follow_on_run_loop(run)
+             return
+         if isinstance(run, RunResult):
+             for event in run.events:
+@@ -146,16 +143,54 @@
+         self._worker.join(remaining)
+         return flushed and not self._worker.is_alive()
+ 
++    def _follow_on_run_loop(self, handle: Any) -> None:
++        """Follow a handle's events on the loop its run belongs to (FR-48).
++
++        Before round 2 the follow task ran on the caller's loop. A waiter of another loop could
++        then be stranded, and a loop that ended first took the task, and flush, with it (M14
++        review round 1, C1). A run whose loop is no longer running has ended, or cannot
++        progress: the events it recorded are queued at once.
++        """
++        run_loop = handle._control.loop
++        try:
++            here = asyncio.get_running_loop()
++        except RuntimeError:
++            here = None
++        with self._state:
++            self._following += 1
++        if run_loop is not None and run_loop is here:
++            task = here.create_task(self._follow(handle))
++            self._feeds.add(task)
++            task.add_done_callback(self._feeds.discard)
++            task.add_done_callback(self._followed)
++            return
++        if run_loop is not None and run_loop.is_running() and not run_loop.is_closed():
++            follow = self._follow(handle)
++            try:
++                asyncio.run_coroutine_threadsafe(follow, run_loop).add_done_callback(self._followed)
++                return
++            except RuntimeError:  # the loop closed in between
++                follow.close()
++        try:
++            for _, event in sorted(handle._events.items()):
++                self._offer(event)
++        finally:
++            self._followed(None)
++
+     async def _follow(self, handle: Any) -> None:
+         try:
+             async for event in handle.events():
+                 self._offer(event)
+-        except Exception:  # noqa: BLE001 - FR-60: counted, never raised into the caller's loop
++        except Exception:  # noqa: BLE001 - FR-60: counted, never raised into the run's loop
+             self._count_error()
+-        finally:
+-            with self._state:
+-                self._following -= 1
+-                self._state.notify_all()
++
++    def _followed(self, _: Any) -> None:
++        """A follow has ended, however it ended: finished, cancelled, or never started. Counted
++        here rather than in _follow, whose finally a follow cancelled before its first step
++        never reaches."""
++        with self._state:
++            self._following -= 1
++            self._state.notify_all()
+ 
+     def _offer(self, event: Any) -> None:
+         with self._state:
