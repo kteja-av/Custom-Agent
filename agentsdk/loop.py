@@ -1,4 +1,4 @@
-"""The agent loop (FR-1, FR-14, FR-26, FR-44, LLD 3.10).
+"""The agent loop (FR-1, FR-14, FR-26, FR-44, FR-50, LLD 3.10).
 
 send -> check tool calls -> execute -> append -> repeat, until the model stops
 asking for tools or max_turns is reached.
@@ -14,6 +14,11 @@ And one thing it does that it once did not: a response that hit the
 output-token limit, or was stopped by a content filter, ends the run failed
 (FR-26). Reporting it as completed passed half an answer off as a whole one,
 and ran tool calls whose argument lists may have been cut off.
+
+Since M12 the loop can be cancelled (FR-50). It checks before every model call
+and every tool call whether its run has been asked to stop, lets a store write
+already started finish, and pairs every tool call of a response it had begun to
+execute with a result before the cancellation continues.
 """
 
 from __future__ import annotations
@@ -30,6 +35,7 @@ from .context import ContextAssembler
 from .errors import ModelError, describe_exception
 from .events import EventSink, EventType
 from .executor import PreparedCall, ToolExecutor
+from .handle import RunControl
 from .hooks import HookAction, RuntimeHook
 from .identity import PrincipalContext
 from .model import ModelClient, ModelRequest, ModelResponse, StopReason, Usage
@@ -114,6 +120,7 @@ class AgentLoop:
         meter: RunMeter | None = None,
         tool_slot: Callable[[str], Any] | None = None,
         model_slot: Callable[[], Any] | None = None,
+        control: RunControl | None = None,
     ) -> None:
         self._model = model_client
         self._sessions = session_store
@@ -131,6 +138,9 @@ class AgentLoop:
         # provider slot (FR-46). A loop built without them limits nothing.
         self._tool_slot = tool_slot
         self._model_slot = model_slot if model_slot is not None else nullcontext
+        # The run's cancellation state and progress (FR-50). A loop built without
+        # one is never cancelled.
+        self._control = control if control is not None else RunControl()
 
     async def run(
         self,
@@ -156,13 +166,19 @@ class AgentLoop:
         # without the offload. That did not reproduce (median 16 ms), and the
         # tests that actually guard this are not timed -- see
         # test_no_store_call_runs_on_the_event_loop_thread_on_any_run_path.
+        #
+        # Since M12 every store call goes through control.store, which is that
+        # same worker thread, shielded so a cancellation cannot drop a write
+        # already started (FR-50).
         meter = self._meter if self._meter is not None else RunMeter()
-        await asyncio.to_thread(
-            self._sessions.append, run_id, Message(role=Role.USER, content=task)
-        )
+        control = self._control
+        store = control.store
+        await store(self._sessions.append, run_id, Message(role=Role.USER, content=task))
 
         for turn in range(1, max_turns + 1):
-            history = await asyncio.to_thread(self._sessions.history, run_id)
+            control.turns = turn
+            control.checkpoint()
+            history = await store(self._sessions.history, run_id)
             request = self._assembler.build(
                 history,
                 self._registry.schemas(),
@@ -176,16 +192,32 @@ class AgentLoop:
             if before.action is HookAction.MODIFY and before.replacement is not None:
                 request = before.replacement
 
+            # FR-50: no model call starts once the run has been asked to stop, even
+            # when the hook above is what asked.
+            control.checkpoint()
+            sending = False
             try:
                 # FR-46: the wait for a provider slot is outside send, so it is
                 # no part of the client's own timeout, and the slot is held
                 # through the retries the client makes inside send (FR-15).
                 async with self._model_slot():
-                    response = await self._model.send(request)
+                    sending = True
+                    control.in_flight = True
+                    try:
+                        response = await self._model.send(request)
+                    finally:
+                        control.in_flight = False
             except ModelError as exc:
                 # The client's own retries are exhausted, or the error is not
                 # transient. The run fails; it does not raise past Runner.
                 return _outcome(meter, None, turn, error=describe_exception(exc))
+            except asyncio.CancelledError:
+                # P2-D7: a call cancelled after entering send may already be
+                # billed and reports no usage, so the run's cost becomes unknown.
+                # One cancelled while waiting for its provider slot was never sent.
+                if sending:
+                    control.cancelled_in_flight = True
+                raise
 
             # The provider has billed this call, whatever happens next. So the
             # account is recorded first and the event second, both before any
@@ -194,7 +226,7 @@ class AgentLoop:
             spent = response.usage
             call_cost = self._price(request, spent)
             meter.record(spent, call_cost)
-            await asyncio.to_thread(
+            await store(
                 self._events.emit,
                 EventType.MODEL_CALLED,
                 {
@@ -218,7 +250,7 @@ class AgentLoop:
             if after.action is HookAction.MODIFY and after.replacement is not None:
                 response = after.replacement
 
-            await asyncio.to_thread(self._sessions.append, run_id, response.message)
+            await store(self._sessions.append, run_id, response.message)
 
             unfinished = _UNFINISHED.get(response.stop_reason)
             if unfinished is not None:
@@ -229,8 +261,11 @@ class AgentLoop:
             if not response.tool_calls:
                 return _outcome(meter, response.message.content, turn)
 
-            results = await self._execute_tool_calls(response.tool_calls, principal_context)
-            await asyncio.to_thread(
+            # FR-50: none of this response's calls starts once the run has been
+            # asked to stop. They were not begun, so they get no results.
+            control.checkpoint()
+            results = await self._execute_tool_calls(run_id, response.tool_calls, principal_context)
+            await store(
                 self._sessions.append,
                 run_id,
                 Message(role=Role.TOOL, tool_results=tuple(results)),
@@ -239,22 +274,37 @@ class AgentLoop:
         return _outcome(meter, None, max_turns, exhausted_turns=True)
 
     async def _execute_tool_calls(
-        self, tool_calls: Sequence[ToolCall], principal_context: PrincipalContext | None
+        self, run_id: str, tool_calls: Sequence[ToolCall], principal_context: PrincipalContext | None
     ) -> list[ToolResult]:
-        """One response's calls, batch by batch, with results in issue order (FR-44)."""
-        results = []
-        for batch in self._batches(tool_calls):
-            for outcome in await self._run_batch(batch, principal_context):
-                if isinstance(outcome, (Completed, Failed)):
-                    results.append(outcome.result)
-                else:  # pragma: no cover - unreachable until Phase 4
-                    raise AssertionError(
-                        f"Phase 0 ToolExecutor returned {type(outcome).__name__}; "
-                        "only Completed and Failed are reachable"
-                    )
-        return results
+        """One response's calls, batch by batch, with results in issue order (FR-44).
 
-    def _batches(self, tool_calls: Sequence[ToolCall]) -> list[list[ToolCall]]:
+        If the run is cancelled, or a call raises CancelledError, while these calls
+        execute, every call of the response is still paired with a result before
+        the cancellation continues (FR-50): an unfinished or unstarted call gets a
+        ToolCancelled result and its ToolCalled event, and the tool message is
+        appended, so the recorded conversation stays well formed.
+        """
+        outcomes: dict[int, ToolExecutionOutcome] = {}
+        prepared: dict[int, PreparedCall] = {}
+        try:
+            for batch in self._batches(list(enumerate(tool_calls))):
+                await self._run_batch(batch, principal_context, outcomes, prepared)
+        except asyncio.CancelledError:
+            try:
+                for index, call in enumerate(tool_calls):
+                    if index not in outcomes:
+                        outcomes[index] = await self._executor.cancelled(prepared.get(index, call))
+                await self._control.store(
+                    self._sessions.append,
+                    run_id,
+                    Message(role=Role.TOOL, tool_results=tuple(_results(outcomes, len(tool_calls)))),
+                )
+            except Exception:  # noqa: BLE001 - the cancellation, not a store failure, decides how the run ends
+                pass
+            raise
+        return _results(outcomes, len(tool_calls))
+
+    def _batches(self, calls: Sequence[tuple[int, ToolCall]]) -> list[list[tuple[int, ToolCall]]]:
         """Consecutive batches, in the order the model issued the calls (FR-44).
 
         A call to a registered tool that declares concurrency_safe joins the
@@ -262,16 +312,16 @@ class AgentLoop:
         tool, is a batch of its own. So a response whose tools declare nothing
         runs exactly as it did before M11: one call at a time, in order.
         """
-        batches: list[list[ToolCall]] = []
-        current: list[ToolCall] = []
-        for call in tool_calls:
-            if self._is_concurrency_safe(call):
-                current.append(call)
+        batches: list[list[tuple[int, ToolCall]]] = []
+        current: list[tuple[int, ToolCall]] = []
+        for item in calls:
+            if self._is_concurrency_safe(item[1]):
+                current.append(item)
                 continue
             if current:
                 batches.append(current)
                 current = []
-            batches.append([call])
+            batches.append([item])
         if current:
             batches.append(current)
         return batches
@@ -285,31 +335,47 @@ class AgentLoop:
             return False
 
     async def _run_batch(
-        self, batch: list[ToolCall], principal_context: PrincipalContext | None
-    ) -> list[ToolExecutionOutcome]:
+        self,
+        batch: list[tuple[int, ToolCall]],
+        principal_context: PrincipalContext | None,
+        outcomes: dict[int, ToolExecutionOutcome],
+        prepared: dict[int, PreparedCall],
+    ) -> None:
         """Every call's steps 1 to 5 in issue order on this thread, then steps 6 to
-        9 concurrently under the run's slots (FR-44).
+        9 concurrently under the run's slots (FR-44), filling `outcomes` by index.
 
         Each call yields its own outcome through the executor's total boundary,
         so one failing changes no other. A BaseException escaping a call, or the
         cancellation of this batch, cancels the other calls and waits for them:
-        none is left running behind a run that has moved on.
+        none is left running behind a run that has moved on. The outcomes of calls
+        that finished are kept, so a cancelled batch pairs only the rest.
         """
-        prepared = [await self._executor.prepare(call, principal_context) for call in batch]
-        outcomes: list[Any] = list(prepared)
-        ready = [index for index, item in enumerate(prepared) if isinstance(item, PreparedCall)]
+        control = self._control
+        for index, call in batch:
+            control.checkpoint()
+            item = await self._executor.prepare(call, principal_context)
+            if isinstance(item, PreparedCall):
+                prepared[index] = item
+            else:
+                outcomes[index] = item
+        ready = [index for index, _ in batch if index in prepared]
+        # A cancellation that arrived while a failure above was being recorded
+        # stops the batch here, before any of its calls reaches step 6.
+        control.checkpoint()
         if len(ready) == 1:
             index = ready[0]
             outcomes[index] = await self._executor.run_prepared(prepared[index], self._tool_slot)
-        elif ready:
-            tasks = {
-                index: asyncio.ensure_future(self._executor.run_prepared(prepared[index], self._tool_slot))
-                for index in ready
-            }
+            return
+        tasks = {
+            index: asyncio.ensure_future(self._executor.run_prepared(prepared[index], self._tool_slot))
+            for index in ready
+        }
+        try:
             await _wait_all_or_cancel(list(tasks.values()))
+        finally:
             for index, task in tasks.items():
-                outcomes[index] = task.result()
-        return outcomes
+                if task.done() and not task.cancelled() and task.exception() is None:
+                    outcomes[index] = task.result()
 
     def _price(self, request: ModelRequest, usage: Usage) -> Decimal | None:
         """One call's cost, or None. The pricer is the caller's, so it is
@@ -332,6 +398,20 @@ class AgentLoop:
     # ModelRateLimited are classified in the first place and where FR-15's
     # numbers live. A client that chooses not to retry is making a policy
     # decision the loop must not silently override.
+
+
+def _results(outcomes: dict[int, ToolExecutionOutcome], count: int) -> list[ToolResult]:
+    results = []
+    for index in range(count):
+        outcome = outcomes[index]
+        if isinstance(outcome, (Completed, Failed)):
+            results.append(outcome.result)
+        else:  # pragma: no cover - unreachable until Phase 4
+            raise AssertionError(
+                f"Phase 0 ToolExecutor returned {type(outcome).__name__}; "
+                "only Completed and Failed are reachable"
+            )
+    return results
 
 
 async def _wait_all_or_cancel(tasks: list[asyncio.Future[Any]]) -> None:

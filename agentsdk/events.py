@@ -11,6 +11,7 @@ Phase 6's execution attempts add values, not columns.
 
 from __future__ import annotations
 
+import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -28,6 +29,8 @@ class EventType(str, Enum):
     TOOL_CALLED = "ToolCalled"
     RUN_COMPLETED = "RunCompleted"
     RUN_FAILED = "RunFailed"
+    # FR-52 (M12): a cancelled run's last event, carrying the reason.
+    RUN_CANCELLED = "RunCancelled"
 
 
 @dataclass(frozen=True)
@@ -71,21 +74,28 @@ class InMemoryEventSink:
         self._project_id = project_id
         self._run_id = run_id
         self._events: list[RunEvent] = []
+        # FR-52. Emits arrive on worker threads, and numbering is a read of the
+        # length followed by an append: with the thread switch interval at a
+        # microsecond, 8 threads produced about 600 duplicate numbers per 1600
+        # events before this lock (KNOWLEDGE-93fa7f44).
+        self._lock = threading.Lock()
 
     def emit(
         self, event_type: EventType, payload: dict[str, Any] | None = None, **identifiers: Any
     ) -> RunEvent:
-        event = RunEvent(
-            event_type=event_type,
-            tenant_id=self._tenant_id,
-            project_id=self._project_id,
-            run_id=self._run_id,
-            sequence_no=len(self._events) + 1,
-            payload=payload or {},
-            **identifiers,
-        )
-        self._events.append(event)
+        with self._lock:
+            event = RunEvent(
+                event_type=event_type,
+                tenant_id=self._tenant_id,
+                project_id=self._project_id,
+                run_id=self._run_id,
+                sequence_no=len(self._events) + 1,
+                payload=payload or {},
+                **identifiers,
+            )
+            self._events.append(event)
         return event
 
     def events(self) -> tuple[RunEvent, ...]:
-        return tuple(self._events)
+        with self._lock:
+            return tuple(self._events)

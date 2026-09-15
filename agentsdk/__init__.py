@@ -6,6 +6,7 @@ the public surface is AgentSpec / RunConfig / Runner / RunResult (NFR-5).
 """
 
 from .api import AgentSpec, RunConfig, Runner, RunResult, RunStatus
+from .handle import RunHandle, RunState
 from .model import ReasoningEffort
 from .persistence import Persistence
 from .scheduler import SchedulerLimits
@@ -23,6 +24,7 @@ from .errors import (
     ModelTimeout,
     ReplanLimitExceeded,
     ToolApprovalRequired,
+    ToolCancelled,
     ToolError,
     ToolExecutionError,
     ToolNotFound,
@@ -58,6 +60,10 @@ __all__ = [
     # the one place every real caller has to go.
     "Persistence",
     "RunStatus",
+    # What Runner.start returns, and its snapshot (FR-48, FR-49): driving a run
+    # that way needs them, so they belong beside Runner.
+    "RunHandle",
+    "RunState",
     # A field of AgentSpec and RunConfig (FR-28), so it belongs beside them.
     "ReasoningEffort",
     # An argument of Runner and a field of RunConfig (FR-43), for the same reason.
@@ -84,6 +90,7 @@ __all__ = [
     "ToolApprovalRequired",
     "ToolTimeout",
     "ToolExecutionError",
+    "ToolCancelled",
     "WorkflowError",
     "BudgetExceeded",
     "MaxTurnsExceeded",

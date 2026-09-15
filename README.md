@@ -7,7 +7,7 @@ persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
 > a store-hardening milestone for Phase 2 are complete, each approved by an
-> independent review; the suite has 925 tests. It is not on PyPI yet, and a lot is
+> independent review; the suite has 985 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -58,6 +58,17 @@ persisted so you can reconstruct exactly what happened afterwards.
   them, and a tool that declares nothing still runs one call at a time. The
   file tools have their own thread pool, so a burst of searches cannot hold up
   database calls.
+- **Lets you watch and stop a run while it works.** `Runner.start()` returns a
+  `RunHandle` at once: iterate `handle.events()` to receive every event as it
+  is recorded, in order, read progress with `handle.state()`, await
+  `handle.result()`, or call `handle.cancel()`. A cancelled run stops before
+  any further model or tool call, lets a store write already started finish,
+  gives every unfinished tool call a `ToolCancelled` result, and ends with
+  status `cancelled`, its usage and cost recorded; the cost is `None` when a
+  model call was cut off, because that call may already be billed.
+  Cancelling the task that awaits `Runner.run()` does the same and then raises
+  `CancelledError`. Cancellation is cooperative: a tool that ignores it delays
+  the end of its run.
 - **Works entirely in memory** when you don't pass a database.
 
 ## What it does not do yet
@@ -67,11 +78,11 @@ Stated plainly, because an SDK that overstates itself costs you a week:
 | not built | where it lands |
 |---|---|
 | Multi-agent orchestration, planning, DAGs, replanning | Phase 2. `RunConfig.parent_run_id` records lineage today; nothing orchestrates |
-| Streaming of tokens or run progress | Phase 2 |
+| Streaming of model tokens as they are generated (a run's events do stream, through `RunHandle.events()`) | Later; not yet scheduled |
 | Native MCP (Model Context Protocol) support | Phase 4 |
 | Human approval workflows | Phase 4. The approval step exists and auto-allows |
 | Sandboxed tool execution | Phase 5 |
-| Pause, resume, cancel; durable interruptions | Phase 6 |
+| Pause and resume; durable interruptions (cancel is built) | Phase 6 |
 | Context compaction (the full history is sent every turn) | Phase 7 |
 | Budget enforcement (cost is measured and recorded, never limited); retention and partitioning of stored rows | Phase 2 / Phase 8 |
 | A second wire format (for example Anthropic's native Messages API) | Deferred by choice; the contract was checked against it |
@@ -399,7 +410,7 @@ Narrowing that is a known, recorded gap.
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (925 tests) runs against a **real database and the live gateway**,
+The full suite (985 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.

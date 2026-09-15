@@ -526,11 +526,25 @@ class PostgresEventStore:
         # a reconstructed one disagree about order -- which is the thing NFR-3
         # exists to prevent.
         event = dataclasses.replace(event, sequence_no=row[0])
-        self._buffer.append(event)
+        # FR-52. Another writer can commit and append between this insert's commit
+        # and this append, so arrival order is not sequence order: widened to 6 ms,
+        # that window read back [1, 2, 4, 6, 3, 5, ...]. The buffer is kept in
+        # sequence_no order instead, under a lock, so RunResult.events and a
+        # RunHandle's stream agree with the stored rows.
+        with self._order_lock:
+            position = len(self._buffer)
+            while position and self._buffer[position - 1].sequence_no > event.sequence_no:
+                position -= 1
+            self._buffer.insert(position, event)
         return event
 
     def events(self) -> tuple[RunEvent, ...]:
-        return tuple(self._buffer)
+        with self._order_lock:
+            return tuple(self._buffer)
+
+    # One lock shared by every store: it is held for a few list operations, never
+    # across a database call, so sharing it costs nothing measurable.
+    _order_lock = threading.Lock()
 
 
 def _json_safe(value: Any) -> Any:

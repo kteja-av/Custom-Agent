@@ -98,15 +98,15 @@
 
 ### M12-run-handles-and-cancellation — A caller can start a run, stream its events in order and cancel it, and a cancelled run ends cancelled with a complete record, RunCancelled as its last event, and no run left running
 
-- state/risk: active / high
+- state/risk: done / high
 - requirements: FR-48, FR-49, FR-50, FR-51, FR-52, NFR-15, NFR-17, AC-39, AC-40, AC-41
 - scope: not bounded
-- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_run_handles.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending
+- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_run_handles.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pass
 - next: Run the task pre-flight.
 
 ### M13-artifacts — Runs and callers can store, read, expire and delete tenant-scoped artifacts that verify their content hash, identically in memory and on Postgres
 
-- state/risk: queued / high
+- state/risk: active / high
 - requirements: FR-53, FR-54, FR-55, FR-56, NFR-16, AC-42, AC-44
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_artifacts.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending

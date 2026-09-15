@@ -1,0 +1,22 @@
+{
+  "task": "M12-run-handles-and-cancellation",
+  "gate": "unit",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests/test_run_handles.py -q",
+  "started_at": "2026-09-15T07:09:09.026Z",
+  "observed_at": "2026-09-15T07:09:24.466Z",
+  "exit_code": 0,
+  "signal": null,
+  "stdout": "............................................................             [100%]\r\n60 passed in 14.24s\r\n",
+  "stderr": "",
+  "revision": {
+    "commit": "1662ede07567064e28672a77df7b1a7feaa5598c",
+    "dirty": true
+  },
+  "source_hash": "c4ea020a45bebc466299442ec2057b52d0663e60f9209ad06c7ee4213868bc46",
+  "environment": {
+    "node": "v20.10.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "hash": "373606a1b34141656f13315d167241c6281ea662d2a82b7203f0d040aed17139"
+}

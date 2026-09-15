@@ -1,10 +1,14 @@
-"""The public API (FR-1, NFR-5, LLD 3.3).
+"""The public API (FR-1, FR-48, NFR-5, LLD 3.3).
 
-`Runner.run()` is the only method application code calls. Everything else in
+`Runner.run()` is the only method most application code calls. Everything else in
 this package is an internal collaborator that Runner composes -- AgentLoop,
 ToolExecutor, ContextAssembler, ModelClient. That visibility boundary is the
 entire point of Runner: it is what lets Phase 2 replace the loop with an
 orchestrator without any caller noticing.
+
+Since M12, `Runner.start()` starts a run and returns a `RunHandle` for it at once,
+through which a caller streams the run's events, reads its state, awaits its
+result or cancels it. `Runner.run()` is a run started that way and awaited.
 """
 
 from __future__ import annotations
@@ -22,6 +26,7 @@ from .context import ContextAssembler
 from .errors import describe_exception
 from .events import EventSink, EventType, InMemoryEventSink, RunEvent
 from .executor import ToolExecutor
+from .handle import PublishingSink, RunControl, RunHandle, RunState
 from .hooks import RuntimeHook
 from .identity import PrincipalContext
 from .loop import AgentLoop, RunMeter
@@ -30,17 +35,24 @@ from .model import ModelClient, ModelRequest, ReasoningEffort, Usage
 from .permissions import AllowlistPermissionChecker, PermissionChecker
 from .persistence import Persistence
 from .postgres import RunScope, column_rejection_reason
+from .primitives import unstorable_reason
 from .registry import ModelRegistry, call_cost, default_registry
 from .scheduler import ProviderSlots, RunSlots, SchedulerLimits
 from .session import InMemorySessionStore, SessionStore
 from .tools import Tool, ToolRegistry
 from .version import __version__
 
+__all__ = ["AgentSpec", "RunConfig", "RunHandle", "RunResult", "RunState", "RunStatus", "Runner"]
+
 
 class RunStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     MAX_TURNS_EXCEEDED = "max_turns_exceeded"
+    # FR-50, P2-D3 (DECISION-a44db7e4): a new terminal status rather than failed
+    # with a reason, so a cancelled run can be told from a failure without
+    # parsing its error.
+    CANCELLED = "cancelled"
 
 
 # The INTEGER column's ceiling, named once (see RunConfig.__post_init__).
@@ -87,6 +99,16 @@ def _refuse_bad_scheduler_limits(value: object, owner: str) -> None:
         raise ValueError(
             f"{owner} scheduler_limits must be a SchedulerLimits or None, got {type(value).__name__}"
         )
+
+
+def _cancellation_reason(value: object) -> str:
+    """What a cancelled run records as its error (FR-50): the reason given, when it
+    is text a store can hold, and `cancelled` otherwise."""
+    if isinstance(value, str) and value:
+        text = str.__getitem__(value, slice(None))
+        if unstorable_reason(text) is None:
+            return text
+    return "cancelled"
 
 
 @dataclass(frozen=True)
@@ -218,6 +240,20 @@ class RunResult:
         return self.status is RunStatus.COMPLETED
 
 
+@dataclass(frozen=True)
+class _OpenedRun:
+    """Everything a run needs that is decided before it starts."""
+
+    scope: RunScope
+    events: EventSink
+    client_key: str
+    model_id: str | None
+    recorded_model: str | None
+    max_output_tokens: int | None
+    reasoning_effort: ReasoningEffort | None
+    meter: RunMeter
+
+
 class Runner:
     def __init__(
         self,
@@ -261,7 +297,8 @@ class Runner:
         self._assembler = assembler if assembler is not None else ContextAssembler()
 
     async def run(self, spec: AgentSpec, task: str, config: RunConfig) -> RunResult:
-        """Drive one agent to a terminal status (FR-1).
+        """Drive one agent to a terminal status (FR-1): a run started with start()
+        and awaited to its end (FR-48).
 
         TOTAL boundary. FR-1 promises a terminal status, and a promise honoured
         only for the failures someone remembered to enumerate is not a promise:
@@ -276,8 +313,42 @@ class Runner:
         in a failed RunResult the caller might not inspect. Those raise before
         the run is considered started.
 
-        BaseException passes through: cancellation is control flow, not failure.
+        Cancellation is recorded, then re-raised (FR-50, amending
+        INVARIANT-af776957). Cancelling the task that awaits this, or a
+        CancelledError raised by a collaborator, ends the run `cancelled` with its
+        usage and cost recorded, and CancelledError then reaches the caller:
+        before M12 it passed straight through and left a persisted run `running`
+        forever (KNOWLEDGE-b3c2b462). Any other BaseException still passes
+        through as control flow.
         """
+        handle = await self.start(spec, task, config)
+        try:
+            result = await handle.result()
+        except asyncio.CancelledError:
+            handle.cancel()
+            await handle._settled()
+            raise
+        if result.status is RunStatus.CANCELLED:
+            raise asyncio.CancelledError()
+        return result
+
+    async def start(self, spec: AgentSpec, task: str, config: RunConfig) -> RunHandle:
+        """Start a run and return its handle without waiting for it (FR-48).
+
+        Configuration is validated exactly as run() validates it, and the same
+        errors raise here, at the call site, before any run is started. The run
+        belongs to the event loop that started it.
+        """
+        opened = self._open(spec, config)
+        control = RunControl()
+        handle = RunHandle(opened.scope.run_id, control, opened.meter)
+        events = PublishingSink(opened.events, handle._publish, asyncio.get_running_loop())
+        control.task = asyncio.ensure_future(self._drive(spec, task, config, opened, events, control))
+        control.task.add_done_callback(handle._finished)
+        return handle
+
+    def _open(self, spec: AgentSpec, config: RunConfig) -> _OpenedRun:
+        """Everything decided before a run starts; configuration errors raise here."""
         run_id = str(uuid.uuid4())
         scope = RunScope(run_id=run_id, tenant_id=config.tenant_id, project_id=config.project_id)
         events: EventSink = (
@@ -285,7 +356,6 @@ class Runner:
             if self._persistence is not None
             else InMemoryEventSink(config.tenant_id, config.project_id, run_id)
         )
-        # Deliberately OUTSIDE the guard below -- see the docstring.
         client_key, model_id = self._resolve_model(spec, config)
         max_output_tokens = (
             config.max_output_tokens
@@ -309,9 +379,32 @@ class Runner:
         # default when nothing was named (KNOWLEDGE-862c2e9e).
         recorded_model = model_id or self._default_model_id(client_key)
         # The run's account, created here so that it outlives any exception the
-        # loop raises: the failure path below reports what the meter recorded,
-        # not what the events happened to capture (R2).
+        # loop raises: the failure path reports what the meter recorded, not what
+        # the events happened to capture (R2).
         meter = RunMeter(no_call_cost=self._cost(recorded_model, Usage()))
+        return _OpenedRun(
+            scope=scope,
+            events=events,
+            client_key=client_key,
+            model_id=model_id,
+            recorded_model=recorded_model,
+            max_output_tokens=max_output_tokens,
+            reasoning_effort=reasoning_effort,
+            meter=meter,
+        )
+
+    async def _drive(
+        self,
+        spec: AgentSpec,
+        task: str,
+        config: RunConfig,
+        opened: _OpenedRun,
+        events: EventSink,
+        control: RunControl,
+    ) -> RunResult:
+        """The run itself, to a terminal status: the total boundary run() documents."""
+        control.started = True
+        scope, meter = opened.scope, opened.meter
         try:
             return await self._run(
                 spec,
@@ -319,17 +412,25 @@ class Runner:
                 config,
                 scope,
                 events,
-                client_key,
-                model_id,
-                recorded_model=recorded_model,
-                max_output_tokens=max_output_tokens,
-                reasoning_effort=reasoning_effort,
+                opened.client_key,
+                opened.model_id,
+                recorded_model=opened.recorded_model,
+                max_output_tokens=opened.max_output_tokens,
+                reasoning_effort=opened.reasoning_effort,
                 meter=meter,
+                control=control,
             )
+        except asyncio.CancelledError:
+            return await self._cancelled(scope, events, meter, control)
         except Exception as exc:  # noqa: BLE001
+            if control.requested and not control.terminal:
+                # Asked to stop first: the run ends as it was asked to, whatever
+                # failed on the way out (FR-50).
+                return await self._cancelled(scope, events, meter, control)
             reason = describe_exception(exc)
-            await self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason})
-            await self._safe_finish(scope, RunStatus.FAILED, meter.usage, meter.cost_usd)
+            control.terminal = True
+            await self._safe_emit(events, EventType.RUN_FAILED, {"status": "failed", "reason": reason}, control)
+            await self._safe_finish(scope, RunStatus.FAILED, meter.usage, meter.cost_usd, control)
             return RunResult(
                 status=RunStatus.FAILED,
                 output=None,
@@ -339,23 +440,59 @@ class Runner:
                 # calls whose events were written, would under-report cost on
                 # exactly the runs someone is investigating.
                 usage=meter.usage,
-                run_id=run_id,
+                run_id=scope.run_id,
                 error=reason,
                 cost_usd=meter.cost_usd,
             )
 
+    async def _cancelled(
+        self, scope: RunScope, events: EventSink, meter: RunMeter, control: RunControl
+    ) -> RunResult:
+        """FR-50: record the run cancelled, as every terminal path records itself.
+
+        RunCancelled is emitted once and is the run's last event; the row is
+        finished `cancelled` with its usage and cost (FR-31). When a model call was
+        in flight, that call may be billed and reports no usage, so the cost is
+        unknown rather than understated (P2-D7, NFR-11).
+        """
+        control.terminal = True
+        reason = _cancellation_reason(control.reason)
+        cost = None if control.cancelled_in_flight else meter.cost_usd
+        await self._safe_emit(
+            events,
+            EventType.RUN_CANCELLED,
+            {"status": RunStatus.CANCELLED.value, "turns": control.turns, "reason": reason},
+            control,
+        )
+        await self._safe_finish(scope, RunStatus.CANCELLED, meter.usage, cost, control)
+        return RunResult(
+            status=RunStatus.CANCELLED,
+            output=None,
+            events=events.events(),
+            usage=meter.usage,
+            run_id=scope.run_id,
+            error=reason,
+            cost_usd=cost,
+        )
+
     async def _safe_finish(
-        self, scope: RunScope, status: RunStatus, usage: Usage, cost_usd: Decimal | None
+        self,
+        scope: RunScope,
+        status: RunStatus,
+        usage: Usage,
+        cost_usd: Decimal | None,
+        control: RunControl,
     ) -> None:
         # Threaded like every other store call (FR-20). This one runs once, on
-        # the failure path, so it is not what NFR-8 measures -- but a store
-        # call that blocks the loop only when a run is already failing is the
-        # kind of inconsistency that gets read as an oversight later.
+        # a terminal path that is already failing or cancelled, so it is not what
+        # NFR-8 measures -- but a store call that blocks the loop only when a run
+        # is already failing is the kind of inconsistency that gets read as an
+        # oversight later.
         if self._persistence is None:
             return
         try:
-            await asyncio.to_thread(self._finish, scope, status, usage, cost_usd)
-        except Exception:  # noqa: BLE001 - persistence must not mask the real failure
+            await control.store(self._finish, scope, status, usage, cost_usd)
+        except Exception:  # noqa: BLE001 - persistence must not mask the real outcome
             pass
 
     def _finish(
@@ -378,10 +515,10 @@ class Runner:
             runs.finish_run(scope, status.value)
 
     @staticmethod
-    async def _safe_emit(events: EventSink, event_type: EventType, payload: dict) -> None:
-        """Telemetry must not be able to fail the failure path."""
+    async def _safe_emit(events: EventSink, event_type: EventType, payload: dict, control: RunControl) -> None:
+        """Telemetry must not be able to fail a terminal path."""
         try:
-            await asyncio.to_thread(events.emit, event_type, payload)
+            await control.store(events.emit, event_type, payload)
         except Exception:  # noqa: BLE001
             pass
 
@@ -399,6 +536,7 @@ class Runner:
         max_output_tokens: int | None,
         reasoning_effort: ReasoningEffort | None,
         meter: RunMeter,
+        control: RunControl,
     ) -> RunResult:
         run_id = scope.run_id
         limits = self._limits_for(config)
@@ -409,7 +547,7 @@ class Runner:
             # transaction as the run row, so no failure between the two can
             # leave a run that nothing can explain. The primary key guarantees
             # "at most one"; passing it here guarantees "at least one".
-            await asyncio.to_thread(
+            await control.store(
                 partial(self._persistence.runs.start_run, scope),
                 agent_spec_id=spec.id,
                 max_turns=config.max_turns,
@@ -442,7 +580,7 @@ class Runner:
         # messages path that HAD been offloaded stalled 14 ms under the same
         # probe. Moving three of four store paths off the loop is the defect
         # this comment exists to prevent recurring.
-        await asyncio.to_thread(
+        await control.store(
             events.emit,
             EventType.RUN_STARTED,
             {
@@ -457,17 +595,17 @@ class Runner:
             },
         )
 
-        # FR-44: the calls of a parallel batch can finish together, and an event
-        # sink numbers an event in two steps (M12 moves that under each sink's
-        # own lock, FR-52). Emitting one ToolCalled of this run at a time keeps
-        # sequence_no unique and contiguous on both stores. Each carries its
-        # call's id in the envelope, which had stayed NULL since Phase 0.
+        # FR-44: the calls of a parallel batch can finish together. Emitting one
+        # ToolCalled of this run at a time keeps their events in the order they
+        # finish on both stores, beside the sinks' own numbering locks (FR-52).
+        # Each carries its call's id in the envelope, which had stayed NULL since
+        # Phase 0.
         tool_events = asyncio.Lock()
 
         async def emit_tool_called(event_type: str, payload: dict[str, Any]) -> None:
             call_id = payload.get("tool_call_id")
             async with tool_events:
-                await asyncio.to_thread(
+                await control.store(
                     events.emit,
                     EventType.TOOL_CALLED,
                     payload,
@@ -501,6 +639,7 @@ class Runner:
             meter=meter,
             tool_slot=RunSlots(limits).slot,
             model_slot=partial(self._provider_slots.slot, client_key),
+            control=control,
         )
 
         # Only what the caller set: a run that sets none of M9's options sends
@@ -527,13 +666,19 @@ class Runner:
         else:
             status, error = RunStatus.COMPLETED, None
 
-        await asyncio.to_thread(
+        # FR-50: a cancellation that arrived during the loop's last store writes
+        # takes effect here, before the terminal event. Once that event is being
+        # written, a cancellation has no effect.
+        if control.requested:
+            raise asyncio.CancelledError()
+        control.terminal = True
+        await control.store(
             events.emit,
             EventType.RUN_COMPLETED if status is RunStatus.COMPLETED else EventType.RUN_FAILED,
             {"status": status.value, "turns": outcome.turns, "reason": error},
         )
         if self._persistence is not None:
-            await asyncio.to_thread(self._finish, scope, status, meter.usage, meter.cost_usd)
+            await control.store(self._finish, scope, status, meter.usage, meter.cost_usd)
         return RunResult(
             status=status,
             output=outcome.output,

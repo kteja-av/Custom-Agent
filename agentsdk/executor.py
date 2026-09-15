@@ -33,6 +33,7 @@ from typing import Any
 import jsonschema
 
 from .errors import (
+    ToolCancelled,
     ToolError,
     ToolExecutionError,
     ToolNotFound,
@@ -163,6 +164,26 @@ class ToolExecutor:
             return await self._failed(
                 prepared.issued, ToolExecutionError(describe_exception(exc)), prepared.state
             )
+
+    async def cancelled(self, item: PreparedCall | ToolCall) -> Failed:
+        """The result of a call its run's cancellation left unfinished (FR-50).
+
+        Every call of a response the run had begun to execute is paired with a
+        result, and its ToolCalled event is emitted, so the recorded conversation
+        stays well formed. A call that reached step 6 carries its tool's declared
+        provenance, as every error after a tool ran does (DECISION-ea6e1daf); one
+        that did not -- still waiting for a slot, or never prepared -- carries the
+        executor's own. Total, like _failed, which it is.
+        """
+        if isinstance(item, PreparedCall):
+            return await self._failed(
+                item.issued,
+                ToolCancelled("the run was cancelled before this tool call finished"),
+                item.state,
+            )
+        return await self._failed(
+            item, ToolCancelled("the run was cancelled before this tool call started"), _CallState()
+        )
 
     async def _prepare(
         self,

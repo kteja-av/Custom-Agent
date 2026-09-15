@@ -97,6 +97,16 @@ class ToolExecutionError(ToolError):
     """Execute step: the tool implementation raised."""
 
 
+class ToolCancelled(ToolError):
+    """The run was cancelled before this tool call finished (FR-50).
+
+    Every tool call of a response the run had begun to execute is paired with a
+    result, so the conversation stays well formed. A call that had reached step 6
+    carries its tool's declared provenance, as every error after a tool ran does
+    (DECISION-ea6e1daf); one that had not carries the executor's own.
+    """
+
+
 # --- Workflow layer ---------------------------------------------------------
 
 

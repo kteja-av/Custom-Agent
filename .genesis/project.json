@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-14T15:36:17.263Z"
+    "updated_at": "2026-09-15T07:40:24.413Z"
   },
   "policy": {
     "ponytail": "full",
@@ -25,7 +25,7 @@
   "lifecycle": {
     "phase": "build",
     "status": "active",
-    "active_task": "M12-run-handles-and-cancellation",
+    "active_task": "M13-artifacts",
     "blocker": null,
     "next_action": "Run the task pre-flight."
   },
@@ -424,6 +424,12 @@
       "text": "Any number that arrives from a model provider, a persisted event payload or a replayed run reaches a typed field only through a total coercion that cannot raise on Exception. Concretely: never call int(), float() or similar directly on such a value; construct the dataclass and let it coerce. Violations have been rejected three times.",
       "source": "human-confirmed",
       "recorded_at": "2026-09-06T15:13:21.028Z"
+    },
+    {
+      "id": "INVARIANT-73299c7c",
+      "text": "Amends INVARIANT-af776957 (M12, FR-50, 2026-09-15). Runner.run() is a total boundary: it returns a RunResult with a terminal status and lets no Exception reach application code, and ToolExecutor.execute() is likewise total. Configuration errors raise at the call site before any run starts, from Runner.run and Runner.start alike. Cancellation is recorded, then re-raised: cancelling the task that awaits Runner.run, or a CancelledError raised by a collaborator, ends the run with status cancelled, RunCancelled as its last event and its usage and cost recorded, and CancelledError then reaches the caller; RunHandle.result() returns that cancelled RunResult. Any other BaseException passes through as control flow.",
+      "source": "M12 FR-50, approved in L4 review round 1, 2026-09-15",
+      "recorded_at": "2026-09-15T07:40:23.759Z"
     }
   ],
   "decisions": [
@@ -922,6 +928,14 @@
       "status": "accepted",
       "source": "owner decision 2026-09-14",
       "recorded_at": "2026-09-14T14:54:55.323Z"
+    },
+    {
+      "id": "DECISION-29e21dd0",
+      "title": "M12: a tool that ignores cancellation is a declared limitation; cancellation stays cooperative",
+      "text": "Owner decision 2026-09-14 at the M12 pre-flight, on the caveat of the M11 round 2 review. A tool that catches CancelledError and carries on cannot be stopped. Cancellation stays cooperative: RunHandle.cancel() cancels every running tool call and waits until each one actually stops, so such a tool delays the end of the run for as long as it runs, and the run ends cancelled only when that tool returns or raises. No grace period and no setting are added, and FR-44 keeps its rule that a cancelled batch leaves no call running. Recorded in SPEC.md Risks beside the existing risk that a running file tool cannot be interrupted; stopping arbitrary code belongs to the Phase 5 sandbox.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-14",
+      "recorded_at": "2026-09-14T16:18:08.770Z"
     }
   ],
   "knowledge": [
@@ -1516,6 +1530,30 @@
       "source": "assumption review 2026-09-14, code read and AC-26 rerun",
       "tags": [],
       "recorded_at": "2026-09-14T15:36:17.263Z"
+    },
+    {
+      "id": "KNOWLEDGE-93fa7f44",
+      "title": "M12 pre-flight: baseline, the sink race and a cancelled run left running",
+      "text": "Measured 2026-09-14 at commit 1662ede, before any M12 change. The full suite passed 925 tests in 122 s. InMemoryEventSink numbers an event by reading its length and then appending: at the default thread switch interval, 8 threads emitting 500 events each for 20 trials produced no duplicate sequence_no, but with sys.setswitchinterval(1e-6), 8 threads emitting 300 events each produced between 584 and 654 duplicates in each of 10 trials, so a test of FR-52 must shorten the switch interval to detect the race. KNOWLEDGE-b3c2b462 reproduced on Postgres: a persisted run whose model client waited inside send was cancelled through the task awaiting Runner.run; Runner.run raised CancelledError, and the stored row stayed status running with NULL usage, NULL cost and no completed_at, with RunStarted its only event. The live database is at migration 0004, and runs.status carries one check constraint, named runs_status_check, admitting running, completed, failed and max_turns_exceeded. Owner decision DECISION-29e21dd0 makes a tool that ignores cancellation a declared limitation.",
+      "source": "M12 pre-flight probes, 2026-09-14",
+      "tags": [],
+      "recorded_at": "2026-09-14T16:20:05.320Z"
+    },
+    {
+      "id": "KNOWLEDGE-c5550bac",
+      "title": "KNOWLEDGE-b3c2b462 closed by M12: a cancelled run is recorded cancelled",
+      "text": "Closed 2026-09-15 by M12 (FR-50), approved in L4 review round 1 by Claude Fable 5.1. The M12 pre-flight reproduced it on Postgres (KNOWLEDGE-93fa7f44): a run cancelled through the task awaiting Runner.run stayed status running with NULL usage and cost. Cancellation now ends the run with status cancelled and RunCancelled as its last event; runs.status is cancelled with usage recorded, the cost is NULL when a model call was in flight (P2-D7), and CancelledError still reaches the caller. tests/test_run_handles.py covers cancellation at every point on both stores, and the reviewer fuzzed 1100 runs with no run left running.",
+      "source": "M12 FR-50 and L4 review round 1, 2026-09-15",
+      "tags": [],
+      "recorded_at": "2026-09-15T07:40:23.971Z"
+    },
+    {
+      "id": "KNOWLEDGE-a23d69bd",
+      "title": "M12 round 1 review: approved with caveats C1 to C4",
+      "text": "Claude Fable 5.1 approved M12 on 2026-09-15 at source c4ea020a after re-deriving FR-48 to FR-52 and probing absorbed cancellation, cancellation from hooks and tools, pairing under ToolCalled lock contention, 300 iterators, and a randomised fuzz of 1000 in-memory and 100 Postgres runs with 0 violations. The owner rechecked the reviewer and reproduced C1. C1: RunHandle.cancel called from a thread other than the run loop thread calls Task.cancel directly, so it takes effect only when the loop next wakes, and under asyncio debug mode Task.cancel raises RuntimeError and the run is stuck. Owner decision: fixed as a follow-up after the M12 commit by scheduling the cancel with call_soon_threadsafe, with no new review round. C2: migration 0005 also drops a multi-column CHECK mentioning status without restoring it, which schema.sql cannot produce. C3: a call cancelled while waiting for the ToolCalled lock at step 9 is recorded ToolCancelled, consistent with FR-44. C4: a BaseException other than CancelledError from a tool still leaves no terminal event, as before M12 and outside NFR-17. The reviewer regression gate took 398 s against 152 s in the author run, cause unknown, both passing.",
+      "source": "M12 L4 review round 1 control and owner recheck, 2026-09-15",
+      "tags": [],
+      "recorded_at": "2026-09-15T07:40:24.227Z"
     }
   ],
   "tasks": [
@@ -2205,7 +2243,7 @@
     {
       "id": "M12-run-handles-and-cancellation",
       "outcome": "A caller can start a run, stream its events in order and cancel it, and a cancelled run ends cancelled with a complete record, RunCancelled as its last event, and no run left running",
-      "state": "active",
+      "state": "done",
       "risk": "high",
       "owner": null,
       "scope": [],
@@ -2227,22 +2265,37 @@
           "id": "unit",
           "command": ".venv\\Scripts\\python.exe -m pytest tests/test_run_handles.py -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M12-run-handles-and-cancellation-unit.json",
+            "source_hash": "c4ea020a45bebc466299442ec2057b52d0663e60f9209ad06c7ee4213868bc46",
+            "hash": "373606a1b34141656f13315d167241c6281ea662d2a82b7203f0d040aed17139",
+            "observed_at": "2026-09-15T07:09:24.466Z"
+          }
         },
         {
           "id": "regression",
           "command": ".venv\\Scripts\\python.exe -m pytest -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M12-run-handles-and-cancellation-regression.json",
+            "source_hash": "c4ea020a45bebc466299442ec2057b52d0663e60f9209ad06c7ee4213868bc46",
+            "hash": "46e0749ff967399704424063a18ed57c750e0975b9d662de65eabf3462ae0090",
+            "observed_at": "2026-09-15T07:16:03.564Z"
+          }
         },
         {
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Claude Fable 5.1 (independent L4 reviewer, M12 round 1, fresh session)",
+            "reason": "Re-derived FR-48 to FR-52, NFR-15, NFR-17 and AC-39 to AC-41 from SPEC.md and reviewed the uncommitted diff against 1662ede with handle.py, migration 0005 and test_run_handles.py. Verified first-hand: full suite 985 passed with -p no:cacheprovider; gate unit 60 passed and regression 985 passed, both source hash c4ea020a; store counts unchanged (runs 10332, messages 54909, run_events 65046, manifests 10310, schema_migrations 4 with 0005 already applied before the review). Probes: an absorbed cancellation during a held store write ends cancelled with the task cancelling count back at 0; asyncio.timeout expiring during a held write yields TimeoutError and an external caller cancel yields CancelledError; cancel from before_model, after_tool, a tool body inline and under wait_for, and before the first step all end cancelled; pairing under ToolCalled lock contention, during a prepare failure emission, between batches and during an inline step 9 gives every call exactly one result and one ToolCalled before RunCancelled; 300 iterators including abandoned and cancelled ones all receive RunResult.events with no waiter leak, and out-of-order publication is held back; a randomised fuzz of 1000 in-memory and 100 Postgres runs cancelled at random points through handle.cancel and by cancelling the Runner.run caller found 0 violations of contiguity, pairing, usage, cost None iff in flight, no run left running and no task left behind. Caveats, not blocking: C1 RunHandle.cancel called from a thread other than the loop thread is only recorded and takes effect at the next loop wake-up, and under asyncio debug mode Task.cancel raises RuntimeError after marking the awaited future cancelled so the run is stuck for good; recommend call_soon_threadsafe in RunControl.request when off the loop thread, or documenting loop-thread-only. C2 migration 0005 also drops a multi-column CHECK that mentions status without restoring it, unreachable from schema.sql. C3 a call cancelled while waiting for the ToolCalled lock at step 9 is recorded ToolCancelled, spec-consistent. C4 a BaseException other than CancelledError from a tool still leaves no terminal event, as before M12.",
+            "source_hash": "c4ea020a45bebc466299442ec2057b52d0663e60f9209ad06c7ee4213868bc46",
+            "observed_at": "2026-09-15T07:17:07.725Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
@@ -2251,12 +2304,12 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-14T07:21:29.672Z",
-      "updated_at": "2026-09-14T07:21:29.673Z"
+      "updated_at": "2026-09-15T07:40:24.412Z"
     },
     {
       "id": "M13-artifacts",
       "outcome": "Runs and callers can store, read, expire and delete tenant-scoped artifacts that verify their content hash, identically in memory and on Postgres",
-      "state": "queued",
+      "state": "active",
       "risk": "high",
       "owner": null,
       "scope": [],
@@ -2869,6 +2922,15 @@
       "task": "M11-concurrency-foundations",
       "human": "Claude Sonnet 5 (independent L4 reviewer, M11 round 2, fresh session)",
       "reason": "Fresh independent review, round 2 of M11, never reviewed this project before. Verified the R1, R2 and R3 repairs first hand against agentsdk/loop.py and agentsdk/builtin_tools.py (git diff 7abfe47), byte identical to the diff captured at the start of this session. FR-44 checks beyond the authors own tests: a tool that cancels its own task via asyncio.current_task().cancel() while a sibling with no timeout waits -- CancelledError raised in 0.06s, both siblings cleaned, zero leftover tasks. Several tasks finishing in one asyncio.wait wakeup, one raising a bare BaseException and one self cancelling -- one exception propagates, no crash, both siblings cleaned. Five repeated cancellations of the batch task while a 0.3s cleanup runs -- absorbed correctly, every sibling cleaned, CancelledError raised exactly once, no hang. A caller wrapping Runner.run in asyncio.wait_for and separately in asyncio.timeout -- both convert to TimeoutError correctly under Python 3.11 uncancel counting, confirmed the current tasks cancelling count returns to 0 afterward. R3 checked under a real directory junction reaching one unstorable named file through two different directory spellings -- withheld count stayed 1, not 2. Caveat, not blocking: a sibling that swallows CancelledError forever blocks wait_all_or_cancel indefinitely, confirmed with a hard external kill after 5s; this is inherent cooperative cancellation behaviour that round 1 FIRST_EXCEPTION also could not resolve for a never completing sibling, so it is not a round 2 regression. Full suite 925 passed twice outside the gate (140s, 123s) and inside a clean gate rerun with no other process on the machine (unit 104 passed 16.50s, regression 925 passed 122.70s, both exit 0); DB row counts unchanged before and after every run (runs 10332, messages 54909, run_events 65046, execution_manifests 10310). NFR-15 was amended 2026-09-14 to name the batching order explicitly, settling A1; the code matches the amended text. No blocking defect found.",
+      "revision": null
+    },
+    {
+      "id": "a34768d4-4a9d-4f5e-9e40-9cd3954d3c99",
+      "at": "2026-09-15T07:17:07.725Z",
+      "action": "approve",
+      "task": "M12-run-handles-and-cancellation",
+      "human": "Claude Fable 5.1 (independent L4 reviewer, M12 round 1, fresh session)",
+      "reason": "Re-derived FR-48 to FR-52, NFR-15, NFR-17 and AC-39 to AC-41 from SPEC.md and reviewed the uncommitted diff against 1662ede with handle.py, migration 0005 and test_run_handles.py. Verified first-hand: full suite 985 passed with -p no:cacheprovider; gate unit 60 passed and regression 985 passed, both source hash c4ea020a; store counts unchanged (runs 10332, messages 54909, run_events 65046, manifests 10310, schema_migrations 4 with 0005 already applied before the review). Probes: an absorbed cancellation during a held store write ends cancelled with the task cancelling count back at 0; asyncio.timeout expiring during a held write yields TimeoutError and an external caller cancel yields CancelledError; cancel from before_model, after_tool, a tool body inline and under wait_for, and before the first step all end cancelled; pairing under ToolCalled lock contention, during a prepare failure emission, between batches and during an inline step 9 gives every call exactly one result and one ToolCalled before RunCancelled; 300 iterators including abandoned and cancelled ones all receive RunResult.events with no waiter leak, and out-of-order publication is held back; a randomised fuzz of 1000 in-memory and 100 Postgres runs cancelled at random points through handle.cancel and by cancelling the Runner.run caller found 0 violations of contiguity, pairing, usage, cost None iff in flight, no run left running and no task left behind. Caveats, not blocking: C1 RunHandle.cancel called from a thread other than the loop thread is only recorded and takes effect at the next loop wake-up, and under asyncio debug mode Task.cancel raises RuntimeError after marking the awaited future cancelled so the run is stuck for good; recommend call_soon_threadsafe in RunControl.request when off the loop thread, or documenting loop-thread-only. C2 migration 0005 also drops a multi-column CHECK that mentions status without restoring it, unreachable from schema.sql. C3 a call cancelled while waiting for the ToolCalled lock at step 9 is recorded ToolCancelled, spec-consistent. C4 a BaseException other than CancelledError from a tool still leaves no terminal event, as before M12.",
       "revision": null
     }
   ],
