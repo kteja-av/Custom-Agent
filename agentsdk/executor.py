@@ -48,12 +48,9 @@ from .outcomes import Completed, Failed, ToolExecutionOutcome
 from .permissions import PermissionChecker
 from .primitives import (
     ContentProvenance,
-    InstructionAuthority,
-    Origin,
-    TaintFlag,
     ToolCall,
     ToolResult,
-    TrustZone,
+    checked_provenance,
     unstorable_reason,
 )
 from .tools import DEFAULT_MAX_OUTPUT_CHARS, Tool, ToolOutput, ToolRegistry
@@ -333,7 +330,7 @@ class ToolExecutor:
         # answer every read differently (rejected, KNOWLEDGE-96063b68).
         answers = returned.tool_call_id
         content = returned.content
-        provenance = _checked_provenance(returned.provenance)
+        provenance = checked_provenance(returned.provenance)
         is_error = returned.is_error
         if type(answers) is not str or not str.__eq__(answers, tool_call.id) or type(is_error) is not bool:
             return await self._failed(
@@ -458,57 +455,6 @@ class ToolExecutor:
             }
         )
         return Failed(error=error, result=result)
-
-
-# A source is a URI or a hash. Bounded, so a result cannot carry megabytes past
-# the output cap in a field the cap does not measure (M10 review round 3).
-_MAX_SOURCE_CHARS = 8192
-
-
-def _is_member(value: Any, labels: Any) -> bool:
-    """Identity with one of the enum's real members.
-
-    An exact-type check is not membership: the labels are str-mixin enums, and
-    str.__new__(Origin, "x") builds an instance of exactly Origin that is none of
-    its members, with any _value_ or none, while every store reads .value (M10
-    review round 4, rejected). Equality is only string equality, so a forged
-    "system" valued "user" would pass it.
-    """
-    return any(value is member for member in labels)
-
-
-def _checked_provenance(value: Any) -> ContentProvenance | str:
-    """A fresh ContentProvenance built from `value`, or the reason it cannot be one.
-
-    Each field is read once and checked before it is used. ContentProvenance does
-    not check its own labels, and every store reads `.value` from them, so a
-    plain-string origin completed in memory and failed on Postgres. The labels
-    must be the enums' own members; the taint set an exact frozenset (a subclass
-    can answer iteration differently from what it holds); the source bounded text.
-
-    A source that is a str subclass is copied into the exact text it holds and
-    bounded on the copy (FR-47): refusing it was a regression M10 introduced for
-    ordinary caller code (KNOWLEDGE-739aca22), and a subclass reporting a false
-    length is measured by what it holds.
-    """
-    if not isinstance(value, ContentProvenance):
-        return "the result carries provenance that is not a ContentProvenance"
-    origin = value.origin
-    authority = value.instruction_authority
-    zone = value.trust_zone
-    taint = value.taint_flags
-    source = value.source_uri_or_hash
-    if not (_is_member(origin, Origin) and _is_member(authority, InstructionAuthority) and _is_member(zone, TrustZone)):
-        return "the result carries provenance whose labels are not members of their enums"
-    if type(taint) is not frozenset or not all(_is_member(flag, TaintFlag) for flag in taint):
-        return "the result carries taint flags that are not members of TaintFlag"
-    if source is not None:
-        source = _exact(source) if isinstance(source, str) else None
-        if source is None or len(source) > _MAX_SOURCE_CHARS:
-            return f"the result carries a source that is not text of at most {_MAX_SOURCE_CHARS} characters"
-    return ContentProvenance(
-        origin=origin, instruction_authority=authority, trust_zone=zone, taint_flags=taint, source_uri_or_hash=source
-    )
 
 
 def _exact(text: str) -> str:

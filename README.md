@@ -7,7 +7,7 @@ persisted so you can reconstruct exactly what happened afterwards.
 
 > **Status: `0.1.0.dev0`, pre-release.** Phase 0 (the single-agent foundation) and
 > a store-hardening milestone for Phase 2 are complete, each approved by an
-> independent review; the suite has 989 tests. It is not on PyPI yet, and a lot is
+> independent review; the suite has 1110 tests. It is not on PyPI yet, and a lot is
 > deliberately not built -- see [What it does not do yet](#what-it-does-not-do-yet).
 
 ## What it does
@@ -382,6 +382,8 @@ credentials -- which is also how the test suite checks them.
 | [`08_testing_agents_offline.py`](scripts/08_testing_agents_offline.py) | behavioural checks against a scripted model, then a real one |
 | [`09_limits_and_cost.py`](scripts/09_limits_and_cost.py) | an output limit that fails a cut-off run honestly, and what a run cost from prices you supply |
 | [`10_builtin_tools.py`](scripts/10_builtin_tools.py) | built-in file tools confined to a folder, and a fetch tool confined to an allowlist and the public internet |
+| [`11_run_handle.py`](scripts/11_run_handle.py) | a run's events streamed through its handle as they happen, and a second run cancelled mid-flight |
+| [`12_artifacts.py`](scripts/12_artifacts.py) | an artifact put, read back and checked against its hash, kept within its tenant, expired and deleted |
 
 ```bash
 python scripts/02_custom_tools.py --offline
@@ -410,7 +412,7 @@ Narrowing that is a known, recorded gap.
 .venv/Scripts/python -m pytest -q
 ```
 
-The full suite (989 tests) runs against a **real database and the live gateway**,
+The full suite (1110 tests) runs against a **real database and the live gateway**,
 including an evaluation that calls two real models and spends tokens. Tests that
 need configuration fail rather than skip when it is missing, on purpose: a test
 suite that skips to green proves nothing.

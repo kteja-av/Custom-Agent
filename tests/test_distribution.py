@@ -31,6 +31,11 @@ EXPECTED_EXAMPLES = {
     "06_mcp_tools.py",
     "07_delegating_to_a_child_run.py",
     "08_testing_agents_offline.py",
+    # FR-56 as amended 2026-09-15 (DECISION-40ae2d24): 09 to 12 in M13; 13 with M14.
+    "09_limits_and_cost.py",
+    "10_builtin_tools.py",
+    "11_run_handle.py",
+    "12_artifacts.py",
 }
 
 

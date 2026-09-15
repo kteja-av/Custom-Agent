@@ -14,10 +14,14 @@ belongs to fails at the database rather than being caught by review.
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import dataclasses
+import hashlib
 import json
 import threading
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -29,6 +33,17 @@ from psycopg_pool import ConnectionPool
 import psycopg
 from psycopg.types.json import Jsonb
 
+from .artifacts import (
+    DEFAULT_MAX_CONTENT_BYTES,
+    ArtifactRef,
+    canonical_id,
+    checked_cap,
+    integrity_error,
+    not_found,
+    prepare_put,
+    refuse_bad_scope,
+    utc_now,
+)
 from .events import SCHEMA_VERSION, EventType, RunEvent
 from .migrate import apply_migrations
 from .model import Usage
@@ -874,3 +889,228 @@ class PostgresTrace:
             ],
             "manifest": manifest,
         }
+
+
+# --- artifacts (FR-54, FR-55) --------------------------------------------------------
+
+
+async def _write_then_honour_cancellation(function: Any, *args: Any) -> Any:
+    """A write on a worker thread that, once started, finishes before a cancellation
+    of the caller is reported.
+
+    Cancelling an asyncio.to_thread call does not stop a thread already running it
+    and drops one still queued (KNOWLEDGE-e22f787f), so a caller that gave up could
+    see a row appear after it moved on, or not appear at all. The write is shielded
+    and awaited to its end, and CancelledError is then raised as the caller asked.
+    Unlike a run's store calls (RunControl.store), the cancellation is not absorbed:
+    an artifact store has no checkpoint to stop at later.
+    """
+    future = asyncio.ensure_future(asyncio.to_thread(function, *args))
+    try:
+        return await asyncio.shield(future)
+    except asyncio.CancelledError:
+        while not future.done():
+            try:
+                await asyncio.shield(future)
+            except asyncio.CancelledError:
+                continue
+            except Exception:  # noqa: BLE001 - the cancellation is what the caller hears
+                break
+        raise
+
+
+_ARTIFACT_COLUMNS = (
+    "artifact_id, tenant_id, project_id, uri, mime_type, content_hash, size, created_by_agent,"
+    " source_run, source_task, provenance, classification, created_at, expires_at"
+)
+
+
+def _artifact_from_row(row: tuple) -> ArtifactRef:
+    return ArtifactRef(
+        artifact_id=str(row[0]),
+        tenant_id=row[1],
+        project_id=row[2],
+        uri=row[3],
+        mime_type=row[4],
+        content_hash=row[5],
+        size=int(row[6]),
+        created_by_agent=row[7],
+        source_run=str(row[8]) if row[8] is not None else None,
+        source_task=row[9],
+        provenance=_provenance_from_json(row[10]),
+        classification=row[11],
+        created_at=row[12],
+        expires_at=row[13],
+    )
+
+
+class PostgresArtifactStore:
+    """FR-55's durable store: the artifacts table (migration 0006), bound to one
+    tenant and project.
+
+    Every statement is filtered by the store's tenant and project, and every read
+    also by expiry, so another scope's artifact, a deleted one, an expired one and
+    an unknown id are the same "no row". I/O runs on worker threads through the
+    pool (FR-20), and content is read through a binary cursor, so a 10 MiB read
+    does not travel as hex (KNOWLEDGE-b0e097e4).
+    """
+
+    def __init__(
+        self,
+        dsn: str,
+        tenant_id: str,
+        project_id: str,
+        *,
+        max_content_bytes: int = DEFAULT_MAX_CONTENT_BYTES,
+        clock: Callable[[], datetime] | None = None,
+    ) -> None:
+        refuse_bad_scope(tenant_id, project_id)
+        self._dsn = dsn
+        self._tenant_id = tenant_id
+        self._project_id = project_id
+        self._cap = checked_cap(max_content_bytes)
+        self._clock = clock if clock is not None else utc_now
+
+    def for_scope(self, tenant_id: str, project_id: str) -> PostgresArtifactStore:
+        """A store over the same database, bound to another tenant and project."""
+        return PostgresArtifactStore(
+            self._dsn, tenant_id, project_id, max_content_bytes=self._cap, clock=self._clock
+        )
+
+    async def put(
+        self,
+        content: bytes,
+        *,
+        mime_type: str,
+        provenance: ContentProvenance,
+        created_by_agent: str,
+        source_run: str | None = None,
+        classification: str | None = None,
+        expires_at: datetime | None = None,
+    ) -> ArtifactRef:
+        ref, data = prepare_put(
+            content,
+            tenant_id=self._tenant_id,
+            project_id=self._project_id,
+            mime_type=mime_type,
+            provenance=provenance,
+            created_by_agent=created_by_agent,
+            source_run=source_run,
+            classification=classification,
+            expires_at=expires_at,
+            now=self._clock(),
+            max_content_bytes=self._cap,
+        )
+        try:
+            await _write_then_honour_cancellation(self._insert, ref, data)
+        except asyncio.CancelledError:
+            # The caller never receives this ref, so nothing could reach the artifact
+            # by its id: a cancelled put takes back what it wrote, shielded the same
+            # way. If the removal fails too, the row stays, and the cancellation is
+            # still what the caller hears.
+            with contextlib.suppress(Exception, asyncio.CancelledError):
+                await _write_then_honour_cancellation(self._remove, ref.artifact_id)
+            raise
+        return ref
+
+    def _remove(self, artifact_id: str) -> None:
+        with _pool(self._dsn).connection() as conn:
+            conn.execute(
+                "DELETE FROM artifacts WHERE artifact_id = %s AND tenant_id = %s AND project_id = %s",
+                (artifact_id, self._tenant_id, self._project_id),
+            )
+
+    def _insert(self, ref: ArtifactRef, data: bytes) -> None:
+        with _pool(self._dsn).connection() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO artifacts (
+                    artifact_id, tenant_id, project_id, uri, mime_type, content_hash, size,
+                    created_by_agent, source_run, source_task, provenance, classification,
+                    created_at, expires_at, content
+                )
+                SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s::uuid, NULL, %s, %s, %s, %s, %s
+                -- A source run must belong to this artifact's own tenant and project,
+                -- checked in the same statement as the insert, as start_run checks a
+                -- parent run (FR-21, FR-55).
+                WHERE %s::uuid IS NULL
+                   OR EXISTS (
+                        SELECT 1 FROM runs r
+                        WHERE r.run_id = %s::uuid AND r.tenant_id = %s AND r.project_id = %s
+                      )
+                """,
+                (
+                    ref.artifact_id,
+                    ref.tenant_id,
+                    ref.project_id,
+                    ref.uri,
+                    ref.mime_type,
+                    ref.content_hash,
+                    ref.size,
+                    ref.created_by_agent,
+                    ref.source_run,
+                    Jsonb(_provenance_to_json(ref.provenance)),
+                    ref.classification,
+                    ref.created_at,
+                    ref.expires_at,
+                    data,
+                    ref.source_run,
+                    ref.source_run,
+                    ref.tenant_id,
+                    ref.project_id,
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError("source_run must be a run of this store's tenant and project")
+
+    def _select(self, key: str, now: datetime, with_content: bool) -> tuple | None:
+        columns = _ARTIFACT_COLUMNS + (", content" if with_content else "")
+        with _pool(self._dsn).connection() as conn:
+            with conn.cursor(binary=True) as cursor:
+                return cursor.execute(
+                    f"SELECT {columns} FROM artifacts"
+                    " WHERE artifact_id = %s AND tenant_id = %s AND project_id = %s"
+                    " AND (expires_at IS NULL OR expires_at > %s)",
+                    (key, self._tenant_id, self._project_id, now),
+                ).fetchone()
+
+    async def _visible(self, artifact_id: Any, with_content: bool) -> tuple:
+        key = canonical_id(artifact_id)
+        row = None if key is None else await asyncio.to_thread(self._select, key, self._clock(), with_content)
+        if row is None:
+            raise not_found(artifact_id)
+        return row
+
+    async def get(self, artifact_id: str) -> bytes:
+        row = await self._visible(artifact_id, with_content=True)
+        content = bytes(row[14])
+        if hashlib.sha256(content).hexdigest() != row[5]:
+            raise integrity_error(artifact_id)
+        return content
+
+    async def metadata(self, artifact_id: str) -> ArtifactRef:
+        return _artifact_from_row(await self._visible(artifact_id, with_content=False))
+
+    def _delete(self, key: str, now: datetime) -> int:
+        with _pool(self._dsn).connection() as conn:
+            return conn.execute(
+                "DELETE FROM artifacts WHERE artifact_id = %s AND tenant_id = %s AND project_id = %s"
+                " AND (expires_at IS NULL OR expires_at > %s)",
+                (key, self._tenant_id, self._project_id, now),
+            ).rowcount
+
+    async def delete(self, artifact_id: str) -> None:
+        key = canonical_id(artifact_id)
+        removed = 0 if key is None else await _write_then_honour_cancellation(self._delete, key, self._clock())
+        if removed != 1:
+            raise not_found(artifact_id)
+
+    def _expire(self, now: datetime) -> int:
+        with _pool(self._dsn).connection() as conn:
+            return conn.execute(
+                "DELETE FROM artifacts WHERE tenant_id = %s AND project_id = %s AND expires_at <= %s",
+                (self._tenant_id, self._project_id, now),
+            ).rowcount
+
+    async def expire(self) -> int:
+        return await _write_then_honour_cancellation(self._expire, self._clock())

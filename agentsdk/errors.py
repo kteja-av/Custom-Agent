@@ -107,6 +107,22 @@ class ToolCancelled(ToolError):
     """
 
 
+# --- Artifacts --------------------------------------------------------------
+
+
+class ArtifactNotFound(AgentSDKError):
+    """No artifact with this id is visible to the store's tenant and project (FR-54).
+
+    Raised alike for another tenant's or project's artifact, a deleted one, an
+    expired one and an id that never existed, with a message naming only the id,
+    so a caller cannot learn which of those it was.
+    """
+
+
+class ArtifactIntegrityError(AgentSDKError):
+    """An artifact's stored content no longer matches its content hash (FR-54)."""
+
+
 # --- Workflow layer ---------------------------------------------------------
 
 

@@ -1,0 +1,22 @@
+{
+  "task": "M13-artifacts",
+  "gate": "unit",
+  "command": ".venv\\Scripts\\python.exe -m pytest tests/test_artifacts.py -q",
+  "started_at": "2026-09-15T12:41:31.052Z",
+  "observed_at": "2026-09-15T12:41:43.672Z",
+  "exit_code": 0,
+  "signal": null,
+  "stdout": "........................................................................ [ 59%]\r\n.................................................                        [100%]\r\n121 passed in 11.96s\r\n",
+  "stderr": "",
+  "revision": {
+    "commit": "e366ded5ae918202628fbc8b97a005bc4439e4ef",
+    "dirty": true
+  },
+  "source_hash": "883c13df9f21677b064646293424264835b4c3de9925e42de355a1176ef85cc7",
+  "environment": {
+    "node": "v20.10.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "hash": "b2e4547c46680c25dd965acad59646b10dc14e12ce31c3bfea583bfe96634093"
+}

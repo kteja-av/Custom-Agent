@@ -9,7 +9,7 @@
     "non_goals": [],
     "trust_boundary": "local repository",
     "created_at": "2026-09-05T14:48:57.894Z",
-    "updated_at": "2026-09-15T07:55:05.312Z"
+    "updated_at": "2026-09-15T13:13:07.142Z"
   },
   "policy": {
     "ponytail": "full",
@@ -25,7 +25,7 @@
   "lifecycle": {
     "phase": "build",
     "status": "active",
-    "active_task": "M13-artifacts",
+    "active_task": "M14-timings-and-telemetry",
     "blocker": null,
     "next_action": "Run the task pre-flight."
   },
@@ -936,6 +936,14 @@
       "status": "accepted",
       "source": "owner decision 2026-09-14",
       "recorded_at": "2026-09-14T16:18:08.770Z"
+    },
+    {
+      "id": "DECISION-40ae2d24",
+      "title": "FR-56 amended: EXPECTED_EXAMPLES gains 09 to 12 in M13, and 13 with M14",
+      "text": "Owner decision 2026-09-15 before the M13 pre-flight. FR-56 said the distribution test EXPECTED_EXAMPLES gains 09 to 13 in M13, but scripts/13_telemetry.py is the M14 example (P2-D11, FR-60), so naming it in M13 would fail AC-17 until M14. M13 adds 09 to 12 (09 and 10 already exist and run without being named; 11 and 12 are the M13 examples), and M14 adds 13 with its example. No scope moves between milestones.",
+      "status": "accepted",
+      "source": "owner decision 2026-09-15",
+      "recorded_at": "2026-09-15T09:40:01.373Z"
     }
   ],
   "knowledge": [
@@ -1562,6 +1570,30 @@
       "source": "M12 C1 follow-up, 2026-09-15",
       "tags": [],
       "recorded_at": "2026-09-15T07:55:05.310Z"
+    },
+    {
+      "id": "KNOWLEDGE-b0e097e4",
+      "title": "M13 pre-flight: baseline, BYTEA reads, and what the artifact store touches",
+      "text": "Measured 2026-09-15 at commit e366ded, before any M13 change. The full suite passed 989 tests in 132 s. psycopg 3.3.5 against PostgreSQL 16.13 returns a BYTEA value as Python bytes from both a text and a binary cursor: the risk that reads carry hex describes the text wire format, not the Python type. A 10485760-byte round trip took 142 ms through a text cursor and 99 ms through a binary one, both equal to the input, with a Python peak of 21 MB, so the store reads content through a binary cursor. The executor step 8 provenance check, _checked_provenance with _is_member and _MAX_SOURCE_CHARS, is referenced only inside agentsdk/executor.py, so FR-53 can move it to primitives without touching a test. The README and scripts/README.md list examples in tables, and no test checked that listing before M13.",
+      "source": "M13 pre-flight probes, 2026-09-15",
+      "tags": [],
+      "recorded_at": "2026-09-15T09:51:07.111Z"
+    },
+    {
+      "id": "KNOWLEDGE-ea66a3c4",
+      "title": "Transient gateway failure in the live golden eval during M13",
+      "text": "M13 full suite on the uncommitted M13 tree, 2026-09-15: 1 failed, 1090 passed in 227.45 s. The failure was tests/test_golden_eval.py::test_the_same_eval_passes_against_a_live_provider[openai.gpt-4o-mini]: the live run completed but needed 2 attempts, because its first model call failed at the gateway with ModelProviderUnavailable (upstream connect error or disconnect/reset before headers, reset reason connection termination), and the test requires exactly one attempt. Rerun alone with no other test process: 2 passed in 21.10 s. First recorded occurrence, not reproduced; treated as a transient gateway failure, not an M13 defect. If it recurs, decide whether the live eval should tolerate a recorded retry.",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-15T11:38:14.145Z"
+    },
+    {
+      "id": "KNOWLEDGE-8b58092d",
+      "title": "M13 independent review round 1",
+      "text": "Independent review round 1 of M13-artifacts: Claude Sonnet 5 approved at 2026-09-15T12:47:22Z and raised no new findings; its gate run passed 121 and 1110 on source hash 883c13df. The owner checked the reviewer: code unchanged, no worktrees or stashes, every database table back to its starting count, no leftover processes. The reviewer skipped the top item of the brief, tenant and project scope, so the owner verified it on both stores: every statement on artifacts filters by tenant and project, reads and delete also by expiry, and the insert checks the source run scope in the same statement; all 33 lookups per store (a missing id, another project, another tenant, another project through for_scope, an expired artifact, four non-canonical id forms, an integer, None) raised ArtifactNotFound with a message naming only the id as given; delete and expire from another scope removed nothing; only a source run of the store scope was accepted. Reviewer probes rerun by the owner: a cancel while the insert fails leaves 0 rows; asyncio.timeout around a held put raises TimeoutError and leaves 0 rows; deleting a run that an artifact names is refused by the foreign key; a changed content_hash raises ArtifactIntegrityError. Caveats, not findings: a changed size is reported as stored (declared); a non-UTC expires_at reads back on Postgres in the database zone (+05:30) and in memory in the offset given, the same instant (cosmetic). Not probed by the reviewer and covered only by the author tests: a bytes subclass as content, the injected clock at exactly the expiry boundary, a cancel before the worker thread starts or during the clean-up of a cancelled put, and the provenance move into primitives (mutants A3, A9, E1 and the unchanged M10 provenance tests).",
+      "source": null,
+      "tags": [],
+      "recorded_at": "2026-09-15T13:12:59.592Z"
     }
   ],
   "tasks": [
@@ -2317,7 +2349,7 @@
     {
       "id": "M13-artifacts",
       "outcome": "Runs and callers can store, read, expire and delete tenant-scoped artifacts that verify their content hash, identically in memory and on Postgres",
-      "state": "active",
+      "state": "done",
       "risk": "high",
       "owner": null,
       "scope": [],
@@ -2336,22 +2368,37 @@
           "id": "unit",
           "command": ".venv\\Scripts\\python.exe -m pytest tests/test_artifacts.py -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M13-artifacts-unit.json",
+            "source_hash": "883c13df9f21677b064646293424264835b4c3de9925e42de355a1176ef85cc7",
+            "hash": "b2e4547c46680c25dd965acad59646b10dc14e12ce31c3bfea583bfe96634093",
+            "observed_at": "2026-09-15T12:41:43.672Z"
+          }
         },
         {
           "id": "regression",
           "command": ".venv\\Scripts\\python.exe -m pytest -q",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "path": ".genesis/evidence/M13-artifacts-regression.json",
+            "source_hash": "883c13df9f21677b064646293424264835b4c3de9925e42de355a1176ef85cc7",
+            "hash": "8981cfcaa6f9c037e4f97cde8ef301616238c02cea19aa212004247bbd95ca0c",
+            "observed_at": "2026-09-15T12:44:02.810Z"
+          }
         },
         {
           "id": "independent-review",
           "command": "",
           "mandatory": true,
-          "status": "pending",
-          "evidence": null
+          "status": "pass",
+          "evidence": {
+            "human": "Claude Sonnet 5 (independent L4 reviewer, M13 round 1, fresh session)",
+            "reason": "Re-derived FR-53..FR-56, NFR-16, AC-42, AC-44 from SPEC.md. Read the full diff against e366ded and the new files. Ran the full suite twice (once as-is, once after the live examples) at 1110 passed each time, matching the gate evidence source hash 883c13df with no staleness. Ran genesis gate, both gates pass, KICKOFF gates line reads unit pass regression pass independent-review pending before this call. Probed beyond the authors own tests using probe tenant SYN-m13r1 and throwaway schema m13r1: a memoryview of non-bytes format and a non-contiguous memoryview both measure and store correctly; the in-memory admission callable is refused unless it returns exactly True, truthy non-bool values are rejected; a cancellation landing while the Postgres insert itself raises ValueError still surfaces CancelledError with no row left; asyncio.timeout around a held-checkout put converts to TimeoutError and still leaves zero rows, the shielded write completing and then being rolled back by the put cleanup; deleting a run an artifact still names is refused by the foreign key as the migration comment promises; expires_at with a non-UTC aware offset is accepted identically on both stores; content_hash tampering is caught by get as ArtifactIntegrityError while size tampering is a declared, not a blocking, gap since get checks only the hash. Independently reapplied migration 0006 in a throwaway schema at 0005 holding a real run row: idempotent, correct NOT NULL and tenant_id project_id leading index, run row undisturbed, schema dropped. Ran both examples offline and live from outside the repository; all checks passed. Confirmed the provenance check moved to primitives.checked_provenance is byte-for-byte the same logic the executor used, with M10s provenance tests unchanged in the full suite. Store counts returned to the stated baseline exactly after cleanup: artifacts 0, runs 10333, messages 54911, run_events 65049, execution_manifests 10311, model_registry 0, schema_migrations 5, 0 runs running, no non-public schemas left. No blocking defect found; G9 (text cursor mutant survives) and the size-tamper gap are correctly declared, not findings.",
+            "source_hash": "883c13df9f21677b064646293424264835b4c3de9925e42de355a1176ef85cc7",
+            "observed_at": "2026-09-15T12:47:22.602Z"
+          }
         }
       ],
       "next_action": "Run the task pre-flight.",
@@ -2360,12 +2407,12 @@
       "failures": [],
       "limitations": [],
       "created_at": "2026-09-14T07:21:29.852Z",
-      "updated_at": "2026-09-14T07:21:29.852Z"
+      "updated_at": "2026-09-15T13:13:07.142Z"
     },
     {
       "id": "M14-timings-and-telemetry",
       "outcome": "Every model and tool call records its timings, and an optional OpenTelemetry exporter turns a run into a span tree without ever affecting the run",
-      "state": "queued",
+      "state": "active",
       "risk": "medium",
       "owner": null,
       "scope": [],
@@ -2939,6 +2986,15 @@
       "task": "M12-run-handles-and-cancellation",
       "human": "Claude Fable 5.1 (independent L4 reviewer, M12 round 1, fresh session)",
       "reason": "Re-derived FR-48 to FR-52, NFR-15, NFR-17 and AC-39 to AC-41 from SPEC.md and reviewed the uncommitted diff against 1662ede with handle.py, migration 0005 and test_run_handles.py. Verified first-hand: full suite 985 passed with -p no:cacheprovider; gate unit 60 passed and regression 985 passed, both source hash c4ea020a; store counts unchanged (runs 10332, messages 54909, run_events 65046, manifests 10310, schema_migrations 4 with 0005 already applied before the review). Probes: an absorbed cancellation during a held store write ends cancelled with the task cancelling count back at 0; asyncio.timeout expiring during a held write yields TimeoutError and an external caller cancel yields CancelledError; cancel from before_model, after_tool, a tool body inline and under wait_for, and before the first step all end cancelled; pairing under ToolCalled lock contention, during a prepare failure emission, between batches and during an inline step 9 gives every call exactly one result and one ToolCalled before RunCancelled; 300 iterators including abandoned and cancelled ones all receive RunResult.events with no waiter leak, and out-of-order publication is held back; a randomised fuzz of 1000 in-memory and 100 Postgres runs cancelled at random points through handle.cancel and by cancelling the Runner.run caller found 0 violations of contiguity, pairing, usage, cost None iff in flight, no run left running and no task left behind. Caveats, not blocking: C1 RunHandle.cancel called from a thread other than the loop thread is only recorded and takes effect at the next loop wake-up, and under asyncio debug mode Task.cancel raises RuntimeError after marking the awaited future cancelled so the run is stuck for good; recommend call_soon_threadsafe in RunControl.request when off the loop thread, or documenting loop-thread-only. C2 migration 0005 also drops a multi-column CHECK that mentions status without restoring it, unreachable from schema.sql. C3 a call cancelled while waiting for the ToolCalled lock at step 9 is recorded ToolCancelled, spec-consistent. C4 a BaseException other than CancelledError from a tool still leaves no terminal event, as before M12.",
+      "revision": null
+    },
+    {
+      "id": "001a00ee-fc39-4c00-b5e6-9a36948891b1",
+      "at": "2026-09-15T12:47:22.602Z",
+      "action": "approve",
+      "task": "M13-artifacts",
+      "human": "Claude Sonnet 5 (independent L4 reviewer, M13 round 1, fresh session)",
+      "reason": "Re-derived FR-53..FR-56, NFR-16, AC-42, AC-44 from SPEC.md. Read the full diff against e366ded and the new files. Ran the full suite twice (once as-is, once after the live examples) at 1110 passed each time, matching the gate evidence source hash 883c13df with no staleness. Ran genesis gate, both gates pass, KICKOFF gates line reads unit pass regression pass independent-review pending before this call. Probed beyond the authors own tests using probe tenant SYN-m13r1 and throwaway schema m13r1: a memoryview of non-bytes format and a non-contiguous memoryview both measure and store correctly; the in-memory admission callable is refused unless it returns exactly True, truthy non-bool values are rejected; a cancellation landing while the Postgres insert itself raises ValueError still surfaces CancelledError with no row left; asyncio.timeout around a held-checkout put converts to TimeoutError and still leaves zero rows, the shielded write completing and then being rolled back by the put cleanup; deleting a run an artifact still names is refused by the foreign key as the migration comment promises; expires_at with a non-UTC aware offset is accepted identically on both stores; content_hash tampering is caught by get as ArtifactIntegrityError while size tampering is a declared, not a blocking, gap since get checks only the hash. Independently reapplied migration 0006 in a throwaway schema at 0005 holding a real run row: idempotent, correct NOT NULL and tenant_id project_id leading index, run row undisturbed, schema dropped. Ran both examples offline and live from outside the repository; all checks passed. Confirmed the provenance check moved to primitives.checked_provenance is byte-for-byte the same logic the executor used, with M10s provenance tests unchanged in the full suite. Store counts returned to the stated baseline exactly after cleanup: artifacts 0, runs 10333, messages 54911, run_events 65049, execution_manifests 10311, model_registry 0, schema_migrations 5, 0 runs running, no non-public schemas left. No blocking defect found; G9 (text cursor mutant survives) and the size-tamper gap are correctly declared, not findings.",
       "revision": null
     }
   ],

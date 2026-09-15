@@ -24,6 +24,8 @@ credentials.
 | [`08_testing_agents_offline.py`](08_testing_agents_offline.py) | behavioural checks against a scripted model, then a real one |
 | [`09_limits_and_cost.py`](09_limits_and_cost.py) | an output limit that fails a cut-off run honestly, and what a run cost from prices you supply |
 | [`10_builtin_tools.py`](10_builtin_tools.py) | built-in file tools confined to a folder, and a fetch tool confined to an allowlist and the public internet |
+| [`11_run_handle.py`](11_run_handle.py) | a run's events streamed through its handle as they happen, and a second run cancelled mid-flight |
+| [`12_artifacts.py`](12_artifacts.py) | an artifact put, read back and checked against its hash, kept within its tenant, expired and deleted |
 
 ## Setup
 
@@ -35,7 +37,7 @@ python -m pip install -e ".[examples]"        # the SDK, plus the MCP library fo
 cp .env.example .env                           # then fill it in, for live mode
 ```
 
-Examples 04 and 07 need `DATABASE_URL` in live mode; the rest need only the
+Examples 04, 07 and 12 need `DATABASE_URL` in live mode; the rest need only the
 model endpoint.
 
 ## Two things the examples do by hand, and say so

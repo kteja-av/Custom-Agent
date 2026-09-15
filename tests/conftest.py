@@ -25,15 +25,29 @@ from agentsdk.postgres import apply_schema
 load_dotenv()
 
 _DSN = normalise_database_url(os.environ.get("DATABASE_URL"))
-_RUN_TABLES = ("runs", "messages", "run_events", "execution_manifests")
+# Each table, and the id column whose set of values the session must leave as it
+# found it. From M13 that includes every artifact, which a run's cleanup would
+# otherwise not see.
+_TRACKED = (
+    ("runs", "run_id"),
+    ("messages", "run_id"),
+    ("run_events", "run_id"),
+    ("execution_manifests", "run_id"),
+    ("artifacts", "artifact_id"),
+)
+_RUN_TABLES = tuple(table for table, _ in _TRACKED)
 
 
 def _run_ids() -> dict[str, set]:
     with psycopg.connect(_DSN) as conn:
-        return {
-            table: {row[0] for row in conn.execute(f"SELECT DISTINCT run_id FROM {table}").fetchall()}
-            for table in _RUN_TABLES
-        }
+        found = {}
+        for table, column in _TRACKED:
+            # A table a pending migration has not created yet has nothing to compare.
+            if conn.execute("SELECT to_regclass(%s)", (table,)).fetchone()[0] is None:
+                found[table] = set()
+                continue
+            found[table] = {row[0] for row in conn.execute(f"SELECT DISTINCT {column} FROM {table}").fetchall()}
+        return found
 
 
 @pytest.fixture(scope="session", autouse=True)

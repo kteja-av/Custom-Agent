@@ -450,3 +450,62 @@ def _named_unstorable_reason(value: Any) -> str | None:
         return None
     except Exception:  # noqa: BLE001 - total by intent, see unstorable_reason
         return "could not be checked for storability"
+
+
+# --- provenance as it is stored (FR-40, FR-47, FR-53) ------------------------------
+
+# A source is a URI or a hash. Bounded, so a result cannot carry megabytes past
+# the output cap in a field the cap does not measure (M10 review round 3).
+MAX_SOURCE_CHARS = 8192
+
+
+def _is_member(value: Any, labels: Any) -> bool:
+    """Identity with one of the enum's real members.
+
+    An exact-type check is not membership: the labels are str-mixin enums, and
+    str.__new__(Origin, "x") builds an instance of exactly Origin that is none of
+    its members, with any _value_ or none, while every store reads .value (M10
+    review round 4, rejected). Equality is only string equality, so a forged
+    "system" valued "user" would pass it.
+    """
+    return any(value is member for member in labels)
+
+
+def checked_provenance(value: Any) -> ContentProvenance | str:
+    """A fresh ContentProvenance built from `value`, or the reason it cannot be one.
+
+    The check executor step 8 applies to what a hook returns, moved here in M13 so
+    the executor and the artifact stores share one implementation (FR-53).
+
+    Each field is read once and checked before it is used. ContentProvenance does
+    not check its own labels, and every store reads `.value` from them, so a
+    plain-string origin completed in memory and failed on Postgres. The labels
+    must be the enums' own members; the taint set an exact frozenset (a subclass
+    can answer iteration differently from what it holds); the source bounded text.
+
+    A source that is a str subclass is copied into the exact text it holds and
+    bounded on the copy (FR-47): refusing it was a regression M10 introduced for
+    ordinary caller code (KNOWLEDGE-739aca22), and a subclass reporting a false
+    length is measured by what it holds.
+    """
+    if not isinstance(value, ContentProvenance):
+        return "the result carries provenance that is not a ContentProvenance"
+    origin = value.origin
+    authority = value.instruction_authority
+    zone = value.trust_zone
+    taint = value.taint_flags
+    source = value.source_uri_or_hash
+    if not (_is_member(origin, Origin) and _is_member(authority, InstructionAuthority) and _is_member(zone, TrustZone)):
+        return "the result carries provenance whose labels are not members of their enums"
+    if type(taint) is not frozenset or not all(_is_member(flag, TaintFlag) for flag in taint):
+        return "the result carries taint flags that are not members of TaintFlag"
+    if source is not None:
+        if isinstance(source, str):
+            source = source if type(source) is str else str.__getitem__(source, slice(None))
+        else:
+            source = None
+        if source is None or len(source) > MAX_SOURCE_CHARS:
+            return f"the result carries a source that is not text of at most {MAX_SOURCE_CHARS} characters"
+    return ContentProvenance(
+        origin=origin, instruction_authority=authority, trust_zone=zone, taint_flags=taint, source_uri_or_hash=source
+    )

@@ -106,15 +106,15 @@
 
 ### M13-artifacts — Runs and callers can store, read, expire and delete tenant-scoped artifacts that verify their content hash, identically in memory and on Postgres
 
-- state/risk: active / high
+- state/risk: done / high
 - requirements: FR-53, FR-54, FR-55, FR-56, NFR-16, AC-42, AC-44
 - scope: not bounded
-- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_artifacts.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending
+- gates: unit: .venv\Scripts\python.exe -m pytest tests/test_artifacts.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pass
 - next: Run the task pre-flight.
 
 ### M14-timings-and-telemetry — Every model and tool call records its timings, and an optional OpenTelemetry exporter turns a run into a span tree without ever affecting the run
 
-- state/risk: queued / medium
+- state/risk: active / medium
 - requirements: FR-57, FR-58, FR-59, FR-60, NFR-15, NFR-19, AC-45, AC-46, AC-47
 - scope: not bounded
 - gates: unit: .venv\Scripts\python.exe -m pytest tests/test_telemetry.py -q, regression: .venv\Scripts\python.exe -m pytest -q, independent-review: pending

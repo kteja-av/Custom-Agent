@@ -6,12 +6,15 @@ the public surface is AgentSpec / RunConfig / Runner / RunResult (NFR-5).
 """
 
 from .api import AgentSpec, RunConfig, Runner, RunResult, RunStatus
+from .artifacts import ArtifactRef, ArtifactStore, InMemoryArtifactStore
 from .handle import RunHandle, RunState
 from .model import ReasoningEffort
 from .persistence import Persistence
 from .scheduler import SchedulerLimits
 from .errors import (
     AgentSDKError,
+    ArtifactIntegrityError,
+    ArtifactNotFound,
     BudgetExceeded,
     Cancelled,
     DependencyFailed,
@@ -68,6 +71,11 @@ __all__ = [
     "ReasoningEffort",
     # An argument of Runner and a field of RunConfig (FR-43), for the same reason.
     "SchedulerLimits",
+    # Artifacts (FR-53, FR-54): the in-memory store is built directly; the
+    # Postgres one comes from Persistence.artifact_store.
+    "ArtifactRef",
+    "ArtifactStore",
+    "InMemoryArtifactStore",
     "ContentProvenance",
     "InstructionAuthority",
     "Message",
@@ -91,6 +99,8 @@ __all__ = [
     "ToolTimeout",
     "ToolExecutionError",
     "ToolCancelled",
+    "ArtifactNotFound",
+    "ArtifactIntegrityError",
     "WorkflowError",
     "BudgetExceeded",
     "MaxTurnsExceeded",
