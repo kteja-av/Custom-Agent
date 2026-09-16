@@ -22,8 +22,10 @@ python-dotenv==1.2.3       # loads MODEL_API_KEY, BASE_URL, DATABASE_URL from .e
 pytest==9.1.1
 pytest-asyncio==1.4.0      # asyncio_mode = auto in pytest.ini
 wheel==0.45.1              # builds the wheel AC-16 installs (tests/test_distribution.py)
-setuptools==65.5.0         # the build backend for that wheel: the test builds with
-                           # --no-build-isolation, so it uses this venv's copy
+setuptools==77.0.1         # the build backend for that wheel: the test builds with
+                           # --no-build-isolation, so it uses this venv's copy.
+                           # >=77 is required by pyproject.toml's SPDX
+                           # license = "MIT" + license-files form.
 cryptography==50.0.1       # M10 AC-30: a throwaway CA and certificate, so the fetch
                            # tool's TLS path is tested with the host name checked
 

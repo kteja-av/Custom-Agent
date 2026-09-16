@@ -1,0 +1,7 @@
+# Generated process artifacts. GitHub Linguist counts the two .genesis HTML
+# files (index/graph.html alone is ~982 KB on one line) at full weight, which
+# made HTML the repository's reported primary language ahead of Python. Mark
+# them generated and undetectable so language statistics reflect the source.
+.genesis/index/** linguist-generated=true linguist-detectable=false
+.genesis/dashboard.html linguist-generated=true linguist-detectable=false
+.genesis/project.json linguist-generated=true linguist-detectable=false
