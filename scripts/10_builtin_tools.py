@@ -17,7 +17,8 @@ refusal is shown every time. In live mode a real model then fetches one
 allowlisted public page itself.
 
 The file tools use Windows handle APIs in this release and refuse to construct
-on other platforms.
+on other platforms. On macOS and Linux this example says so, shows the fetch
+tool only, and still exits 0.
 
 Run it
   python scripts/10_builtin_tools.py            # live: BASE_URL and MODEL_API_KEY from .env, plus internet access
@@ -90,25 +91,35 @@ def results_of(sessions, run_id):
 
 async def main(offline: bool) -> None:
     config = RunConfig(tenant_id="example-tenant", project_id="examples", max_turns=3)
+    windows = sys.platform == "win32"
     with tempfile.TemporaryDirectory() as temporary:
         root = make_folders(Path(temporary))
         # Localhost is allowlisted on purpose, to show that the address check
         # refuses it anyway: it resolves to loopback, which is not public.
         fetch = fetch_tool(["example.com", "localhost"], max_bytes=200_000, timeout_seconds=15)
-        tools = [read_file_tool(root), list_directory_tool(root), glob_tool(root), grep_tool(root), fetch]
-        names = tuple(tool.name for tool in tools)
-
+        tools = [fetch]
         calls = [
-            ToolCall(id="read", name="read_file", arguments={"path": "notes/plan.txt"}),
-            ToolCall(id="glob", name="glob_files", arguments={"pattern": "**/*.txt"}),
-            ToolCall(id="grep", name="grep_files", arguments={"text": "Ship"}),
-            ToolCall(id="dotdot", name="read_file", arguments={"path": "../private.txt"}),
-            ToolCall(id="absolute", name="read_file", arguments={"path": str(Path(temporary) / "private.txt")}),
             ToolCall(id="not-allowed", name="fetch_url", arguments={"url": "https://evil.example.net/"}),
             ToolCall(id="metadata", name="fetch_url", arguments={"url": "http://169.254.169.254/latest/meta-data/"}),
             ToolCall(id="loopback", name="fetch_url", arguments={"url": "http://localhost/"}),
             ToolCall(id="scheme", name="fetch_url", arguments={"url": "file:///C:/Windows/win.ini"}),
         ]
+        if windows:
+            # The file tools prepend to the fetch cases so both are shown in one run.
+            tools = [read_file_tool(root), list_directory_tool(root), glob_tool(root), grep_tool(root), fetch]
+            calls = [
+                ToolCall(id="read", name="read_file", arguments={"path": "notes/plan.txt"}),
+                ToolCall(id="glob", name="glob_files", arguments={"pattern": "**/*.txt"}),
+                ToolCall(id="grep", name="grep_files", arguments={"text": "Ship"}),
+                ToolCall(id="dotdot", name="read_file", arguments={"path": "../private.txt"}),
+                ToolCall(id="absolute", name="read_file", arguments={"path": str(Path(temporary) / "private.txt")}),
+            ] + calls
+        else:
+            print(
+                "file tools require Windows in this release (they confine paths with Windows handle APIs);"
+                " showing fetch_tool only."
+            )
+        names = tuple(tool.name for tool in tools)
         sessions = InMemorySessionStore()
         runner = Runner({"scripted": ScriptedModel(calls)}, tools=tools, session_store=sessions)
         agent = AgentSpec(id="researcher", instructions="Use the tools.", tool_profile=names)
@@ -143,14 +154,19 @@ async def main(offline: bool) -> None:
     outside = "a file outside the workspace"
     checks = [
         ("the scripted run completed", scripted.status is RunStatus.COMPLETED),
-        ("a file inside the root was read", results["read"].content.startswith("Step 1")),
-        ("glob found both notes", "notes/plan.txt" in results["glob"].content and "notes/ideas.txt" in results["glob"].content),
-        ("grep matched literal text", "notes/ideas.txt:1:" in results["grep"].content),
-        ("'..' and an absolute path were refused, disclosing nothing",
-         all(results[i].is_error and outside not in results[i].content for i in ("dotdot", "absolute"))),
         ("hosts off the allowlist, metadata, loopback and file: were refused",
          all(results[i].is_error for i in ("not-allowed", "metadata", "loopback", "scheme"))),
     ]
+    if windows:
+        # Matches the Windows-only cases prepended to `calls` above.
+        checks = [
+            ("the scripted run completed", scripted.status is RunStatus.COMPLETED),
+            ("a file inside the root was read", results["read"].content.startswith("Step 1")),
+            ("glob found both notes", "notes/plan.txt" in results["glob"].content and "notes/ideas.txt" in results["glob"].content),
+            ("grep matched literal text", "notes/ideas.txt:1:" in results["grep"].content),
+            ("'..' and an absolute path were refused, disclosing nothing",
+             all(results[i].is_error and outside not in results[i].content for i in ("dotdot", "absolute"))),
+        ] + checks
     if not offline:
         checks.append((
             f"a real model fetched {PUBLIC_PAGE}, labelled untrusted",

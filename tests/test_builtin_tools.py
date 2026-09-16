@@ -19,7 +19,6 @@ whole file failing to import.
 
 from __future__ import annotations
 
-import _winapi
 import ast
 import asyncio
 import contextlib
@@ -50,6 +49,14 @@ import uuid
 import zlib
 
 import pytest
+
+# The file-confinement corpus builds real junctions through CPython's
+# Windows-only `_winapi` extension. Importing it at module scope aborts
+# collection of the WHOLE run on macOS and Linux, hiding the nine other test
+# modules. Skip this module instead. `agentsdk.builtin_tools` itself imports
+# cleanly everywhere, and the file tools refuse to construct off Windows by
+# design, so there is nothing here to exercise elsewhere.
+_winapi = pytest.importorskip("_winapi", reason="the file tools use Windows handle APIs")
 
 import agentsdk.tools as tools_module
 from agentsdk import AgentSpec, RunConfig, Runner, RunStatus
