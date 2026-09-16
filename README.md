@@ -400,9 +400,12 @@ Narrowing that is a known, recorded gap.
 ```
 
 The full suite (925 tests) runs against a **real database and the live gateway**,
-including an evaluation that calls two real models and spends tokens. Tests that
-need configuration fail rather than skip when it is missing, on purpose: a test
-suite that skips to green proves nothing.
+including an evaluation that calls two real models and spends tokens. The gate
+tests that assert the environment is actually configured **fail** rather than
+skip when it is missing, on purpose: a suite that skips to green proves nothing.
+Tests *backed by* that configuration -- the database- and gateway-dependent
+tests themselves -- **skip** with a visible reason naming the missing setting, so
+a green run is never mistaken for coverage that did not happen.
 
 ## How it was built
 

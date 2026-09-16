@@ -8,7 +8,8 @@ dynamic = ["version"]
 description = "A Python SDK for tool-using AI agents: validated and permission-checked tools, provenance on every result, and optional PostgreSQL persistence."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "siva-rgb" }]
 # Must match the runtime section of requirements.txt exactly; a test compares them.
 dependencies = [
@@ -29,6 +30,11 @@ Repository = "https://github.com/siva-rgb/Custom-Agent"
 
 [tool.setuptools]
 packages = ["agentsdk", "agentsdk.providers"]
+# agentsdk/migrations holds only .sql data read at runtime by agentsdk.migrate;
+# it is deliberately not an importable package. Turning off auto-inclusion and
+# listing the data explicitly below silences setuptools' "would be ignored"
+# warning without adding an __init__.py, which agentsdk.migrate.discover rejects.
+include-package-data = false
 
 [tool.setuptools.package-data]
 # apply_schema reads these from the installed package, not from a checkout (FR-22).
